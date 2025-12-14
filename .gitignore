@@ -1,0 +1,49 @@
+HELP.md
+.DS_Store
+Thumbs.db
+*.log
+
+**/target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+**/*.class
+
+**/src/main/resources/application-local.properties
+**/.env
+
+# --- IDEs ---
+
+### STS / Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+*.code-workspace
+
+**/node_modules/
+npm-debug.log
+yarn-error.log
