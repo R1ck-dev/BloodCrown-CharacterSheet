@@ -1,11 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login</title>
+    <link rel="stylesheet" href="assets/css/Login.css">
 </head>
 <body>
-    
+    <main class="container">
+        <section class="card">
+            <h1>Login</h1>
+            <p>Conecte-se à sua conta</p>
+
+            <form class="form" id="login-form">
+                <label for="login__email-user">Nome de Usuário</label>
+                <input type="text" name="username" id="login__username-user" placeholder="Digite seu nome">
+
+                <label for="login__password-user">Senha</label>
+                <input type="password" name="password" id="login__password-user" placeholder="Digite sua senha">
+
+                <button type="submit">Continuar</button>
+            </form>
+
+            <p class="redirect">Não tem uma conta?
+                <a href="RegisterScreen.html">Criar agora</a>
+            </p>
+        </section>
+    </main>
+
+    <script src="assets/js/ApiService.js"></script>
+    <script src="assets/js/Login.js"></script>
 </body>
 </html>

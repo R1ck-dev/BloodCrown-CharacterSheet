@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Cinzel:wght@700&display=swap');
+
+:root {
+    --primary: #8a1c1c;        
+    --primary-hover: #a52a2a;
+    --gold: #d4af37;         
+    --gold-hover: #f1c40f;     
+    
+    --background: #fdfbf7;    
+    --card-bg: #ffffff;
+    --text: #2c0b0b;          
+    --gray: #8b5e5e;      
+    --input-border: #e0d0d0;
+    --radius: 8px;             
+    --transition: 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0f0505;   
+        --card-bg: #1a0b0b;     
+        --text: #eecfa1;         
+        --gray: #a87b7b;
+        --input-border: #4a1c1c; 
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    background: radial-gradient(circle at center, var(--background) 0%, #000000 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: 1rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(138, 28, 28, 0.15); 
+    text-align: center;
+    border: 1px solid var(--input-border);
+    animation: fadeIn 0.8s ease;
+}
+
+.card h1 {
+    font-family: 'Cinzel', serif; 
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+}
+
+.card p {
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 0.8rem;
+}
+
+.form label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.form input {
+    padding: 0.8rem;
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.2); 
+    color: var(--text);
+    transition: all var(--transition);
+}
+
+.form input:focus {
+    border-color: var(--gold); 
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+    outline: none;
+}
+
+button {
+    margin-top: 1.2rem;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, var(--primary) 0%, #5e0a0a 100%);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border: 1px solid var(--primary-hover);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+    text-transform: uppercase;
+}
+
+button:hover {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, #7a1515 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 28, 28, 0.4);
+    border-color: var(--gold);
+}
+
+.redirect {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--gray);
+}
+
+.redirect a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition);
+}
+
+.redirect a:hover {
+    color: var(--gold-hover);
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
