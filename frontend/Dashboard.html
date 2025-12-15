@@ -3,72 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodCrown - Meus Personagens</title>
-    <link rel="stylesheet" href="assets/css/Register.css"> 
-    <style>
-        /* Ajustes específicos para o Dashboard */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            color: var(--gold);
-        }
-        
-        .char-list {
-            display: grid;
-            gap: 1rem;
-            text-align: left;
-        }
-
-        .char-card {
-            background: rgba(0,0,0,0.1);
-            border: 1px solid var(--gray);
-            padding: 1rem;
-            border-radius: var(--radius);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: var(--transition);
-        }
-
-        .char-card:hover {
-            border-color: var(--gold);
-            transform: translateX(5px);
-        }
-
-        .btn-logout {
-            background: transparent;
-            border: 1px solid var(--text);
-            color: var(--text);
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-        }
-        .btn-logout:hover {
-            background: rgba(0,0,0,0.1);
-            color: var(--primary);
-            border-color: var(--primary);
-            box-shadow: none;
-            transform: none;
-        }
-    </style>
+    <title>BloodCrown - Mesa de Jogo</title>
+    
+    <link rel="stylesheet" href="assets/css/Register.css">
+    <link rel="stylesheet" href="assets/css/Dashboard.css">
 </head>
 <body>
-    <main class="container" style="max-width: 800px;">
-        <section class="card">
+    <main class="container" style="max-width: 1000px;">
+        <section class="card dashboard-card">
             
             <div class="dashboard-header">
                 <h1>Mesa de Jogo</h1>
-                <button id="btnLogout" class="btn-logout">Sair</button>
+                <div class="user-controls">
+                    <span id="welcomeMessage">Viajante</span>
+                    <button id="btnLogout" class="btn-logout">Sair</button>
+                </div>
             </div>
 
-            <p id="welcomeMessage">Bem-vindo, Viajante.</p>
+            <div class="char-grid" id="charactersList">
+                </div>
 
-            <div class="char-list" id="charactersList">
-                <p style="text-align: center; font-style: italic;">Carregando pergaminhos...</p>
+            <div class="fab-container">
+                <button class="fab-btn secondary" title="Meus Grupos/Pastas">
+                    📁
+                </button>
+                
+                <button id="btnNewChar" class="fab-btn primary" title="Novo Personagem">
+                    +
+                </button>
             </div>
-
-            <button id="btnNewChar" style="width: 100%; margin-top: 2rem;">+ Criar Nova Ficha</button>
 
         </section>
     </main>

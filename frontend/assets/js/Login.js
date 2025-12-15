@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             alert('Login realizado com sucesso!');
             
-            // window.location.href = 'Dashboard.html';
+            window.location.href = 'Dashboard.html';
         } catch (error) {
             console.error('Erro ao tentar login: ', error.message);
             alert(error.message);

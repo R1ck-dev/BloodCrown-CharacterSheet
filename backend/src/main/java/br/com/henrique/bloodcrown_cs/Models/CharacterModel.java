@@ -1,6 +1,10 @@
 package br.com.henrique.bloodcrown_cs.Models;
 
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterAttributes;
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterExpertise;
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,22 +36,12 @@ public class CharacterModel {
     @Column(name = "level")
     private Integer level;
 
-    @Column(name = "strength")
-    private Integer strength;
+    @Embedded
+    private CharacterAttributes attributes;
 
-    @Column(name = "dexterity")
-    private Integer dexterity;
-
-    @Column(name = "constitution")
-    private Integer constitution;
-
-    @Column(name = "intelligence")
-    private Integer intelligence;
-
-    @Column(name = "wisdom")
-    private Integer wisdom;
-
-    @Column(name = "charisma")
-    private Integer charisma;
-
+    @Embedded
+    private CharacterStatus status;
+    
+    @Embedded 
+    private CharacterExpertise expertise;
 }

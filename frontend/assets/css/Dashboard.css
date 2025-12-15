@@ -1,0 +1,155 @@
+/* --- Ajustes Gerais do Container --- */
+.dashboard-card {
+    min-height: 80vh; /* Garante altura para os botões ficarem lá embaixo */
+    position: relative; /* Necessário para os botões flutuantes (absolute) funcionarem */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Cabeçalho --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--input-border);
+    padding-bottom: 1rem;
+}
+
+.dashboard-header h1 {
+    font-size: 1.5rem;
+    color: var(--gold);
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* --- Botão de Logout --- */
+.btn-logout {
+    margin-top: 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--gray);
+    color: var(--text);
+}
+
+.btn-logout:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(138, 28, 28, 0.1);
+    transform: none;
+}
+
+/* --- Grid de Personagens --- */
+.char-grid {
+    display: grid;
+    /* Cria colunas automáticas. Se a tela for pequena, empilha. Se grande, coloca lado a lado */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    gap: 1.5rem;
+    padding-bottom: 6rem; /* Espaço extra no fim para não cobrir os botões flutuantes */
+    width: 100%;
+}
+
+/* --- Card do Personagem --- */
+.char-card {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    height: 250px; /* Altura fixa para ficarem iguais ao desenho */
+}
+
+/* Efeito Hover no Card */
+.char-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
+    transform: translateY(-5px);
+    background: var(--card-bg);
+}
+
+/* Placeholder da Imagem (Círculo ou Quadrado) */
+.char-img-placeholder {
+    width: 80px;
+    height: 80px;
+    background-color: var(--input-border);
+    color: var(--gold);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    border: 2px solid transparent;
+}
+
+.char-card:hover .char-img-placeholder {
+    border-color: var(--gold);
+    background-color: rgba(138, 28, 28, 0.1);
+}
+
+.char-info h3 {
+    color: var(--text);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.char-info span {
+    font-size: 0.85rem;
+    color: var(--gray);
+    display: block;
+}
+
+/* --- Botões Flutuantes (FABs) --- */
+.fab-container {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+    z-index: 10;
+}
+
+.fab-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%; /* Redondo */
+    border: none;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: var(--transition);
+    margin-top: 0;
+}
+
+.fab-btn.primary {
+    background: var(--primary);
+    color: var(--gold);
+    border: 2px solid var(--primary-hover);
+}
+
+.fab-btn.secondary {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--gray);
+}
+
+.fab-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
