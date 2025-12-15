@@ -20,7 +20,7 @@ async function registerUser(username, password) {
 
     const registeredUser = await response.json();
 
-    return registerUser;
+    return registeredUser;
 }
 
 async function loginUser(username, password) {
