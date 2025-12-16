@@ -1,5 +1,3 @@
-const API_BASE_URL = 'http://localhost:8080'
-
 document.addEventListener('DOMContentLoaded', async function() {
 
     const token = localStorage.getItem('authToken');
