@@ -1,3 +1,5 @@
+const API_BASE_URL = 'http://localhost:8080'
+
 document.addEventListener('DOMContentLoaded', async function() {
 
     const token = localStorage.getItem('authToken');
@@ -18,12 +20,32 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const btnNewChar = document.getElementById('btnNewChar');
     if(btnNewChar) {
-        btnNewChar.addEventListener('click', function() {
-            console.log('Criar novo personagem clicado.')
+        btnNewChar.addEventListener('click', async function() {
+            try {
+                const originalText = btnNewChar.innerText;
+                btnNewChar.innerText = "⏳";
+
+                const response = await fetch('http://localhost:8080/characters', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erro ao criar ficha');
+
+                const newChar = await response.json();
+
+                console.log("Ficha criada! ID: ", newChar.id);
+                window.location.href = `sheet.html?id=${newChar.id}`;
+            } catch (error) {
+
+            }
         })
     }
     
     await loadCharacters(token);
+
 });
 
 async function loadCharacters(token) {

@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import br.com.henrique.bloodcrown_cs.DTOs.CreateCharacterDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Services.CharacterService;
 
@@ -14,10 +14,8 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-
 
 @RestController
 @RequestMapping("/characters")
@@ -37,8 +35,8 @@ public class CharacterController {
     }
 
     @PostMapping
-    public ResponseEntity<CharacterDTO> createCharacter(@RequestBody CreateCharacterDTO data, Authentication authentication) {
-        CharacterDTO newChar = characterService.createCharacter(data, authentication);
+    public ResponseEntity<CharacterDTO> createCharacter(Authentication authentication) {
+        CharacterDTO newChar = characterService.createCharacter(authentication);
         
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest().path("/{id}")
@@ -47,5 +45,10 @@ public class CharacterController {
         return ResponseEntity.created(location).body(newChar);
     }
     
+    @GetMapping("/{id}")
+    public ResponseEntity<CharacterSheetDTO> getCharacterById(@PathVariable String id, Authentication authentication) {
+        CharacterSheetDTO character = characterService.getCharacterById(id, authentication);
+        return ResponseEntity.ok(character);
+    }
     
 }

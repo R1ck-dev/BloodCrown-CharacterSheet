@@ -1,0 +1,47 @@
+/* --- Estilos da Página de Ficha --- */
+
+.sheet-debug-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.debug-box {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    border: 1px solid var(--primary); /* Variável vinda do Register.css */
+    border-radius: var(--radius);
+    width: 100%;
+    text-align: center;
+}
+
+.debug-box p {
+    color: var(--gray);
+    margin-bottom: 0.5rem;
+}
+
+.debug-box h2 {
+    color: var(--gold);
+    font-family: monospace; /* Fonte tipo código para o ID */
+    font-size: 1.2rem;
+    word-break: break-all; /* Quebra o ID se for muito longo */
+}
+
+.btn-back {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    border: 1px solid var(--gray);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+}
+
+.btn-back:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(0,0,0,0.1);
+}

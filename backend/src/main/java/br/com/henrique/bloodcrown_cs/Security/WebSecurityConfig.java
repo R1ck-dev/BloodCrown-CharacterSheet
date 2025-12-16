@@ -47,6 +47,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        // .requestMatchers(HttpMethod.GET, "/characters").permitAll()
+                        // .requestMatchers(HttpMethod.POST, "/characters").permitAll()
+                        // .requestMatchers(HttpMethod.GET, "/characters/{id}").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
