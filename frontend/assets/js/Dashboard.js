@@ -73,13 +73,19 @@ async function loadCharacters(token) {
             const card = document.createElement('div');
             card.className = 'char-card';
 
+            card.addEventListener('click', function() {
+                window.location.href = `sheet.html?id=${char.id}`;
+            });
+
             const initial = char.name.charAt(0).toUpperCase();
+            const charClass = char.characterClass || 'Aventureiro';
+            const charLevel = char.level || 1;
 
             card.innerHTML = `
                 <div class="char-img-placeholder">${initial}</div>
                 <div class="char-info">
                     <h3>${char.name}</h3>
-                    <span>${char.characterClass} • Nvl ${char.level}</span>
+                    <span>${charClass} • Nvl ${charLevel}</span>
                 </div>
             `;
 

@@ -16,6 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/characters")
@@ -51,4 +54,9 @@ public class CharacterController {
         return ResponseEntity.ok(character);
     }
     
+    @PutMapping("/{id}")
+    public ResponseEntity<CharacterSheetDTO> updateCharacter(@PathVariable String id, @RequestBody CharacterSheetDTO characterSheetDTO, Authentication authentication) {
+        CharacterSheetDTO updatedCharacter = characterService.updateCharacter(id, characterSheetDTO, authentication);
+        return ResponseEntity.ok(updatedCharacter);
+    }
 }

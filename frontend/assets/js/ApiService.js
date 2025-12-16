@@ -45,3 +45,21 @@ async function loginUser(username, password) {
 
     return data.token;
 }
+
+async function getCharacterById(id, token) {
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        if (response.status === 403) throw new Error('Você não tem permissão para ver essa ficha.');
+        if (response.status === 404) throw new Error('Ficha não encontrada');
+        throw new Error('Erro ao carregar dados da ficha.');
+    }
+
+    return await response.json();
+}

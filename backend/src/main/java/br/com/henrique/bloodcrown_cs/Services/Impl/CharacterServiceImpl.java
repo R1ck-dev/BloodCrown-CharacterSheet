@@ -105,6 +105,7 @@ public class CharacterServiceImpl implements CharacterService{
         );
     }
 //-----------------------------------------------------------------------------------
+//--------------------------------Recupera o Personagem pelo Id--------------------------------
 
     @Override
     public CharacterSheetDTO getCharacterById(String id, Authentication authentication) {
@@ -145,8 +146,53 @@ public class CharacterServiceImpl implements CharacterService{
             status,
             expertise
         );
-
     }
+//-----------------------------------------------------------------------------------
+
+    @Override
+    public CharacterSheetDTO updateCharacter(String id, CharacterSheetDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
+                .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
+
+        charModel.setName(dto.name());
+        charModel.setCharacterClass(dto.characterClass());
+        charModel.setLevel(dto.level());
+
+        if (dto.attributes() != null) {
+            charModel.getAttributes().setForca(dto.attributes().forca());
+            charModel.getAttributes().setDestreza(dto.attributes().destreza());
+            charModel.getAttributes().setConstituicao(dto.attributes().constituicao());
+            charModel.getAttributes().setInteligencia(dto.attributes().inteligencia());
+            charModel.getAttributes().setSabedoria(dto.attributes().sabedoria());
+            charModel.getAttributes().setCarisma(dto.attributes().carisma());
+        }
+
+        if (dto.status() != null) {
+            charModel.getStatus().setMaxHealth(dto.status().maxHealth());
+            charModel.getStatus().setMaxMana(dto.status().maxMana());
+            charModel.getStatus().setMaxSanity(dto.status().maxSanity());
+            charModel.getStatus().setMaxStamina(dto.status().maxStamina());
+            charModel.getStatus().setDefense(dto.status().defense());
+            
+            charModel.getStatus().setCurrentHealth(dto.status().maxHealth()); 
+            charModel.getStatus().setCurrentMana(dto.status().maxMana());
+            charModel.getStatus().setCurrentSanity(dto.status().maxSanity());
+            charModel.getStatus().setCurrentStamina(dto.status().maxStamina());
+        }
+
+        if (dto.expertise() != null) {
+            charModel.getExpertise().setAtletismo(dto.expertise().atletismo());
+            charModel.getExpertise().setLuta(dto.expertise().luta());
+            charModel.getExpertise().setPercepcao(dto.expertise().percepcao());
+        }
+
+        characterRepository.save(charModel);
+        return dto; 
+    }
+
+
 
 
 } 
