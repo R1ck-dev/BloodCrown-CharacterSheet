@@ -7,22 +7,126 @@
     
     <link rel="stylesheet" href="assets/css/Register.css">
     <link rel="stylesheet" href="assets/css/Sheet.css">
+    <style>
+        .form-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #333; background: #1a1a1a; border-radius: 8px; }
+        .form-group { margin-bottom: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #ccc; }
+        input { width: 100%; padding: 0.5rem; background: #333; border: 1px solid #555; color: white; border-radius: 4px; }
+        h2 { border-bottom: 1px solid #444; padding-bottom: 0.5rem; margin-bottom: 1rem; color: #e50914; }
+    </style>
 </head>
 <body>
     
     <main class="container">
-        <section class="card sheet-debug-card">
-            <h1>Grimório de Edição</h1>
+        
+        <section class="card sheet-header-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Grimório de Edição</h1>
+                <a href="Dashboard.html" class="btn-back">⬅ Voltar</a>
+            </div>
+            <div class="debug-box" style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+                <span>ID da Ficha: </span>
+                <span id="charIdDisplay">Carregando...</span>
+            </div>
+        </section>
+
+        <form id="sheetForm">
             
-            <div class="debug-box">
-                <p>Você está editando o pergaminho de ID:</p>
-                <h2 id="charIdDisplay">...</h2>
+            <section class="form-section">
+                <h2>Dados do Personagem</h2>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="charName">Nome</label>
+                        <input type="text" id="charName" placeholder="Nome do Personagem">
+                    </div>
+                    <div class="form-group">
+                        <label for="charClass">Classe</label>
+                        <input type="text" id="charClass" placeholder="Ex: Guerreiro">
+                    </div>
+                    <div class="form-group">
+                        <label for="charLevel">Nível</label>
+                        <input type="number" id="charLevel" min="1">
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Status Vitais</h2>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="statusMaxHealth">Vida Máxima</label>
+                        <input type="number" id="statusMaxHealth">
+                    </div>
+                    <div class="form-group">
+                        <label for="statusMaxMana">Mana Máxima</label>
+                        <input type="number" id="statusMaxMana">
+                    </div>
+                    <div class="form-group">
+                        <label for="statusMaxSanity">Sanidade Máxima</label>
+                        <input type="number" id="statusMaxSanity">
+                    </div>
+                    <div class="form-group">
+                        <label for="statusMaxStamina">Estamina Máxima</label>
+                        <input type="number" id="statusMaxStamina">
+                    </div>
+                    <div class="form-group">
+                        <label for="statusDefense">Defesa</label>
+                        <input type="number" id="statusDefense">
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Atributos</h2>
+                <div class="grid-3">
+                    <div class="form-group"><label for="attrForca">Força</label><input type="number" id="attrForca"></div>
+                    <div class="form-group"><label for="attrDestreza">Destreza</label><input type="number" id="attrDestreza"></div>
+                    <div class="form-group"><label for="attrConstituicao">Constituição</label><input type="number" id="attrConstituicao"></div>
+                    <div class="form-group"><label for="attrInteligencia">Inteligência</label><input type="number" id="attrInteligencia"></div>
+                    <div class="form-group"><label for="attrSabedoria">Sabedoria</label><input type="number" id="attrSabedoria"></div>
+                    <div class="form-group"><label for="attrCarisma">Carisma</label><input type="number" id="attrCarisma"></div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Perícias</h2>
+                <div class="grid-4">
+                    <div class="form-group"><label for="skillAtletismo">Atletismo</label><input type="number" id="skillAtletismo"></div>
+                    <div class="form-group"><label for="skillConhecimento">Conhecimento</label><input type="number" id="skillConhecimento"></div>
+                    <div class="form-group"><label for="skillConsertar">Consertar</label><input type="number" id="skillConsertar"></div>
+                    <div class="form-group"><label for="skillDiplomacia">Diplomacia</label><input type="number" id="skillDiplomacia"></div>
+                    <div class="form-group"><label for="skillDomar">Domar</label><input type="number" id="skillDomar"></div>
+                    <div class="form-group"><label for="skillEmpatia">Empatia</label><input type="number" id="skillEmpatia"></div>
+                    <div class="form-group"><label for="skillFortitude">Fortitude</label><input type="number" id="skillFortitude"></div>
+                    <div class="form-group"><label for="skillFurtividade">Furtividade</label><input type="number" id="skillFurtividade"></div>
+                    <div class="form-group"><label for="skillMagia">Magia</label><input type="number" id="skillMagia"></div>
+                    <div class="form-group"><label for="skillIniciativa">Iniciativa</label><input type="number" id="skillIniciativa"></div>
+                    <div class="form-group"><label for="skillIntimidar">Intimidar</label><input type="number" id="skillIntimidar"></div>
+                    <div class="form-group"><label for="skillIntuicao">Intuição</label><input type="number" id="skillIntuicao"></div>
+                    <div class="form-group"><label for="skillInvestigacao">Investigação</label><input type="number" id="skillInvestigacao"></div>
+                    <div class="form-group"><label for="skillLabia">Lábia</label><input type="number" id="skillLabia"></div>
+                    <div class="form-group"><label for="skillLadinagem">Ladinagem</label><input type="number" id="skillLadinagem"></div>
+                    <div class="form-group"><label for="skillLuta">Luta</label><input type="number" id="skillLuta"></div>
+                    <div class="form-group"><label for="skillMedicina">Medicina</label><input type="number" id="skillMedicina"></div>
+                    <div class="form-group"><label for="skillMente">Mente</label><input type="number" id="skillMente"></div>
+                    <div class="form-group"><label for="skillPercepcao">Percepção</label><input type="number" id="skillPercepcao"></div>
+                    <div class="form-group"><label for="skillPontaria">Pontaria</label><input type="number" id="skillPontaria"></div>
+                    <div class="form-group"><label for="skillReflexos">Reflexos</label><input type="number" id="skillReflexos"></div>
+                    <div class="form-group"><label for="skillSeduzir">Seduzir</label><input type="number" id="skillSeduzir"></div>
+                    <div class="form-group"><label for="skillSobrevivencia">Sobrevivência</label><input type="number" id="skillSobrevivencia"></div>
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button id="btnSave" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.2rem; cursor: pointer;">💾 Salvar Ficha</button>
             </div>
 
-            <a href="Dashboard.html" class="btn-back">⬅ Voltar para a Mesa</a>
-        </section>
+        </form>
     </main>
 
+    <script src="assets/js/ApiService.js"></script>
     <script src="assets/js/Sheet.js"></script>
 </body>
 </html>

@@ -91,8 +91,28 @@ public class CharacterServiceImpl implements CharacterService{
 
         CharacterExpertise expertise = new CharacterExpertise();
         expertise.setAtletismo(0);
+        expertise.setConhecimento(0);
+        expertise.setConsertar(0);
+        expertise.setDiplomacia(0);
+        expertise.setDomar(0);
+        expertise.setEmpatia(0);
+        expertise.setFortitude(0);
+        expertise.setFurtividade(0);
+        expertise.setMagia(0);
+        expertise.setIniciativa(0);
+        expertise.setIntimidar(0);
+        expertise.setIntuicao(0);
+        expertise.setInvestigacao(0);
+        expertise.setLabia(0);
+        expertise.setLadinagem(0);
         expertise.setLuta(0);
+        expertise.setMedicina(0);
+        expertise.setMente(0);
         expertise.setPercepcao(0);
+        expertise.setPontaria(0);
+        expertise.setReflexos(0);
+        expertise.setSeduzir(0);
+        expertise.setSobrevivencia(0);
         charModel.setExpertise(expertise);
 
         characterRepository.save(charModel);
@@ -133,8 +153,28 @@ public class CharacterServiceImpl implements CharacterService{
 
         ExpertiseDTO expertise = new ExpertiseDTO(
             charModel.getExpertise().getAtletismo(),
+            charModel.getExpertise().getConhecimento(),
+            charModel.getExpertise().getConsertar(),
+            charModel.getExpertise().getDiplomacia(),
+            charModel.getExpertise().getDomar(),
+            charModel.getExpertise().getEmpatia(),
+            charModel.getExpertise().getFortitude(),
+            charModel.getExpertise().getFurtividade(),
+            charModel.getExpertise().getMagia(),
+            charModel.getExpertise().getIniciativa(),
+            charModel.getExpertise().getIntimidar(),
+            charModel.getExpertise().getIntuicao(),
+            charModel.getExpertise().getInvestigacao(),
+            charModel.getExpertise().getLabia(),
+            charModel.getExpertise().getLadinagem(),
             charModel.getExpertise().getLuta(),
-            charModel.getExpertise().getPercepcao()
+            charModel.getExpertise().getMedicina(),
+            charModel.getExpertise().getMente(),
+            charModel.getExpertise().getPercepcao(),
+            charModel.getExpertise().getPontaria(),
+            charModel.getExpertise().getReflexos(),
+            charModel.getExpertise().getSeduzir(),
+            charModel.getExpertise().getSobrevivencia()
         );
 
         return new CharacterSheetDTO(
@@ -184,15 +224,33 @@ public class CharacterServiceImpl implements CharacterService{
 
         if (dto.expertise() != null) {
             charModel.getExpertise().setAtletismo(dto.expertise().atletismo());
+            charModel.getExpertise().setConhecimento(dto.expertise().conhecimento());
+            charModel.getExpertise().setConsertar(dto.expertise().consertar());
+            charModel.getExpertise().setDiplomacia(dto.expertise().diplomacia());
+            charModel.getExpertise().setDomar(dto.expertise().domar());
+            charModel.getExpertise().setEmpatia(dto.expertise().empatia());
+            charModel.getExpertise().setFortitude(dto.expertise().fortitude());
+            charModel.getExpertise().setFurtividade(dto.expertise().furtividade());
+            charModel.getExpertise().setMagia(dto.expertise().magia());
+            charModel.getExpertise().setIniciativa(dto.expertise().iniciativa());
+            charModel.getExpertise().setIntimidar(dto.expertise().intimidar());
+            charModel.getExpertise().setIntuicao(dto.expertise().intuicao());
+            charModel.getExpertise().setInvestigacao(dto.expertise().investigacao());
+            charModel.getExpertise().setLabia(dto.expertise().labia());
+            charModel.getExpertise().setLadinagem(dto.expertise().ladinagem());
             charModel.getExpertise().setLuta(dto.expertise().luta());
+            charModel.getExpertise().setMedicina(dto.expertise().medicina());
+            charModel.getExpertise().setMente(dto.expertise().mente());
             charModel.getExpertise().setPercepcao(dto.expertise().percepcao());
+            charModel.getExpertise().setPontaria(dto.expertise().pontaria());
+            charModel.getExpertise().setReflexos(dto.expertise().reflexos());
+            charModel.getExpertise().setSeduzir(dto.expertise().seduzir());
+            charModel.getExpertise().setSobrevivencia(dto.expertise().sobrevivencia());
+            
         }
 
         characterRepository.save(charModel);
         return dto; 
     }
-
-
-
 
 } 

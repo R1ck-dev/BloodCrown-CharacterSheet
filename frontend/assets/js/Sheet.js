@@ -43,8 +43,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if(charData.expertise) {
             document.getElementById('skillAtletismo').value = charData.expertise.atletismo;
+            document.getElementById('skillConhecimento').value = charData.expertise.conhecimento;
+            document.getElementById('skillConsertar').value = charData.expertise.consertar;
+            document.getElementById('skillDiplomacia').value = charData.expertise.diplomacia;
+            document.getElementById('skillDomar').value = charData.expertise.domar;
+            document.getElementById('skillEmpatia').value = charData.expertise.empatia;
+            document.getElementById('skillFortitude').value = charData.expertise.fortitude;
+            document.getElementById('skillFurtividade').value = charData.expertise.furtividade;
+            document.getElementById('skillMagia').value = charData.expertise.magia;
+            document.getElementById('skillIniciativa').value = charData.expertise.iniciativa;
+            document.getElementById('skillIntimidar').value = charData.expertise.intimidar;
+            document.getElementById('skillIntuicao').value = charData.expertise.intuicao;
+            document.getElementById('skillInvestigacao').value = charData.expertise.investigacao;
+            document.getElementById('skillLabia').value = charData.expertise.labia;
+            document.getElementById('skillLadinagem').value = charData.expertise.ladinagem;
             document.getElementById('skillLuta').value = charData.expertise.luta;
+            document.getElementById('skillMedicina').value = charData.expertise.medicina;
+            document.getElementById('skillMente').value = charData.expertise.mente;
             document.getElementById('skillPercepcao').value = charData.expertise.percepcao;
+            document.getElementById('skillPontaria').value = charData.expertise.pontaria;
+            document.getElementById('skillReflexos').value = charData.expertise.reflexos;
+            document.getElementById('skillSeduzir').value = charData.expertise.seduzir;
+            document.getElementById('skillSobrevivencia').value = charData.expertise.sobrevivencia;
         }
 
     } catch (error) {
@@ -88,8 +108,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 expertise: {
                     atletismo: parseInt(document.getElementById('skillAtletismo').value) || 0,
+                    conhecimento: parseInt(document.getElementById('skillConhecimento').value) || 0,
+                    consertar: parseInt(document.getElementById('skillConsertar').value) || 0,
+                    diplomacia: parseInt(document.getElementById('skillDiplomacia').value) || 0,
+                    domar: parseInt(document.getElementById('skillDomar').value) || 0,
+                    empatia: parseInt(document.getElementById('skillEmpatia').value) || 0,
+                    fortitude: parseInt(document.getElementById('skillFortitude').value) || 0,
+                    furtividade: parseInt(document.getElementById('skillFurtividade').value) || 0,
+                    magia: parseInt(document.getElementById('skillMagia').value) || 0,
+                    iniciativa: parseInt(document.getElementById('skillIniciativa').value) || 0,
+                    intimidar: parseInt(document.getElementById('skillIntimidar').value) || 0,
+                    intuicao: parseInt(document.getElementById('skillIntuicao').value) || 0,
+                    investigacao: parseInt(document.getElementById('skillInvestigacao').value) || 0,
+                    labia: parseInt(document.getElementById('skillLabia').value) || 0,
+                    ladinagem: parseInt(document.getElementById('skillLadinagem').value) || 0,
                     luta: parseInt(document.getElementById('skillLuta').value) || 0,
-                    percepcao: parseInt(document.getElementById('skillPercepcao').value) || 0
+                    medicina: parseInt(document.getElementById('skillMedicina').value) || 0,
+                    mente: parseInt(document.getElementById('skillMente').value) || 0,
+                    percepcao: parseInt(document.getElementById('skillPercepcao').value) || 0,
+                    pontaria: parseInt(document.getElementById('skillPontaria').value) || 0,
+                    reflexos: parseInt(document.getElementById('skillReflexos').value) || 0,
+                    seduzir: parseInt(document.getElementById('skillSeduzir').value) || 0,
+                    sobrevivencia: parseInt(document.getElementById('skillSobrevivencia').value) || 0
                 }
             };
 
