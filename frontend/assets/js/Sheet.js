@@ -34,11 +34,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if(charData.status) {
-            document.getElementById('statusMaxHealth').value = charData.status.maxHealth;
-            document.getElementById('statusMaxMana').value = charData.status.maxMana;
-            document.getElementById('statusMaxSanity').value = charData.status.maxSanity;
-            document.getElementById('statusMaxStamina').value = charData.status.maxStamina;
-            document.getElementById('statusDefense').value = charData.status.defense;
+            document.getElementById('statusDefense').value = charData.status.defense ?? 0;
+
+            const statusHealthCurrent = document.getElementById('statusHealthCurrent');
+            const statusMaxHealth = document.getElementById('statusMaxHealth');
+            if (statusHealthCurrent) statusHealthCurrent.value = (charData.status.currentHealth ?? charData.status.maxHealth ?? 0);
+            if (statusMaxHealth) statusMaxHealth.value = (charData.status.maxHealth ?? 0);
+
+            const statusManaCurrent = document.getElementById('statusManaCurrent');
+            const statusMaxMana = document.getElementById('statusMaxMana');
+            if (statusManaCurrent) statusManaCurrent.value = (charData.status.currentMana ?? charData.status.maxMana ?? 0);
+            if (statusMaxMana) statusMaxMana.value = (charData.status.maxMana ?? 0);
+
+            const statusSanityCurrent = document.getElementById('statusSanityCurrent');
+            const statusMaxSanity = document.getElementById('statusMaxSanity');
+            if (statusSanityCurrent) statusSanityCurrent.value = (charData.status.currentSanity ?? charData.status.maxSanity ?? 0);
+            if (statusMaxSanity) statusMaxSanity.value = (charData.status.maxSanity ?? 0);
+
+            const statusStaminaCurrent = document.getElementById('statusStaminaCurrent');
+            const statusMaxStamina = document.getElementById('statusMaxStamina');
+            if (statusStaminaCurrent) statusStaminaCurrent.value = (charData.status.currentStamina ?? charData.status.maxStamina ?? 0);
+            if (statusMaxStamina) statusMaxStamina.value = (charData.status.maxStamina ?? 0);
         }
 
         if(charData.expertise) {
@@ -100,9 +116,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 status: {
                     maxHealth: parseInt(document.getElementById('statusMaxHealth').value) || 0,
+                    currentHealth: parseInt(document.getElementById('statusHealthCurrent').value) || 0,
+
                     maxMana: parseInt(document.getElementById('statusMaxMana').value) || 0,
+                    currentMana: parseInt(document.getElementById('statusManaCurrent').value) || 0,
+
                     maxSanity: parseInt(document.getElementById('statusMaxSanity').value) || 0,
+                    currentSanity: parseInt(document.getElementById('statusSanityCurrent').value) || 0,
+
                     maxStamina: parseInt(document.getElementById('statusMaxStamina').value) || 0,
+                    currentStamina: parseInt(document.getElementById('statusStaminaCurrent').value) || 0,
+
                     defense: parseInt(document.getElementById('statusDefense').value) || 0
                 },
 
@@ -154,4 +178,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnSave.disabled = false;
         }
     });
+
+        function updateBar(currentInput, maxInput, barElement) {
+        if (!barElement || !currentInput || !maxInput) return;
+        const current = parseInt(currentInput.value) || 0;
+        const max = parseInt(maxInput.value) || 0;
+        if (max <= 0) {
+            barElement.style.width = '0%';
+            return;
+        }
+        const percentage = Math.min(100, Math.max(0, (current / max) * 100));
+        barElement.style.width = `${percentage}%`;
+
+    }
+
+    (function bindStatusBars() {
+        const statusPairs = [
+            ['statusHealthCurrent', 'statusMaxHealth', 'barHealth'],
+            ['statusSanityCurrent',  'statusMaxSanity',  'barSanity'],
+            ['statusManaCurrent',    'statusMaxMana',    'barMana'],
+            ['statusStaminaCurrent', 'statusMaxStamina', 'barStamina']
+        ];
+
+        statusPairs.forEach(([currentId, maxId, barId]) => {
+            const current = document.getElementById(currentId);
+            const max = document.getElementById(maxId);
+            const bar = document.getElementById(barId);
+
+            if (!current || !max || !bar) return;
+
+            const update = () => updateBar(current, max, bar);
+
+            current.addEventListener('input', update);
+            max.addEventListener('input', update);
+
+        // Inicializa a barra
+            update();
+        });
+    })();
 });
+

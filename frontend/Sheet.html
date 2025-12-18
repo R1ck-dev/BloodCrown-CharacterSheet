@@ -1,132 +1,200 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editando Ficha | BloodCrown</title>
     
-    <link rel="stylesheet" href="assets/css/Register.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/Sheet.css">
-    <style>
-        .form-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #333; background: #1a1a1a; border-radius: 8px; }
-        .form-group { margin-bottom: 1rem; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: #ccc; }
-        input { width: 100%; padding: 0.5rem; background: #333; border: 1px solid #555; color: white; border-radius: 4px; }
-        h2 { border-bottom: 1px solid #444; padding-bottom: 0.5rem; margin-bottom: 1rem; color: #e50914; }
-    </style>
-</head>
-<body>
-    
-    <main class="container">
-        
-        <section class="card sheet-header-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Grimório de Edição</h1>
-                <a href="Dashboard.html" class="btn-back">⬅ Voltar</a>
-            </div>
-            <div class="debug-box" style="margin-top: 10px; font-size: 0.8rem; color: #666;">
-                <span>ID da Ficha: </span>
-                <span id="charIdDisplay">Carregando...</span>
-            </div>
-        </section>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+</head>
+<body class="bg-black text-light"> <main class="container-fluid p-4">
+        
         <form id="sheetForm">
             
-            <section class="form-section">
-                <h2>Dados do Personagem</h2>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label for="charName">Nome</label>
-                        <input type="text" id="charName" placeholder="Nome do Personagem">
-                    </div>
-                    <div class="form-group">
-                        <label for="charClass">Classe</label>
-                        <input type="text" id="charClass" placeholder="Ex: Guerreiro">
-                    </div>
-                    <div class="form-group">
-                        <label for="charLevel">Nível</label>
-                        <input type="number" id="charLevel" min="1">
-                    </div>
+            <header class="row align-items-end mb-4 p-3 rounded custom-header">
+                <div class="col-md-3">
+                    <label class="text-secondary small">PERSONAGEM</label>
+                    <input type="text" id="charName" class="form-control rpg-input" placeholder="Nome do Personagem">
                 </div>
-            </section>
-
-            <section class="form-section">
-                <h2>Status Vitais</h2>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label for="statusMaxHealth">Vida Máxima</label>
-                        <input type="number" id="statusMaxHealth">
-                    </div>
-                    <div class="form-group">
-                        <label for="statusMaxMana">Mana Máxima</label>
-                        <input type="number" id="statusMaxMana">
-                    </div>
-                    <div class="form-group">
-                        <label for="statusMaxSanity">Sanidade Máxima</label>
-                        <input type="number" id="statusMaxSanity">
-                    </div>
-                    <div class="form-group">
-                        <label for="statusMaxStamina">Estamina Máxima</label>
-                        <input type="number" id="statusMaxStamina">
-                    </div>
-                    <div class="form-group">
-                        <label for="statusDefense">Defesa</label>
-                        <input type="number" id="statusDefense">
-                    </div>
+                <div class="col-md-3">
+                    <label class="text-secondary small">CLASSE</label>
+                    <input type="text" id="charClass" class="form-control rpg-input" placeholder="Ex: Irregular">
                 </div>
-            </section>
-
-            <section class="form-section">
-                <h2>Atributos</h2>
-                <div class="grid-3">
-                    <div class="form-group"><label for="attrForca">Força</label><input type="number" id="attrForca"></div>
-                    <div class="form-group"><label for="attrDestreza">Destreza</label><input type="number" id="attrDestreza"></div>
-                    <div class="form-group"><label for="attrConstituicao">Constituição</label><input type="number" id="attrConstituicao"></div>
-                    <div class="form-group"><label for="attrInteligencia">Inteligência</label><input type="number" id="attrInteligencia"></div>
-                    <div class="form-group"><label for="attrSabedoria">Sabedoria</label><input type="number" id="attrSabedoria"></div>
-                    <div class="form-group"><label for="attrCarisma">Carisma</label><input type="number" id="attrCarisma"></div>
+                <div class="col-md-2">
+                    <label class="text-secondary small">Nível</label>
+                    <input type="number" id="charLevel" class="form-control rpg-input" placeholder="5">
                 </div>
-            </section>
-
-            <section class="form-section">
-                <h2>Perícias</h2>
-                <div class="grid-4">
-                    <div class="form-group"><label for="skillAtletismo">Atletismo</label><input type="number" id="skillAtletismo"></div>
-                    <div class="form-group"><label for="skillConhecimento">Conhecimento</label><input type="number" id="skillConhecimento"></div>
-                    <div class="form-group"><label for="skillConsertar">Consertar</label><input type="number" id="skillConsertar"></div>
-                    <div class="form-group"><label for="skillDiplomacia">Diplomacia</label><input type="number" id="skillDiplomacia"></div>
-                    <div class="form-group"><label for="skillDomar">Domar</label><input type="number" id="skillDomar"></div>
-                    <div class="form-group"><label for="skillEmpatia">Empatia</label><input type="number" id="skillEmpatia"></div>
-                    <div class="form-group"><label for="skillFortitude">Fortitude</label><input type="number" id="skillFortitude"></div>
-                    <div class="form-group"><label for="skillFurtividade">Furtividade</label><input type="number" id="skillFurtividade"></div>
-                    <div class="form-group"><label for="skillMagia">Magia</label><input type="number" id="skillMagia"></div>
-                    <div class="form-group"><label for="skillIniciativa">Iniciativa</label><input type="number" id="skillIniciativa"></div>
-                    <div class="form-group"><label for="skillIntimidar">Intimidar</label><input type="number" id="skillIntimidar"></div>
-                    <div class="form-group"><label for="skillIntuicao">Intuição</label><input type="number" id="skillIntuicao"></div>
-                    <div class="form-group"><label for="skillInvestigacao">Investigação</label><input type="number" id="skillInvestigacao"></div>
-                    <div class="form-group"><label for="skillLabia">Lábia</label><input type="number" id="skillLabia"></div>
-                    <div class="form-group"><label for="skillLadinagem">Ladinagem</label><input type="number" id="skillLadinagem"></div>
-                    <div class="form-group"><label for="skillLuta">Luta</label><input type="number" id="skillLuta"></div>
-                    <div class="form-group"><label for="skillMedicina">Medicina</label><input type="number" id="skillMedicina"></div>
-                    <div class="form-group"><label for="skillMente">Mente</label><input type="number" id="skillMente"></div>
-                    <div class="form-group"><label for="skillPercepcao">Percepção</label><input type="number" id="skillPercepcao"></div>
-                    <div class="form-group"><label for="skillPontaria">Pontaria</label><input type="number" id="skillPontaria"></div>
-                    <div class="form-group"><label for="skillReflexos">Reflexos</label><input type="number" id="skillReflexos"></div>
-                    <div class="form-group"><label for="skillSeduzir">Seduzir</label><input type="number" id="skillSeduzir"></div>
-                    <div class="form-group"><label for="skillSobrevivencia">Sobrevivência</label><input type="number" id="skillSobrevivencia"></div>
+                <div class="col-md-4 text-end">
+                    <a href="Dashboard.html" class="btn btn-outline-secondary me-2">Sair</a>
+                    <button id="btnSave" class="btn btn-purple">SALVAR</button>
                 </div>
-            </section>
+            </header>
 
-            <div style="text-align: center; margin-top: 2rem;">
-                <button id="btnSave" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.2rem; cursor: pointer;">💾 Salvar Ficha</button>
-            </div>
+            <div class="row g-4">
+                
+                <div class="col-lg-3 d-flex flex-column gap-4">
+                    
+                    <div class="attributes-box text-center">
+                        <h5 class="text-secondary mb-3">ATRIBUTOS</h5>
+                        
+                        <div class="attributes-grid">
 
+                            <div class="attr-circle">
+                                <label>DES</label>
+                                <input type="text" id="attrDestreza" value="1">
+                            </div>
+
+                            <div class="attr-circle">
+                                <label>FOR</label>
+                                <input type="text" id="attrForca" value="1">
+                            </div>
+
+                            <div class="attr-circle">
+                                <label>INT</label>
+                                <input type="text" id="attrInteligencia" value="1">
+                            </div>
+
+                            <div class="attr-circle">
+                                <label>CAR</label>
+                                <input type="text" id="attrCarisma" value="1">
+                            </div>
+
+                            <div class="attr-circle">
+                                <label>COS</label>
+                                <input type="text" id="attrConstituicao" value="1">
+                            </div>
+
+                            <div class="attr-circle">
+                                <label>SAB</label>
+                                <input type="text" id="attrSabedoria" value="1">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="status-box">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-danger mb-1">
+                                <strong>VIDA</strong>
+                                <input type="number" id="statusMaxHealth" class="status-input text-danger" placeholder="Max">
+                            </div>
+                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-info mb-1"> <strong style="color: #a06cd5;">SANIDADE</strong>
+                                <input type="number" id="statusMaxSanity" class="status-input" style="color: #a06cd5;" placeholder="Max">
+                            </div>
+                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" style="background-color: #a06cd5; width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-warning mb-1">
+                                <strong>MANA</strong>
+                                <input type="number" id="statusMaxMana" class="status-input text-warning" placeholder="Max">
+                            </div>
+                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                         <div class="mb-3">
+                            <div class="d-flex justify-content-between text-light mb-1">
+                                <strong>ESTAMINA</strong>
+                                <input type="number" id="statusMaxStamina" class="status-input text-light" placeholder="Max">
+                            </div>
+                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
+                                <div class="progress-bar bg-light" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="defense-card d-flex align-items-center justify-content-center p-3 border border-secondary rounded">
+                        <div class="text-center">
+                            <h2 class="m-0">🛡️</h2>
+                            <input type="text" id="statusDefense" class="form-control rpg-input text-center fs-3 fw-bold" value="10" style="width: 80px;">
+                            <small class="text-muted">DEFESA</small>
+                        </div>
+                    </div>
+
+                </div> <div class="col-lg-5">
+                    <div class="card bg-dark border-secondary h-100">
+                        <div class="card-header border-secondary bg-transparent">
+                            <h5 class="m-0 text-center">PERÍCIAS</h5>
+                        </div>
+                        <div class="card-body p-0 overflow-auto" style="max-height: 700px;">
+                            <table class="table table-dark table-striped table-hover m-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Nome</th>
+                                        <th class="text-center">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="ps-4">Atletismo (FOR)</td><td class="text-center"><input type="text" id="skillAtletismo" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Conhecimento (INT)</td><td class="text-center"><input type="text" id="skillConhecimento" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Consertar (INT)</td><td class="text-center"><input type="text" id="skillConsertar" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Diplomacia (CAR)</td><td class="text-center"><input type="text" id="skillDiplomacia" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Domar (CAR)</td><td class="text-center"><input type="text" id="skillDomar" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Empatia (CAR)</td><td class="text-center"><input type="text" id="skillEmpatia" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Fortitude (COS)</td><td class="text-center"><input type="text" id="skillFortitude" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Furtividade (DES)</td><td class="text-center"><input type="text" id="skillFurtividade" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Iniciativa (DES)</td><td class="text-center"><input type="text" id="skillIniciativa" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Intimidação (CAR)</td><td class="text-center"><input type="text" id="skillIntimidar" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Intuição (SAB)</td><td class="text-center"><input type="text" id="skillIntuicao" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Investigação (INT)</td><td class="text-center"><input type="text" id="skillInvestigacao" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Lábia (CAR)</td><td class="text-center"><input type="text" id="skillLabia" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Ladinagem (DES)</td><td class="text-center"><input type="text" id="skillLadinagem" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Luta (FOR)</td><td class="text-center"><input type="text" id="skillLuta" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Magia (SAB)</td><td class="text-center"><input type="text" id="skillMagia" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Medicina (INT)</td><td class="text-center"><input type="text" id="skillMedicina" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Mente (INT)</td><td class="text-center"><input type="text" id="skillMente" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Percepção (SAB)</td><td class="text-center"><input type="text" id="skillPercepcao" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Pontaria (DES)</td><td class="text-center"><input type="text" id="skillPontaria" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Reflexos (DES)</td><td class="text-center"><input type="text" id="skillReflexos" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Seduzir (CAR)</td><td class="text-center"><input type="text" id="skillSeduzir" class="skill-input"></td></tr>
+                                    <tr><td class="ps-4">Sobrevivência (INT)</td><td class="text-center"><input type="text" id="skillSobrevivencia" class="skill-input"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div> <div class="col-lg-4">
+                     <ul class="nav nav-tabs border-secondary" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active text-light" id="combat-tab" data-bs-toggle="tab" data-bs-target="#combat" type="button">COMBATE</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-secondary" id="inv-tab" data-bs-toggle="tab" data-bs-target="#inv" type="button">INVENTÁRIO</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-3 border border-top-0 border-secondary bg-dark rounded-bottom" id="myTabContent" style="min-height: 500px;">
+                        <div class="tab-pane fade show active" id="combat" role="tabpanel">
+                            <p class="text-muted text-center mt-5">Você ainda não possui ataques.</p>
+                            <div class="text-center">
+                                <button class="btn btn-outline-danger btn-sm">Criar Ataque</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="inv" role="tabpanel">
+                             <p class="text-muted text-center mt-5">Mochila vazia.</p>
+                        </div>
+                    </div>
+                </div> </div>
         </form>
     </main>
 
-    <script src="assets/js/ApiService.js"></script>
-    <script src="assets/js/Sheet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="assets/js/ApiService.js" defer></script>
+    <script src="assets/js/Sheet.js" defer></script>
 </body>
 </html>

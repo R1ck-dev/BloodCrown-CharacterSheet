@@ -145,9 +145,13 @@ public class CharacterServiceImpl implements CharacterService{
 
         StatusDTO status = new StatusDTO(
             charModel.getStatus().getMaxHealth(),
+            charModel.getStatus().getCurrentHealth(),
             charModel.getStatus().getMaxSanity(),
+            charModel.getStatus().getCurrentSanity(),
             charModel.getStatus().getMaxMana(),
+            charModel.getStatus().getCurrentMana(),
             charModel.getStatus().getMaxStamina(),
+            charModel.getStatus().getCurrentStamina(),
             charModel.getStatus().getDefense()
         );
 
@@ -210,16 +214,41 @@ public class CharacterServiceImpl implements CharacterService{
         }
 
         if (dto.status() != null) {
-            charModel.getStatus().setMaxHealth(dto.status().maxHealth());
-            charModel.getStatus().setMaxMana(dto.status().maxMana());
-            charModel.getStatus().setMaxSanity(dto.status().maxSanity());
-            charModel.getStatus().setMaxStamina(dto.status().maxStamina());
-            charModel.getStatus().setDefense(dto.status().defense());
-            
-            charModel.getStatus().setCurrentHealth(dto.status().maxHealth()); 
-            charModel.getStatus().setCurrentMana(dto.status().maxMana());
-            charModel.getStatus().setCurrentSanity(dto.status().maxSanity());
-            charModel.getStatus().setCurrentStamina(dto.status().maxStamina());
+            Integer newMaxHealth = dto.status().maxHealth();
+            Integer newMaxMana = dto.status().maxMana();
+            Integer newMaxSanity = dto.status().maxSanity();
+            Integer newMaxStamina = dto.status().maxStamina();
+
+            if (newMaxHealth != null) charModel.getStatus().setMaxHealth(newMaxHealth);
+            if (newMaxMana != null) charModel.getStatus().setMaxMana(newMaxMana);
+            if (newMaxSanity != null) charModel.getStatus().setMaxSanity(newMaxSanity);
+            if (newMaxStamina != null) charModel.getStatus().setMaxStamina(newMaxStamina);
+
+            if (dto.status().defense() != null) charModel.getStatus().setDefense(dto.status().defense());
+
+            Integer currHealth = dto.status().currentHealth();
+            if (currHealth != null) {
+                int capped = Math.max(0, Math.min(currHealth, charModel.getStatus().getMaxHealth()));
+                charModel.getStatus().setCurrentHealth(capped);
+            }
+
+            Integer currMana = dto.status().currentMana();
+            if (currMana != null) {
+                int capped = Math.max(0, Math.min(currMana, charModel.getStatus().getMaxMana()));
+                charModel.getStatus().setCurrentMana(capped);
+            }
+
+            Integer currSanity = dto.status().currentSanity();
+            if (currSanity != null) {
+                int capped = Math.max(0, Math.min(currSanity, charModel.getStatus().getMaxSanity()));
+                charModel.getStatus().setCurrentSanity(capped);
+            }
+
+            Integer currStamina = dto.status().currentStamina();
+            if (currStamina != null) {
+                int capped = Math.max(0, Math.min(currStamina, charModel.getStatus().getMaxStamina()));
+                charModel.getStatus().setCurrentStamina(capped);
+            }
         }
 
         if (dto.expertise() != null) {

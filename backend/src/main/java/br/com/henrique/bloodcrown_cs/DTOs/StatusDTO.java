@@ -2,13 +2,13 @@ package br.com.henrique.bloodcrown_cs.DTOs;
 
 public record StatusDTO(
     Integer maxHealth,
-    // Integer currentHealth,
+    Integer currentHealth,
     Integer maxSanity,
-    // Integer currentSanity,
+    Integer currentSanity,
     Integer maxMana,
-    // Integer currentMana,
+    Integer currentMana,
     Integer maxStamina,
-    // Integer currentStamina,
+    Integer currentStamina,
     Integer defense
 ) {
 } 
