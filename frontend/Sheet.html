@@ -78,43 +78,60 @@
                     </div>
 
                     <div class="status-box">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between text-danger mb-1">
-                                <strong>VIDA</strong>
-                                <input type="number" id="statusMaxHealth" class="status-input text-danger" placeholder="Max">
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-danger fw-bold">VIDA</span>
+
+                            <div class="d-flex align-items-center gap-1">
+                                <input id="statusHealthCurrent" type="number" class="status-input">
+                                <span>/</span>
+                                <input id="statusMaxHealth" type="number" class="status-input">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between text-info mb-1"> <strong style="color: #a06cd5;">SANIDADE</strong>
-                                <input type="number" id="statusMaxSanity" class="status-input" style="color: #a06cd5;" placeholder="Max">
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
-                                <div class="progress-bar" role="progressbar" style="background-color: #a06cd5; width: 100%"></div>
+                        <div class="progress">
+                            <div id="barHealth" class="progress-bar bg-danger"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-info fw-bold">SANIDADE</span>
+
+                            <div class="d-flex align-items-center gap-1">
+                                <input id="statusSanityCurrent" type="number" class="status-input">
+                                <span>/</span>
+                                <input id="statusMaxSanity" type="number" class="status-input">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between text-warning mb-1">
-                                <strong>MANA</strong>
-                                <input type="number" id="statusMaxMana" class="status-input text-warning" placeholder="Max">
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                        <div class="progress">
+                            <div id="barSanity" class="progress-bar bg-info"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-success fw-bold">MANA</span>
+
+                            <div class="d-flex align-items-center gap-1">
+                                <input id="statusManaCurrent" type="number" class="status-input">
+                                <span>/</span>
+                                <input id="statusMaxMana" type="number" class="status-input">
                             </div>
                         </div>
 
-                         <div class="mb-3">
-                            <div class="d-flex justify-content-between text-light mb-1">
-                                <strong>ESTAMINA</strong>
-                                <input type="number" id="statusMaxStamina" class="status-input text-light" placeholder="Max">
+                        <div class="progress">
+                            <div id="barMana" class="progress-bar bg-success"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-warning fw-bold">ESTAMINA</span>
+
+                            <div class="d-flex align-items-center gap-1">
+                                <input id="statusStaminaCurrent" type="number" class="status-input">
+                                <span>/</span>
+                                <input id="statusMaxStamina" type="number" class="status-input">
                             </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 10px;">
-                                <div class="progress-bar bg-light" role="progressbar" style="width: 100%"></div>
-                            </div>
+                        </div>
+
+                        <div class="progress">
+                            <div id="barStamina" class="progress-bar bg-warning"></div>
                         </div>
                     </div>
 

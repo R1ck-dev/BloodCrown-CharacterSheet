@@ -146,13 +146,14 @@ main.container-fluid{
   overflow: hidden;
 }
 .status-input{
-  width:72px;
-  background: transparent;
+  width: 48px;
+  background: none;
   border: none;
+  color: white;
+  font-weight: bold;
   text-align: right;
-  color: inherit;
-  font-weight:600;
 }
+
 .status-input:focus{ outline: none; }
 
 /* Defense card */
@@ -253,3 +254,4 @@ main.container-fluid{
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
