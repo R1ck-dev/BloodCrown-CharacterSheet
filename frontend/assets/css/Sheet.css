@@ -255,3 +255,72 @@ main.container-fluid{
   background-clip: padding-box;
 }
 
+/* --- Modal de Dados --- */
+.dice-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* Fundo bem escuro */
+    backdrop-filter: blur(5px);
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Classe para mostrar o modal (usada pelo JS) */
+.dice-modal-overlay.show {
+    opacity: 1;
+}
+/* Classe utilitária do Bootstrap para esconder */
+.d-none { display: none !important; }
+
+.dice-modal-content {
+    background: #1a1a1a;
+    border: 1px solid #7b2cbf;
+    box-shadow: 0 0 30px rgba(123, 44, 191, 0.4);
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dice-modal-overlay.show .dice-modal-content {
+    transform: scale(1);
+}
+
+.dice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+.text-purple { color: #9d4edd; text-shadow: 0 0 10px rgba(157, 78, 221, 0.5); }
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+.btn-close-modal:hover { color: white; }
+
+/* Indicador visual de que dá para clicar nas perícias/atributos */
+.clickable-roll {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.clickable-roll:hover {
+    color: #9d4edd; /* Roxo */
+    text-shadow: 0 0 5px #9d4edd;
+}
+

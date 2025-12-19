@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!response.ok) throw new Error('Erro ao salvar ficha.');
 
-            alert("Ficha salva com sucesso! 💾");
+            alert("Ficha salva com sucesso!");
 
         } catch (error) {
             console.error(error);
@@ -216,5 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             update();
         });
     })();
+
+    setupRollEvents();
 });
 
