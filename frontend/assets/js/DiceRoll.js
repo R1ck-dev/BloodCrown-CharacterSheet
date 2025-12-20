@@ -63,25 +63,29 @@ function rollSystem(sourceName, attrId, skillInputId = null) {
 }
 
 //Preencher o HTML do modal
+let toastTimer = null;
+
 function showModal(title, rolls, best, bonus, total) {
-    const modal = document.getElementById('diceModal');
+    const toast = document.getElementById('diceToast');
 
     document.getElementById('rollTitle').innerText = title;
     document.getElementById('diceRolled').innerText = `[ ${rolls.join(', ')} ]`;
-    document.getElementById('bestDice').innerText = best;
+    
+    const bestEl = document.getElementById('bestDice');
+    if (bestEl) bestEl.innerText = best;
 
     //Se o bônus for positivo, coloca um "+" na frente
     document.getElementById('modifierValue').innerText = bonus >= 0 ? `+${bonus}` : bonus;
 
     document.getElementById('finalResult').innerText = total;
 
-    //Lógica CSS 
-    modal.classList.remove('d-none');
+    toast.classList.add('show');
 
-    //Pequeno atraso de 10ms para dar tempo do navegador renderizar
-    setTimeout(() => {
-        modal.classList.add('show');
-    }, 10);
+    if(toastTimer) clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 10000);
 }
 
 //Funcão de configuração para percorrer o site procurando os elementos e adicionando o "clique" neles
@@ -132,23 +136,12 @@ function setupRollEvents() {
         }
     });
 
-    //Fechar o modal
-    const closeModalBtn = document.getElementById('closeModal');
-    const modalOverlay = document.getElementById('diceModal');
-
-    if (closeModalBtn && modalOverlay) {
-        const closeFunction = () => {
-            modalOverlay.classList.remove('show');
-            setTimeout(() => modalOverlay.classList.add('d-none'), 300);
-        };
-
-        closeModalBtn.addEventListener('click', closeFunction);
-
-        //Fechar se clicar no fundo escuro
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                closeFunction();
-            }
+    const closeToastBtn = document.getElementById('closeToast');
+    if(closeToastBtn) {
+        closeToastBtn.addEventListener('click', () => {
+            const toast = document.getElementById('diceToast');
+            toast.classList.remove('show');
+            if(toastTimer) clearTimeout(toastTimer);
         });
     }
 }

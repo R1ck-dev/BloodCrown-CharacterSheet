@@ -81,6 +81,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('skillReflexos').value = charData.expertise.reflexos;
             document.getElementById('skillSeduzir').value = charData.expertise.seduzir;
             document.getElementById('skillSobrevivencia').value = charData.expertise.sobrevivencia;
+
+            if (charData.attacks && charData.attacks.length > 0) {
+                charData.attacks.forEach(atk => renderAttackCard(atk));
+            }
         }
 
     } catch (error) {
@@ -217,6 +221,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     })();
 
+    const btnOpenAttackModal = document.querySelector('#tabCombat button');
+
+    if (btnOpenAttackModal) {
+        btnOpenAttackModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modalEl = document.getElementById('modalNewAttack');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        });
+    }
+
+    const btnSaveAttack = document.getElementById('btnSaveAttack');
+
+    if (btnSaveAttack) {
+        btnSaveAttack.addEventListener('click', () => {
+            createAttack(id, token);
+        });
+    }
+
     setupRollEvents();
-});
+
+}); //Fim do DOM
 

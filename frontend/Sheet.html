@@ -184,46 +184,143 @@
                             </table>
                         </div>
                     </div>
-                </div> <div class="col-lg-4">
-                    <ul class="nav nav-tabs border-secondary" id="myTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active text-light" id="combat-tab" data-bs-toggle="tab" data-bs-target="#combat" type="button">COMBATE</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link text-secondary" id="inv-tab" data-bs-toggle="tab" data-bs-target="#inv" type="button">INVENTÁRIO</button>
-                        </li>
+                </div> 
+                <div class="col-lg-4">
+                    
+                    <ul class="nav nav-tabs border-secondary small" id="rpgTabs" role="tablist" style="font-size: 0.8rem;">
+                        
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCombat" type="button">COMBATE</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabClass" type="button">HABILIDADES DE CLASSE</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMagic" type="button">HABILIDADES DE MAGIA</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAwaken" type="button">HABILIDADES DE DESPERTAR</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabWeapon" type="button">HABILIDADES DE ARMA</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabTrans" type="button">TRANSFORMAÇÃO</button></li> <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabSpecial" type="button">ESPECIAIS</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabInv" type="button">INVENTÁRIO</button></li> <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabDesc" type="button">DESCRIÇÃO</button></li>
                     </ul>
 
-                    <div class="tab-content p-3 border border-top-0 border-secondary bg-dark rounded-bottom" id="myTabContent" style="min-height: 500px;">
-                        <div class="tab-pane fade show active" id="combat" role="tabpanel">
-                            <p class="text-muted text-center mt-5">Você ainda não possui ataques.</p>
-                            <div class="text-center">
-                                <button class="btn btn-outline-danger btn-sm">Criar Ataque</button>
+                    <div class="tab-content p-3 border border-top-0 border-secondary bg-dark rounded-bottom custom-scroll" id="rpgTabContent" style="height: 600px; overflow-y: auto;">
+                        
+                        <div class="tab-pane fade show active" id="tabCombat" role="tabpanel">
+                            <div class="text-center mt-5 text-muted">
+                                <i class="fa-solid fa-khanda fs-1 mb-3"></i>
+                                <p>Nenhum ataque registrado.</p>
+                                <button id="btnOpenAttackModal" class="btn btn-outline-danger btn-sm">Criar Ataque</button>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="inv" role="tabpanel">
-                            <p class="text-muted text-center mt-5">Mochila vazia.</p>
+
+                        <div class="tab-pane fade" id="tabClass" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Habilidades de Classe</h6>
+                            <p class="text-muted text-center mt-4">Nenhuma habilidade passiva ou ativa.</p>
                         </div>
+
+                        <div class="tab-pane fade" id="tabMagic" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Habilidades de Magia</h6>
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-info btn-sm">Adicionar Magia</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabAwaken" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Habilidades de Despertar</h6>
+                            <p class="text-muted small">Habilidades únicas ligadas ao despertar do personagem.</p>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabWeapon" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Habilidades de Arma</h6>
+                            <p class="text-muted small">Habilidades intrinsecas à arma.</p>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabTrans" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Formas Alternativas</h6>
+                            <p class="text-muted small">Nenhuma transformação disponível.</p>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabSpecial" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Outros</h6>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabInv" role="tabpanel">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2">Mochila</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">Capacidade: 0/20</span>
+                                <button class="btn btn-sm btn-outline-secondary py-0">+</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabDesc" role="tabpanel">
+                            <div class="form-group">
+                                <label class="text-secondary small mb-1">História & Aparência</label>
+                                <textarea class="form-control bg-transparent text-light border-secondary" rows="15" placeholder="Escreva sobre seu personagem..."></textarea>
+                            </div>
+                        </div>
+
                     </div>
-                </div> </div>
+                </div> 
+            </div>
         </form>
 
-        <div id="diceModal" class="dice-modal-overlay d-none">
-            <div class="dice-modal-content">
-                <div class="dice-header">
-                    <h3 id="rollTitle">Testando Perícia...</h3>
-                    <button id="closeModal" class="btn-close-modal">&times;</button>
-                </div>
-                
-                <div class="dice-result-box">
-                    <span class="dice-label">Resultado Final</span>
-                    <h1 id="finalResult" class="display-1 fw-bold text-purple">20</h1>
+        <div id="diceToast" class="dice-toast">
+            <div class="dice-header-toast">
+                <strong id="rollTitle">Teste de Perícia</strong>
+                <span id="closeToast" class="close-toast-btn">&times;</span>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-between mt-2">
+                <div class="dice-info text-secondary small">
+                    <div>Dados: <span id="diceRolled" class="text-light"></span></div>
+                    <div>Maior: <span id="bestDice" class="text-warning fw-bold"></span></div>
+                    <div>Bônus: <span id="modifierValue" class="text-info"></span></div>
                 </div>
 
-                <div class="dice-details">
-                    <p>Dados Rolados: <span id="diceRolled" class="text-white"></span></p>
-                    <p>Maior Dado: <strong id="bestDice" class="text-warning"></strong></p>
-                    <p>Bônus: <strong id="modifierValue" class="text-info"></strong></p>
+                <div class="dice-total text-end">
+                    <h2 id="finalResult" class="m-0 fw-bold text-purple" style="font-size: 2.5rem; line-height: 1;">20</h2>
+                    <small class="text-muted" style="font-size: 0.7rem;">TOTAL</small>
+                </div>
+            </div>
+            
+            <div class="toast-progress-bar"></div>
+        </div>
+        <div class="modal fade" id="modalNewAttack" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark border-secondary text-light">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title">Novo Ataque</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formAttack">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small">NOME DO ATAQUE</label>
+                                <input type="text" id="atkName" class="form-control bg-black text-light border-secondary" placeholder="Ex: Espada Longa">
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label text-secondary small">ATRIBUTO DE TESTE</label>
+                                    <select id="atkTest" class="form-select bg-black text-light border-secondary">
+                                        <option value="attrForca">Força</option>
+                                        <option value="attrDestreza">Destreza</option>
+                                        <option value="attrInteligencia">Inteligência</option>
+                                        <option value="attrSabedoria">Sabedoria</option>
+                                        <option value="attrCarisma">Carisma</option>
+                                        <option value="attrConstituicao">Constituição</option>
+                                        <option value="None">Nenhum</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label text-secondary small">DANO</label>
+                                    <input type="text" id="atkDamage" class="form-control bg-black text-light border-secondary" placeholder="Ex: 1d8 + 2">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small">DESCRIÇÃO / CRÍTICO</label>
+                                <textarea id="atkDesc" class="form-control bg-black text-light border-secondary" rows="2" placeholder="Ex: Crítico x2, Alcance 1.5m"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-purple" id="btnSaveAttack">Criar Ataque</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,6 +330,7 @@
     
     <script src="assets/js/ApiService.js" defer></script>
     <script src="assets/js/DiceRoll.js"></script>
+    <script src="assets/js/Attack.js"></script>
     <script src="assets/js/Sheet.js" defer></script>
 </body>
 </html>
