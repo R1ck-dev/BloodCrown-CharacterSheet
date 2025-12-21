@@ -293,27 +293,15 @@
                                 <label class="form-label text-secondary small">NOME DO ATAQUE</label>
                                 <input type="text" id="atkName" class="form-control bg-black text-light border-secondary" placeholder="Ex: Espada Longa">
                             </div>
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label class="form-label text-secondary small">ATRIBUTO DE TESTE</label>
-                                    <select id="atkTest" class="form-select bg-black text-light border-secondary">
-                                        <option value="attrForca">Força</option>
-                                        <option value="attrDestreza">Destreza</option>
-                                        <option value="attrInteligencia">Inteligência</option>
-                                        <option value="attrSabedoria">Sabedoria</option>
-                                        <option value="attrCarisma">Carisma</option>
-                                        <option value="attrConstituicao">Constituição</option>
-                                        <option value="None">Nenhum</option>
-                                    </select>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label text-secondary small">DANO</label>
-                                    <input type="text" id="atkDamage" class="form-control bg-black text-light border-secondary" placeholder="Ex: 1d8 + 2">
-                                </div>
-                            </div>
+                            
                             <div class="mb-3">
-                                <label class="form-label text-secondary small">DESCRIÇÃO / CRÍTICO</label>
-                                <textarea id="atkDesc" class="form-control bg-black text-light border-secondary" rows="2" placeholder="Ex: Crítico x2, Alcance 1.5m"></textarea>
+                                <label class="form-label text-secondary small">DANO (Formato: 1d8, 2d6+3)</label>
+                                <input type="text" id="atkDamage" class="form-control bg-black text-light border-secondary" placeholder="Ex: 2d8 + 2">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small">DESCRIÇÃO / TESTE USADO</label>
+                                <textarea id="atkDesc" class="form-control bg-black text-light border-secondary" rows="2" placeholder="Ex: Rolar Luta + Força."></textarea>
                             </div>
                         </form>
                     </div>

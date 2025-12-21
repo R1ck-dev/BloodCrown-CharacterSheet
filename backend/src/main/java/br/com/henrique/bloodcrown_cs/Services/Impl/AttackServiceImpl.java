@@ -33,7 +33,6 @@ public class AttackServiceImpl implements AttackService{
 
         AttackModel attack = new AttackModel();
         attack.setName(dto.name());
-        attack.setTestDice(dto.testDice());
         attack.setDamageDice(dto.damageDice());
         attack.setDescription(dto.description());
         attack.setCharacter(charModel);
@@ -43,7 +42,6 @@ public class AttackServiceImpl implements AttackService{
         return new AttackDTO(
             savedAttack.getId(),
             savedAttack.getName(),
-            savedAttack.getTestDice(),
             savedAttack.getDamageDice(),
             savedAttack.getDescription()
         );

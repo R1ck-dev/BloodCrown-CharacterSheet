@@ -25,16 +25,13 @@ public class AttackModel {
     private String name;
 
     @Column
-    private String testDice;
-
-    @Column
     private String damageDice;
 
     @Column
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "characted_id")
+    @JoinColumn(name = "character_id")
     @JsonIgnore
     private CharacterModel character;
 }

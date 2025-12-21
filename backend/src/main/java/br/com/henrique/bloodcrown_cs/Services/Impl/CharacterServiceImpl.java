@@ -48,7 +48,6 @@ public class CharacterServiceImpl implements CharacterService{
                     characterModel.getAttacks().stream().map(atk -> new AttackDTO(
                         atk.getId(),
                         atk.getName(),
-                        atk.getTestDice(),
                         atk.getDamageDice(),
                         atk.getDescription()
                     )).toList()

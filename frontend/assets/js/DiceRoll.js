@@ -145,3 +145,50 @@ function setupRollEvents() {
         });
     }
 }
+
+function rollDamage(damageString, sourceName) {
+    //Remove espaços extras
+    const cleanStr = damageString.toLowerCase().replace(/\s/g, '');
+
+    // Grupo 1: O sinal (+ ou -). Se não tiver, assume +.
+    // Grupo 2 e 3: Dados (Ex: 2d8) -> Grupo 2 é a qtd, Grupo 3 são os lados.
+    // Grupo 4: Número fixo (Ex: 5) caso não seja dado.
+    const regex = /([+-]?)(\d+)d(\d+)|([+-]?)(\d+)/g;
+    
+    let match;
+    let total = 0;
+    let allRolls = [];
+    let breakdownText = [];
+
+    if (!cleanStr.match(/[\d\w]/)) {
+        alert("Fórmula de dano vazia.");
+        return;
+    }
+
+    while ((match = regex.exec(cleanStr)) !== null) {
+        if (match[2] && match[3]) {
+            const sign = match[1] === '-' ? -1 : 1;
+            const count = parseInt(match[2]);
+            const faces = parseInt(match[3]);
+
+            for (let i = 0; i < count; i++) {
+                const result = Math.ceil(Math.random() * faces);
+                allRolls.push(result);
+                total += (result * sign);
+            }
+        }
+        else if (match[5]) {
+            const sign = match[4] === '-' ? -1 : 1;
+            const val = parseInt(match[5]);
+            total += (val * sign);
+        }
+    }
+
+    showModal(sourceName, allRolls, total, 0, total);
+
+    const labelEl = document.querySelector('#diceToast .dice-info div:nth-child(2)');
+    if(labelEl) {
+        labelEl.innerHTML = `Dano Total: <span class="text-warning fw-bold">${total}</span>`;
+    }
+
+}
