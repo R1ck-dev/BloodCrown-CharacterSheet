@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,9 +36,20 @@ public class AbilityController {
         return ResponseEntity.created(location).body(newAbility);
     }
 
-    // @DeleteMapping("/{id}")
-    // public ResponseEntity<Void> deleteAttack(@PathVariable String id) {
-    //     abilityService.
-    //     return ResponseEntity.noContent().build();
-    // }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAbility(@PathVariable String id) {
+        abilityService.deleteAbility(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{abilityId}/toggle")
+    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId) {
+        return ResponseEntity.ok(abilityService.toggleAbility(abilityId));
+    }
+
+    @PostMapping("/next-turn/{characterId}")
+    public ResponseEntity<Void> advanceTurn(@PathVariable String characterId) {
+        abilityService.advanceTurn(characterId);
+        return ResponseEntity.ok().build();
+    }
 }

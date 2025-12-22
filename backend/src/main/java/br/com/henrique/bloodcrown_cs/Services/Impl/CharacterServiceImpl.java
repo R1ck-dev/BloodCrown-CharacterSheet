@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttributesDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
@@ -202,6 +203,23 @@ public class CharacterServiceImpl implements CharacterService{
                 atk.getDescription()
             )).toList();
 
+        List<AbilityDTO> abilities = charModel.getAbilities().stream()
+            .map(ab -> new AbilityDTO(
+                ab.getId(),
+                ab.getName(),
+                ab.getCategory(),
+                ab.getActionType(),
+                ab.getMaxUses(),
+                ab.getCurrentUses(),
+                ab.getDiceRoll(),
+                ab.getTargetAttribute(),
+                ab.getEffectValue(),
+                ab.getDurationDice(),
+                ab.getIsActive(),
+                ab.getTurnsRemaining(),
+                ab.getDescription()
+            )).toList();
+
         return new CharacterSheetDTO(
             charModel.getId(),
             charModel.getName(),
@@ -210,7 +228,8 @@ public class CharacterServiceImpl implements CharacterService{
             attr,
             status,
             expertise,
-            attacks
+            attacks,
+            abilities
         );
     }
 //-----------------------------------------------------------------------------------

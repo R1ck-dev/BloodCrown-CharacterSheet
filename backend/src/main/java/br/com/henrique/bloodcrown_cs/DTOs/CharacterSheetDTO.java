@@ -10,7 +10,8 @@ public record CharacterSheetDTO(
     AttributesDTO attributes,
     StatusDTO status,
     ExpertiseDTO expertise,
-    List<AttackDTO> attacks
+    List<AttackDTO> attacks,
+    List<AbilityDTO> abilities
 ) {
     
 }
