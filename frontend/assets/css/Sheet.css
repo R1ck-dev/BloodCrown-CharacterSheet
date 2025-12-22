@@ -164,12 +164,79 @@ main.container-fluid{
   min-height: 120px;
 }
 .defense-card h2{ font-size: 26px; margin-bottom: 4px; }
-#statusDefense{
-  background: var(--input-bg);
-  border-radius: 8px;
-  width: 120px;
-  margin: 6px auto;
-  border: 1px solid rgba(255,255,255,0.03);
+
+#statusDefense {
+    /* Remove qualquer estilo nativo do navegador */
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    
+    /* Tipografia e Cor */
+    color: white;
+    font-weight: 800; /* Extra negrito */
+    text-align: center;
+    
+    /* Zera espaços internos para o cálculo de centro ser exato */
+    padding: 0;
+    margin: 0;
+    line-height: 1; /* Importante: remove espaço acima/abaixo da fonte */
+    
+    /* AJUSTE MANUAL DE POSIÇÃO */
+    /* Se achar que está muito alto ou baixo, mexa no segundo valor do translate */
+    /* -50% é o centro exato. -45% desce um pouco, -55% sobe. */
+    transform: translate(-3%, -10%) !important; 
+
+}
+
+/* 2. Os Inputs da Fórmula (Base, Des, Arm, Out) */
+.formula-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #444; /* Linha sutil embaixo */
+    color: #eee;
+    
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem; /* Número um pouco maior que o rótulo */
+    
+    width: 40px; /* Largura fixa para não dançar */
+    padding-bottom: 2px; /* Espaço entre número e linha */
+    margin-bottom: 2px;
+    
+    /* Remove as setinhas de aumentar/diminuir número */
+    /* -moz-appearance: textfield; */
+}
+
+/* Remove setinhas no Chrome/Safari/Edge */
+.formula-input::-webkit-outer-spin-button,
+.formula-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Efeito de foco na fórmula */
+.formula-input:focus {
+    outline: none;
+    border-bottom-color: #7b2cbf; /* Roxo ao clicar */
+    color: white;
+}
+
+/* 3. Os Sinais de "+" na fórmula */
+.defense-formula span {
+    color: #666; /* Cinza escuro para não chamar atenção */
+    font-weight: 300;
+    margin: 0 5px; /* Espaço lateral */
+    padding-bottom: 15px; /* Empurra o + para cima para alinhar com os números */
+}
+
+/* 4. Os Rótulos Pequenos (BASE, DES, ARM) */
+.defense-formula div div {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-top: 2px;
 }
 
 /* Center: perícias table (improves contrast) */

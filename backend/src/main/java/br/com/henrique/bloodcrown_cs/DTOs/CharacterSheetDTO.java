@@ -1,5 +1,7 @@
 package br.com.henrique.bloodcrown_cs.DTOs;
 
+import java.util.List;
+
 public record CharacterSheetDTO(
     String id,
     String name,
@@ -7,7 +9,8 @@ public record CharacterSheetDTO(
     Integer level,
     AttributesDTO attributes,
     StatusDTO status,
-    ExpertiseDTO expertise
+    ExpertiseDTO expertise,
+    List<AttackDTO> attacks
 ) {
     
 }

@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(charData.status) {
             document.getElementById('statusDefense').value = charData.status.defense ?? 0;
 
+            document.getElementById('defBase').value = charData.status.defenseBase ?? 10;
+            document.getElementById('defArmor').value = charData.status.armorBonus ?? 0;
+            document.getElementById('defOther').value = charData.status.otherBonus ?? 0;
+
             const statusHealthCurrent = document.getElementById('statusHealthCurrent');
             const statusMaxHealth = document.getElementById('statusMaxHealth');
             if (statusHealthCurrent) statusHealthCurrent.value = (charData.status.currentHealth ?? charData.status.maxHealth ?? 0);
@@ -55,6 +59,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const statusMaxStamina = document.getElementById('statusMaxStamina');
             if (statusStaminaCurrent) statusStaminaCurrent.value = (charData.status.currentStamina ?? charData.status.maxStamina ?? 0);
             if (statusMaxStamina) statusMaxStamina.value = (charData.status.maxStamina ?? 0);
+
+            setupDefenseEvents();
+            calculateDefense();
         }
 
         if(charData.expertise) {
@@ -131,7 +138,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     maxStamina: parseInt(document.getElementById('statusMaxStamina').value) || 0,
                     currentStamina: parseInt(document.getElementById('statusStaminaCurrent').value) || 0,
 
-                    defense: parseInt(document.getElementById('statusDefense').value) || 0
+                    defense: parseInt(document.getElementById('statusDefense').value) || 0,
+                    defenseBase: parseInt(document.getElementById('defBase').value) || 10,
+                    armorBonus: parseInt(document.getElementById('defArmor').value) || 0,
+                    otherBonus: parseInt(document.getElementById('defOther').value) || 0
                 },
 
                 expertise: {

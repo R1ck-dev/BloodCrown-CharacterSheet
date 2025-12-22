@@ -9,6 +9,9 @@ public record StatusDTO(
     Integer currentMana,
     Integer maxStamina,
     Integer currentStamina,
-    Integer defense
+    Integer defense,
+    Integer defenseBase,
+    Integer armorBonus,
+    Integer otherBonus
 ) {
 } 

@@ -93,6 +93,9 @@ public class CharacterServiceImpl implements CharacterService{
         status.setMaxStamina(maxStamina);
         status.setCurrentStamina(maxStamina);
         status.setDefense(10);
+        status.setDefenseBase(10);
+        status.setArmorBonus(0);
+        status.setOtherBonus(0);
         charModel.setStatus(status);
 
         CharacterExpertise expertise = new CharacterExpertise();
@@ -159,7 +162,10 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getStatus().getCurrentMana(),
             charModel.getStatus().getMaxStamina(),
             charModel.getStatus().getCurrentStamina(),
-            charModel.getStatus().getDefense()
+            charModel.getStatus().getDefense(),
+            charModel.getStatus().getDefenseBase(),
+            charModel.getStatus().getArmorBonus(),
+            charModel.getStatus().getOtherBonus()
         );
 
         ExpertiseDTO expertise = new ExpertiseDTO(
@@ -188,6 +194,14 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getExpertise().getSobrevivencia()
         );
 
+        List<AttackDTO> attacks = charModel.getAttacks().stream()
+            .map(atk -> new AttackDTO(
+                atk.getId(),
+                atk.getName(),
+                atk.getDamageDice(),
+                atk.getDescription()
+            )).toList();
+
         return new CharacterSheetDTO(
             charModel.getId(),
             charModel.getName(),
@@ -195,7 +209,8 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getLevel(),
             attr,
             status,
-            expertise
+            expertise,
+            attacks
         );
     }
 //-----------------------------------------------------------------------------------
@@ -231,7 +246,19 @@ public class CharacterServiceImpl implements CharacterService{
             if (newMaxSanity != null) charModel.getStatus().setMaxSanity(newMaxSanity);
             if (newMaxStamina != null) charModel.getStatus().setMaxStamina(newMaxStamina);
 
-            if (dto.status().defense() != null) charModel.getStatus().setDefense(dto.status().defense());
+            if (dto.status().defense() != null) {
+                charModel.getStatus().setDefense(dto.status().defense());
+            }
+
+            if (dto.status().defenseBase() != null) {
+                charModel.getStatus().setDefenseBase(dto.status().defenseBase());
+            }
+            if (dto.status().armorBonus() != null) {
+                charModel.getStatus().setArmorBonus(dto.status().armorBonus());
+            }
+            if (dto.status().otherBonus() != null) {
+                charModel.getStatus().setOtherBonus(dto.status().otherBonus());
+            }
 
             Integer currHealth = dto.status().currentHealth();
             if (currHealth != null) {
@@ -287,6 +314,17 @@ public class CharacterServiceImpl implements CharacterService{
 
         characterRepository.save(charModel);
         return dto; 
+    }
+//-----------------------------------------------------------------------------------
+
+    @Override
+    public void deleteCharacter(String id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
+            .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
+
+        characterRepository.delete(charModel);
     }
 
 } 

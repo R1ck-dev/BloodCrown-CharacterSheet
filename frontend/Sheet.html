@@ -135,11 +135,40 @@
                         </div>
                     </div>
 
-                    <div class="defense-card d-flex align-items-center justify-content-center p-3 border border-secondary rounded">
-                        <div class="text-center">
-                            <h2 class="m-0">🛡️</h2>
-                            <input type="text" id="statusDefense" class="form-control rpg-input text-center fs-3 fw-bold" value="10" style="width: 80px;">
-                            <small class="text-muted">DEFESA</small>
+                    <div class="defense-card d-flex flex-column align-items-center p-3 border border-secondary rounded bg-dark">
+                        
+                        <div class="position-relative text-center mb-2">
+                            <i class="fa-solid fa-shield text-secondary" style="font-size: 3.5rem;"></i>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <input type="text" id="statusDefense" class="fw-bold text-center bg-transparent border-0 text-white" 
+                                    style="width: 50px; font-size: 1.4rem;" readonly value="10">
+                            </div>
+                        </div>
+                        
+                        <div class="defense-formula d-flex align-items-center justify-content-center gap-1 text-muted" style="font-size: 0.8rem;">
+                            
+                            <div class="text-center">
+                                <input type="number" id="defBase" class="formula-input text-secondary" value="10" title="Base">
+                                <div style="font-size: 0.6rem;">BASE</div>
+                            </div>
+                            <span>+</span>
+                            
+                            <div class="text-center">
+                                <span id="defDexDisplay" class="fw-bold text-light">0</span>
+                                <div style="font-size: 0.6rem;">DES</div>
+                            </div>
+                            <span>+</span>
+
+                            <div class="text-center">
+                                <input type="number" id="defArmor" class="formula-input text-info" placeholder="0" title="Armadura">
+                                <div style="font-size: 0.6rem;">ARM</div>
+                            </div>
+                            <span>+</span>
+
+                            <div class="text-center">
+                                <input type="number" id="defOther" class="formula-input text-warning" placeholder="0" title="Outros">
+                                <div style="font-size: 0.6rem;">OUT</div>
+                            </div>
                         </div>
                     </div>
 
@@ -319,6 +348,7 @@
     <script src="assets/js/ApiService.js" defer></script>
     <script src="assets/js/DiceRoll.js"></script>
     <script src="assets/js/Attack.js"></script>
+    <script src="assets/js/Defense.js"></script>
     <script src="assets/js/Sheet.js" defer></script>
 </body>
 </html>

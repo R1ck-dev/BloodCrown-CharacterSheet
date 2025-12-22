@@ -33,4 +33,13 @@ public class CharacterStatus {
     
     @Column(name = "defense")
     private Integer defense;
+
+    @Column(name = "defense_base")
+    private Integer defenseBase;
+
+    @Column(name = "armor_bonus")
+    private Integer armorBonus;
+
+    @Column(name = "other_bonus")
+    private Integer otherBonus;
 }

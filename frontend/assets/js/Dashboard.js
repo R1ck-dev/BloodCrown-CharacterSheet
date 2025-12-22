@@ -46,6 +46,27 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 });
 
+    async function deleteCharacter(charId, token) {
+        if(!confirm("Tem certeza que deseja DELETAR esta ficha permanentemente?")) return;
+
+        try {
+            const response = await fetch(`http://localhost:8080/characters/${charId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Erro ao deletar');
+
+            await loadCharacters(token);
+        
+        } catch (error) {
+            console.error(error);
+            alert("Não foi possível deletar a ficha.")
+        }
+    }
+
 async function loadCharacters(token) {
     const listElement = document.getElementById('charactersList');
 
@@ -72,6 +93,7 @@ async function loadCharacters(token) {
         characters.forEach(char => {
             const card = document.createElement('div');
             card.className = 'char-card';
+            card.style.position = 'relative';
 
             card.addEventListener('click', function() {
                 window.location.href = `sheet.html?id=${char.id}`;
@@ -83,11 +105,25 @@ async function loadCharacters(token) {
 
             card.innerHTML = `
                 <div class="char-img-placeholder">${initial}</div>
+                
                 <div class="char-info">
                     <h3>${char.name}</h3>
                     <span>${charClass} • Nvl ${charLevel}</span>
-                </div>
+                </div> 
+                <button class="btn-delete-char" title="Excluir Ficha">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             `;
+
+            card.addEventListener('click', function() {
+                window.location.href = `sheet.html?id=${char.id}`;
+            });
+
+            const btnDelete = card.querySelector('.btn-delete-char');
+            btnDelete.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteCharacter(char.id, token);
+            });
 
             listElement.appendChild(card);
         });
@@ -95,4 +131,5 @@ async function loadCharacters(token) {
         console.error(error);
         listElement.innerHTML = '<p style="color: red;">Erro ao carregar dados.</p>';
     }
+    
 }

@@ -94,13 +94,14 @@ function renderAttackCard(attack) {
             
             <div style="border-left: 1px solid #333; height: 30px; margin: 0 5px;"></div>
 
-            <button class="btn btn-sm btn-outline-dark text-secondary border-0 btn-delete-atk" title="Apagar">
+            <button type="button" class="btn btn-sm btn-outline-dark text-secondary border-0 btn-delete-atk" title="Apagar">
                 <i class="fa-solid fa-trash"></i>
             </button>
         </div>
     `;
 
     card.querySelector('.btn-delete-atk').addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const token = localStorage.getItem('authToken');
         deleteAttack(attack.id, card, token);
