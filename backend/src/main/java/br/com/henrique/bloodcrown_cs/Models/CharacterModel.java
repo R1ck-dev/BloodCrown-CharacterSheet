@@ -51,4 +51,7 @@ public class CharacterModel {
 
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttackModel> attacks;
+
+    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AbilityModel> abilities;
 }

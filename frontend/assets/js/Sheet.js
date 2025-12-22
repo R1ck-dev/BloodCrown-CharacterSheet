@@ -250,6 +250,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    window.openAbilityModal = function(category) {
+        const modalEl = document.getElementById('modalNewAbility');
+        const select = document.getElementById('abilCategory');
+        if(select) select.value = category; 
+        
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    document.getElementById('btnSaveAbility').addEventListener('click', () => {
+        createAbility(id, token);
+    });
+
     setupRollEvents();
 
 }); //Fim do DOM
