@@ -50,12 +50,15 @@ public class AbilityServiceImpl implements AbilityService{
         ability.setDescription(dto.description());
         ability.setCharacter(charModel);
 
+        ability.setResourceType(dto.resourceType());
+
         AbilityModel saved = abilityRepository.save(ability);
 
         return new AbilityDTO(
             saved.getId(),
             saved.getName(),
             saved.getCategory(),
+            saved.getResourceType(),
             saved.getActionType(),
             saved.getMaxUses(),
             saved.getCurrentUses(),
@@ -86,22 +89,30 @@ public class AbilityServiceImpl implements AbilityService{
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
         ability.setIsActive(isActivating);
 
-        if (isActivating) {
+if (isActivating) {
+            if (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0) {
+                throw new RuntimeException("Sem usos disponíveis para ativar esta habilidade!");
+            }
+
+            ability.setCurrentUses(ability.getCurrentUses() - 1);
+
+            ability.setIsActive(true);
             if (ability.getDurationDice() != null && !ability.getDurationDice().isBlank()) {
                 int turns = rollDice(ability.getDurationDice());
                 ability.setTurnsRemaining(turns);
             } else {
-                ability.setTurnsRemaining(null); 
+                ability.setTurnsRemaining(null);
             }
             
         } else {
+            ability.setIsActive(false);
             ability.setTurnsRemaining(0);
         }
 
         AbilityModel saved = abilityRepository.save(ability);
         
         return new AbilityDTO(
-            saved.getId(), saved.getName(), saved.getCategory(), saved.getActionType(),
+            saved.getId(), saved.getName(), saved.getCategory(), saved.getResourceType(), saved.getActionType(),
             saved.getMaxUses(), saved.getCurrentUses(), saved.getDiceRoll(),
             saved.getTargetAttribute(), saved.getEffectValue(),
             saved.getDurationDice(), saved.getIsActive(), saved.getTurnsRemaining(),

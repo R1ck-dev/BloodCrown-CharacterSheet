@@ -18,6 +18,7 @@ async function createAbility(characterId, token) {
     const targetEl = document.getElementById('abilTarget');
     const effectEl = document.getElementById('abilEffectValue');
     const durationEl = document.getElementById('abilDuration');
+    const resourceEl = document.getElementById('abilResource');
 
     if (!nameEl || !maxUsesEl) {
         console.error("Erro: Campos do modal não encontrados no HTML.");
@@ -29,9 +30,11 @@ async function createAbility(characterId, token) {
         category: categoryEl.value,
         actionType: actionEl.value,
         description: descEl.value,
+
+        resourceType: resourceEl ? resourceEl.value : 'MANA',
         
-        maxUses: parseInt(maxUsesEl.value) || 1, 
-        currentUses: parseInt(maxUsesEl.value) || 1, 
+        maxUses: parseInt(document.getElementById('abilMaxUses').value) || 1, 
+        currentUses: parseInt(document.getElementById('abilMaxUses').value) || 1, 
         diceRoll: diceEl ? diceEl.value : '',
         
         targetAttribute: targetEl ? targetEl.value : 'none',
@@ -158,7 +161,10 @@ async function toggleAbility(abilityId, token) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!response.ok) throw new Error('Erro ao ativar habilidade');
+        if (!response.ok) {
+            const errorMsg = await response.text();
+            throw new Error(errorMsg || 'Erro ao ativar habilidade');
+        } 
 
         const params = new URLSearchParams(window.location.search);
         const charId = params.get('id');

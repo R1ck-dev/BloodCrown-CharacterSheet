@@ -3,6 +3,7 @@ package br.com.henrique.bloodcrown_cs.Models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import br.com.henrique.bloodcrown_cs.Enums.AbilityCategoryEnum;
+import br.com.henrique.bloodcrown_cs.Enums.AbilityResourceEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,6 +30,10 @@ public class AbilityModel {
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private AbilityCategoryEnum category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resource_type")
+    private AbilityResourceEnum resourceType;
 
     @Column(name = "action_type")
     private String actionType;

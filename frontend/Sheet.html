@@ -394,6 +394,14 @@
                                     <div class="p-2 border border-secondary rounded mb-3 bg-dark bg-opacity-25">
                                         <label class="text-info small fw-bold mb-2"><i class="fa-solid fa-arrows-rotate"></i> SISTEMA DE USOS</label>
                                         <div class="row">
+                                            <div class="col-12">
+                                                <select id="abilResource" class="form-select bg-black text-light border-secondary">
+                                                    <option value="MANA">Mana</option>
+                                                    <option value="STAMINA">Estamina</option>
+                                                    <option value="HYBRID">Mana ou Estamina</option>
+                                                </select>
+                                                <div class="form-text text-muted small" style="font-size: 0.7rem;">Define o que é gasto para recuperar 1 uso.</div>
+                                            </div>
                                             <div class="col-6">
                                                 <label class="text-secondary small">Max. Usos</label>
                                                 <input type="number" id="abilMaxUses" class="form-control bg-black text-light border-secondary text-center" value="1">

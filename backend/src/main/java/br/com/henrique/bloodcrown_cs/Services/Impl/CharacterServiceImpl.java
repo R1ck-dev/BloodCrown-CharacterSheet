@@ -208,6 +208,7 @@ public class CharacterServiceImpl implements CharacterService{
                 ab.getId(),
                 ab.getName(),
                 ab.getCategory(),
+                ab.getResourceType(),
                 ab.getActionType(),
                 ab.getMaxUses(),
                 ab.getCurrentUses(),
