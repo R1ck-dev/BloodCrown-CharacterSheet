@@ -1,6 +1,5 @@
 body {
     background-color: var(--bg-page);
-    /* Gradiente sutil no topo simulando luz da mesa */
     background-image: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--primary), transparent 85%) 0%, var(--bg-page) 80%);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
@@ -11,13 +10,11 @@ body {
     color: var(--text-highlight) !important;
 }
 
-/* Navbar */
 .navbar {
     background-color: var(--bg-card) !important;
     border-bottom: 1px solid var(--border-color);
 }
 
-/* Card de Personagem */
 .char-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -60,7 +57,6 @@ body {
     border-color: var(--primary);
 }
 
-/* Botão de Adicionar (Estilo Card Tracejado) */
 .btn-add-card {
     background-color: rgba(255, 255, 255, 0.02);
     border: 2px dashed var(--border-color);
@@ -87,7 +83,6 @@ body {
     margin-bottom: 0.5rem;
 }
 
-/* Botão de Deletar */
 .btn-delete {
     position: absolute;
     top: 10px;

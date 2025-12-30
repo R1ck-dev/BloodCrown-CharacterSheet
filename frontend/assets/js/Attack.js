@@ -3,7 +3,6 @@ async function createAttack(characterId, token) {
     const damage = document.getElementById('atkDamage').value; 
     const desc = document.getElementById('atkDesc').value;
 
-    // Validação de formato de dado (Ex: 1d8)
     if(!damage.match(/\d+d\d+/)) {
         Swal.fire({ icon: 'warning', text: "A fórmula de dano precisa ter pelo menos um dado (ex: 1d6).", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
         return;
@@ -16,7 +15,7 @@ async function createAttack(characterId, token) {
     };
 
     try {
-        const response = await fetch(`http://localhost:8080/attacks/${characterId}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${characterId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -59,7 +58,7 @@ async function deleteAttack(attackId, elementToRemove, token) {
     if (!result.isConfirmed) return;
 
     try {
-        const response = await fetch(`http://localhost:8080/attacks/${attackId}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${attackId}`, {
             method: 'DELETE',
             headers: {'Authorization': `Bearer ${token}`}
         });

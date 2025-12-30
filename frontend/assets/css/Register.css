@@ -1,8 +1,5 @@
-/* Não importamos mais fontes aqui, pois o Global.css já faz isso. */
-
 body {
     background-color: var(--bg-page);
-    /* Mantemos um gradiente sutil usando a cor primária bem escura e transparente */
     background-image: radial-gradient(circle at center, color-mix(in srgb, var(--primary), transparent 90%) 0%, var(--bg-page) 100%);
     font-family: 'Inter', sans-serif;
     color: #fff;
@@ -18,13 +15,11 @@ body {
 
 .login-card:hover {
     border-color: var(--primary);
-    /* Usa a variável de foco que já tem transparência */
     box-shadow: 0 0 15px var(--border-focus) !important;
 }
 
-/* Inputs focados */
 .form-control {
-    background-color: var(--bg-page); /* Ou um tom levemente mais claro */
+    background-color: var(--bg-page); 
     border: 1px solid var(--border-color);
     color: white;
 }
@@ -42,7 +37,6 @@ body {
     color: var(--text-highlight);
 }
 
-/* Botão Principal */
 .btn-purple {
     background-color: var(--primary);
     color: white;
@@ -57,7 +51,6 @@ body {
     box-shadow: 0 4px 10px var(--border-focus);
 }
 
-/* Links */
 .text-info {
     color: var(--text-highlight) !important;
 }

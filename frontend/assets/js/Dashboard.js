@@ -1,13 +1,11 @@
 document.addEventListener('DOMContentLoaded', async function() {
     const token = localStorage.getItem('authToken');
 
-    // 1. Verifica Login
     if (!token) {
         window.location.href = 'index.html';
         return;
     }
     
-    // 2. Configura Logout
     const btnLogout = document.getElementById('btnLogout');
     if(btnLogout) {
         btnLogout.addEventListener('click', function() {
@@ -30,18 +28,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // 3. Carrega Fichas
     await loadCharacters(token);
 });
-
-// --- FUNÇÕES ---
 
 async function loadCharacters(token) {
     const listElement = document.getElementById('charList');
     listElement.innerHTML = '<div class="text-center text-secondary mt-5"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><p class="mt-2">Carregando fichas...</p></div>';
 
     try {
-        const response = await fetch('http://localhost:8080/characters', {
+        const response = await fetch('https://bloodcrown-api.onrender.com/characters', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -52,9 +47,8 @@ async function loadCharacters(token) {
         if (!response.ok) throw new Error('Falha ao buscar fichas');
 
         const characters = await response.json();
-        listElement.innerHTML = ''; // Limpa loading
+        listElement.innerHTML = ''; 
 
-        // Renderiza cada personagem
         characters.forEach(char => {
             const initial = char.name ? char.name.charAt(0).toUpperCase() : '?';
             const charClass = char.characterClass || 'Desconhecido';
@@ -84,10 +78,8 @@ async function loadCharacters(token) {
                 </div>
             `;
 
-            // Clique no card abre a ficha
             const cardDiv = col.querySelector('.char-card');
             cardDiv.addEventListener('click', (e) => {
-                // Se clicou no lixo, não abre
                 if(e.target.closest('.btn-delete')) return;
                 window.location.href = `Sheet.html?id=${char.id}`;
             });
@@ -95,7 +87,6 @@ async function loadCharacters(token) {
             listElement.appendChild(col);
         });
 
-        // Adiciona o Card de "Criar Novo" no final
         const addCol = document.createElement('div');
         addCol.className = 'col-12 col-md-6 col-lg-4 col-xl-3';
         addCol.innerHTML = `
@@ -113,7 +104,6 @@ async function loadCharacters(token) {
 }
 
 async function createCharacter(token) {
-    // Feedback visual (pode ser um Toast ou Loading)
     Swal.fire({
         title: 'Criando...',
         didOpen: () => Swal.showLoading(),
@@ -121,7 +111,7 @@ async function createCharacter(token) {
     });
 
     try {
-        const response = await fetch('http://localhost:8080/characters', {
+        const response = await fetch('https://bloodcrown-api.onrender.com/characters', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -130,7 +120,6 @@ async function createCharacter(token) {
 
         const newChar = await response.json();
         
-        // Redireciona direto
         window.location.href = `Sheet.html?id=${newChar.id}`;
 
     } catch (error) {
@@ -139,7 +128,7 @@ async function createCharacter(token) {
 }
 
 async function deleteCharacter(event, charId, token) {
-    event.stopPropagation(); // Impede de abrir a ficha ao clicar no lixo
+    event.stopPropagation(); 
 
     const result = await Swal.fire({
         title: 'Excluir Ficha?',
@@ -155,14 +144,13 @@ async function deleteCharacter(event, charId, token) {
 
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`http://localhost:8080/characters/${charId}`, {
+            const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${charId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) throw new Error('Erro ao deletar');
 
-            // Sucesso e Recarrega
             Swal.fire({
                 icon: 'success',
                 title: 'Deletado!',

@@ -8,7 +8,7 @@ async function createItem(characterId, token) {
     };
 
     try {
-        const response = await fetch(`http://localhost:8080/items/${characterId}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/items/${characterId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -29,7 +29,7 @@ async function createItem(characterId, token) {
 
 async function toggleEquipItem(itemId, token) {
     try {
-        await fetch(`http://localhost:8080/items/${itemId}/toggle`, {
+        await fetch(`https://bloodcrown-api.onrender.com/items/${itemId}/toggle`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -41,7 +41,6 @@ async function toggleEquipItem(itemId, token) {
 }
 
 async function deleteItem(itemId, token) {
-    // Confirmação estilizada
     const result = await Swal.fire({
         title: 'Deletar Item?',
         text: "Essa ação não pode ser desfeita.",
@@ -57,7 +56,7 @@ async function deleteItem(itemId, token) {
     if(!result.isConfirmed) return;
 
     try {
-        await fetch(`http://localhost:8080/items/${itemId}`, {
+        await fetch(`https://bloodcrown-api.onrender.com/items/${itemId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

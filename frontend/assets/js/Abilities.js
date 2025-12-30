@@ -52,7 +52,7 @@ async function createAbility(characterId, token) {
     };
 
     try {
-        const response = await fetch(`http://localhost:8080/abilities/${characterId}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${characterId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -90,7 +90,7 @@ async function deleteAbility(id, element, token) {
     if(!result.isConfirmed) return;
 
     try {
-        await fetch(`http://localhost:8080/abilities/${id}`, { 
+        await fetch(`https://bloodcrown-api.onrender.com/abilities/${id}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
@@ -197,7 +197,7 @@ function renderAbilityCard(ability) {
 
 async function toggleAbility(abilityId, token) {
     try {
-        const response = await fetch(`http://localhost:8080/abilities/${abilityId}/toggle`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/toggle`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -224,7 +224,6 @@ async function recoverAbilityUse(abilityId, resourceType, token) {
     let resourceToSpend = resourceType;
 
     if (resourceType === 'HYBRID') {
-        // Modal Especial para Híbridos
         const result = await Swal.fire({
             title: 'Recuperar Uso',
             text: "Qual recurso deseja gastar?",
@@ -232,24 +231,21 @@ async function recoverAbilityUse(abilityId, resourceType, token) {
             showCancelButton: true,
             confirmButtonText: 'Mana (50)',
             cancelButtonText: 'Estamina (50)',
-            confirmButtonColor: '#0dcaf0', // Ciano
-            cancelButtonColor: '#ffc107',  // Amarelo
+            confirmButtonColor: '#0dcaf0', 
+            cancelButtonColor: '#ffc107',  
             background: '#212529', color: '#fff'
         });
-        
-        // Se confirmou = Mana, se cancelou (mas não fechou) = Estamina
-        // A biblioteca trata o botão "cancelar" como dismiss. Precisamos verificar se foi um dismiss por clique no botão.
         if (result.isConfirmed) {
             resourceToSpend = 'MANA';
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             resourceToSpend = 'STAMINA';
         } else {
-            return; // Clicou fora ou esc
+            return; 
         }
     }
 
     try {
-        const response = await fetch(`http://localhost:8080/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });

@@ -9,12 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerText;
 
-        // Feedback Visual
         submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ENTRANDO...';
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('http://localhost:8080/auth/login', {
+            const response = await fetch('https://bloodcrown-api.onrender.com/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -26,13 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                // CORREÇÃO AQUI: LER COMO JSON
                 const data = await response.json(); 
                 
-                // Extrai apenas a string do token
                 const token = data.token; 
                 
-                // Salva o token limpo
                 localStorage.setItem('authToken', token);
 
                 const Toast = Swal.mixin({

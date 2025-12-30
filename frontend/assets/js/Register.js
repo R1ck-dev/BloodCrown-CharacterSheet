@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('register__password-user').value;
         const confirmPassword = document.getElementById('register__confirm-password-user').value;
 
-        // Validação de senha com SweetAlert
         if (password !== confirmPassword) {
             Swal.fire({
                 icon: 'warning',
@@ -21,15 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Feedback visual de carregamento
         const submitBtn = registerForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerText;
         submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> CRIANDO...';
         submitBtn.disabled = true;
 
         try {
-            // Chamada direta para a API
-            const response = await fetch('http://localhost:8080/auth/register', {
+            const response = await fetch('https://bloodcrown-api.onrender.com/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -37,12 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     username: username,
                     password: password,
-                    role: 'USER' // Padrão
+                    role: 'USER' 
                 })
             });
 
             if (response.ok) {
-                // Sucesso!
                 Swal.fire({
                     icon: 'success',
                     title: 'Bem-vindo!',
@@ -51,11 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     color: '#fff',
                     confirmButtonColor: '#7b2cbf'
                 }).then(() => {
-                    window.location.href = 'index.html'; // Redireciona para o login
+                    window.location.href = 'index.html'; 
                 });
             } else {
-                // Erro vindo do backend (ex: usuário já existe)
-                // Tentamos ler a mensagem de erro se houver texto
                 const errorText = await response.text(); 
                 throw new Error(errorText || 'Erro ao criar conta.');
             }
@@ -71,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#d33'
             });
         } finally {
-            // Restaura o botão
             submitBtn.innerText = originalText;
             submitBtn.disabled = false;
         }

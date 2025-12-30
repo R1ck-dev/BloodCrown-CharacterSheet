@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080'
+const API_BASE_URL = 'https://bloodcrown-api.onrender.com'
 
 async function registerUser(username, password) {
     const userData = {

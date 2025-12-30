@@ -1,6 +1,3 @@
-/* assets/js/Sheet.js - Versão Final com SweetAlert2 */
-
-// Configuração padrão do Toast (Aviso rápido no canto)
 const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
@@ -45,7 +42,6 @@ window.loadCharacterData = async function(id, token) {
     try {
         console.log("Atualizando ficha...", id);
         
-        // Exibe loading bonito
         Swal.fire({
             title: 'Carregando...',
             background: '#000',
@@ -54,13 +50,12 @@ window.loadCharacterData = async function(id, token) {
         });
 
         const charData = await getCharacterById(id, token);
-        Swal.close(); // Fecha loading
+        Swal.close(); 
 
         document.getElementById('charName').value = charData.name;
         document.getElementById('charClass').value = charData.characterClass;
         document.getElementById('charLevel').value = charData.level;
 
-        // --- NOVOS CAMPOS (Garantindo que existam) ---
         if(document.getElementById('charMoney')) document.getElementById('charMoney').value = charData.money || "";
         if(document.getElementById('charBio')) document.getElementById('charBio').value = charData.biography || "";
         if(document.getElementById('charHeroPoint')) document.getElementById('charHeroPoint').checked = (charData.heroPoint === 1);
@@ -150,7 +145,6 @@ window.loadCharacterData = async function(id, token) {
         if (charData.attacks) charData.attacks.forEach(atk => renderAttackCard(atk));
         if (charData.abilities) charData.abilities.forEach(ability => renderAbilityCard(ability));
 
-        // Inventário
         const invContainer = document.getElementById('inventoryList');
         if (invContainer) {
             invContainer.innerHTML = '';
@@ -189,7 +183,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Barras
     function updateBar(currentInput, maxInput, barElement) {
         if (!barElement || !currentInput || !maxInput) return;
         const current = parseInt(currentInput.value) || 0;
@@ -216,7 +209,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         max.addEventListener('input', update);
     });
 
-    // Salvar
     const performSave = async () => {
         const btnSave = document.getElementById('btnSave');
         const originalText = btnSave.innerText;
@@ -226,8 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnSave.innerText = "Salvando..."; 
             btnSave.disabled = true; 
         } else {
-            // Auto-save silencioso (opcionalmente pode usar Toast)
-             console.log("Auto-salvando...");
+            console.log("Auto-salvando...");
         }
 
         try { 
@@ -263,7 +254,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     setInterval(() => performSave(), 300000);
 
-    // Bloco de Notas Local
     const notepad = document.getElementById('tempNotepad');
     if (notepad) {
         const savedNote = localStorage.getItem('rpg_notepad_' + id);
@@ -273,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Botões e Modais
     const btnOpenAttackModal = document.querySelector('#tabCombat button');
     if (btnOpenAttackModal) btnOpenAttackModal.addEventListener('click', (e) => {
         e.preventDefault();
@@ -286,12 +275,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnNextTurn = document.getElementById('btnNextTurn');
     if (btnNextTurn) {
         btnNextTurn.addEventListener('click', async () => {
-            // Loading no botão
             const originalIcon = btnNextTurn.innerHTML;
             btnNextTurn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnNextTurn.disabled = true;
             try {
-                const response = await fetch(`http://localhost:8080/abilities/next-turn/${id}`, {
+                const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/next-turn/${id}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -315,13 +303,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnRest.addEventListener('click', async (e) => {
             e.preventDefault();
             
-            // Confirmação bonita
             const result = await Swal.fire({
                 title: 'Descanso Longo?',
                 text: "Isso recuperará toda Vida, Mana, Sanidade, Estamina e resetará usos de habilidades.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#7b2cbf', // Roxo
+                confirmButtonColor: '#7b2cbf', 
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Sim, descansar',
                 cancelButtonText: 'Cancelar',
@@ -335,7 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRest.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnRest.disabled = true;
             try {
-                const response = await fetch(`http://localhost:8080/characters/${id}/rest`, {
+                const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${id}/rest`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -363,7 +350,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Painel Lateral (Toggle)
     const btnOpenPanel = document.getElementById('btnOpenPanel');
     const btnClosePanel = document.getElementById('btnClosePanel');
     const panel = document.getElementById('activeEffectsPanel');
@@ -383,7 +369,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.updateAllBonusesState = function(charData) {
-        // Função interna para atualizar o painel considerando o estado minimizado
         updateAllBonuses(charData, isPanelMinimized, panel, btnOpenPanel);
     };
 
@@ -471,7 +456,7 @@ async function saveCharacterData(id, token, btnSave) {
             }
         };
 
-        const response = await fetch(`http://localhost:8080/characters/${id}`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${id}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -486,7 +471,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     const badge = document.getElementById('badgeActiveCount');
     const list = document.getElementById('effectsList');
     
-    // Limpeza
     const allPossibleTargets = [
         'defOther', 'defArmor', 'resPhysical', 'resMagical',
         'attrForca', 'attrDestreza', 'attrConstituicao', 'attrInteligencia', 'attrSabedoria', 'attrCarisma',
@@ -508,7 +492,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     
     if(list) list.innerHTML = '';
 
-    // Habilidades
     if (charData.abilities) {
         charData.abilities.forEach(abil => {
             if (abil.isActive) {
@@ -546,7 +529,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         });
     }
 
-    // Itens
     if (charData.inventory) {
         charData.inventory.forEach(item => {
             if (item.isEquipped && item.targetAttribute !== 'none') {
@@ -558,7 +540,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         });
     }
 
-    // Toggle Panel vs Button
     if (activeCount > 0) {
         if (isMinimized) {
             if(panel) panel.style.display = 'none';
@@ -573,7 +554,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         if(btnOpen) btnOpen.style.display = 'none';
     }
 
-    // Aplica Bônus
     for (const [targetId, val] of Object.entries(totalBuffs)) {
         const input = document.getElementById(targetId);
         if (input) {
