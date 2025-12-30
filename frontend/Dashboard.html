@@ -1,44 +1,44 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodCrown - Mesa de Jogo</title>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>Mesa de Jogo | BloodCrown</title>
     
-    <link rel="stylesheet" href="assets/css/Register.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/Dashboard.css">
 </head>
 <body>
-    <main class="container" style="max-width: 1000px;">
-        <section class="card dashboard-card">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">BLOOD<span style="color: #7b2cbf;">CROWN</span></a>
             
-            <div class="dashboard-header">
-                <h1>Mesa de Jogo</h1>
-                <div class="user-controls">
-                    <span id="welcomeMessage">Viajante</span>
-                    <button id="btnLogout" class="btn-logout">Sair</button>
-                </div>
-            </div>
-
-            <div class="char-grid" id="charactersList">
-                </div>
-
-            <div class="fab-container">
-                <button class="fab-btn secondary" title="Meus Grupos/Pastas">
-                    📁
-                </button>
-                
-                <button id="btnNewChar" class="fab-btn primary" title="Novo Personagem">
-                    +
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-secondary small d-none d-md-block">Bem-vindo</span>
+                <button id="btnLogout" class="btn btn-sm btn-outline-danger">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
                 </button>
             </div>
+        </div>
+    </nav>
 
-        </section>
+    <main class="container mt-5 pt-5">
+        <div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary pb-2">
+            <div>
+                <h3 class="text-light m-0"><i class="fa-solid fa-dungeon text-purple me-2"></i>Seus Personagens</h3>
+                <small class="text-secondary">Selecione uma ficha para jogar ou editar</small>
+            </div>
+        </div>
+
+        <div id="charList" class="row g-4">
+            </div>
     </main>
 
-    <script src="assets/js/ApiService.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="assets/css/Global.css">
     <script src="assets/js/Dashboard.js"></script>
 </body>
 </html>

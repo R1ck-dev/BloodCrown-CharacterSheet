@@ -42,4 +42,10 @@ public class CharacterStatus {
 
     @Column(name = "other_bonus")
     private Integer otherBonus;
+
+    @Column(name = "physical_res")
+    private Integer physicalRes;
+
+    @Column(name = "magical_res")
+    private Integer magicalRes;
 }

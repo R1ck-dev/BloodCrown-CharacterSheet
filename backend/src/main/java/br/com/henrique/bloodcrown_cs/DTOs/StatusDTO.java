@@ -12,6 +12,8 @@ public record StatusDTO(
     Integer defense,
     Integer defenseBase,
     Integer armorBonus,
-    Integer otherBonus
+    Integer otherBonus,
+    Integer physicalRes,
+    Integer magicalRes
 ) {
 } 

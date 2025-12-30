@@ -1,192 +1,105 @@
-/* --- Ajustes Gerais do Container --- */
-.dashboard-card {
-    min-height: 80vh; /* Garante altura para os botões ficarem lá embaixo */
-    position: relative; /* Necessário para os botões flutuantes (absolute) funcionarem */
-    display: flex;
-    flex-direction: column;
+body {
+    background-color: var(--bg-page);
+    /* Gradiente sutil no topo simulando luz da mesa */
+    background-image: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--primary), transparent 85%) 0%, var(--bg-page) 80%);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    color: #e6e9eb;
 }
 
-/* --- Cabeçalho --- */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--input-border);
-    padding-bottom: 1rem;
+.text-purple {
+    color: var(--text-highlight) !important;
 }
 
-.dashboard-header h1 {
-    font-size: 1.5rem;
-    color: var(--gold);
+/* Navbar */
+.navbar {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.user-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: var(--gray);
-    font-size: 0.9rem;
-}
-
-/* --- Botão de Logout --- */
-.btn-logout {
-    margin-top: 0;
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-    background: transparent;
-    border: 1px solid var(--gray);
-    color: var(--text);
-}
-
-.btn-logout:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: rgba(138, 28, 28, 0.1);
-    transform: none;
-}
-
-/* --- Grid de Personagens --- */
-.char-grid {
-    display: grid;
-    /* Cria colunas automáticas. Se a tela for pequena, empilha. Se grande, coloca lado a lado */
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
-    gap: 1.5rem;
-    padding-bottom: 6rem; /* Espaço extra no fim para não cobrir os botões flutuantes */
-    width: 100%;
-}
-
-/* --- Card do Personagem --- */
+/* Card de Personagem */
 .char-card {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--input-border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: var(--transition);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
-    height: 250px; /* Altura fixa para ficarem iguais ao desenho */
-}
-
-/* Efeito Hover no Card */
-.char-card:hover {
-    border-color: var(--gold);
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
-    transform: translateY(-5px);
-    background: var(--card-bg);
-}
-
-/* Placeholder da Imagem (Círculo ou Quadrado) */
-.char-img-placeholder {
-    width: 80px;
-    height: 80px;
-    background-color: var(--input-border);
-    color: var(--gold);
+    overflow: hidden;
+    height: 100%;
+    min-height: 220px;
     border-radius: 8px;
-    margin-bottom: 1rem;
+}
+
+.char-card h5 { color: #fff; }
+.char-card small { color: var(--secondary); }
+
+.char-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px var(--border-focus);
+}
+
+.char-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 2rem;
-    border: 2px solid transparent;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    transition: 0.3s;
 }
 
-.char-card:hover .char-img-placeholder {
-    border-color: var(--gold);
-    background-color: rgba(138, 28, 28, 0.1);
+.char-card:hover .char-avatar {
+    background-color: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
 }
 
-.char-info h3 {
-    color: var(--text);
-    font-size: 1.1rem;
+/* Botão de Adicionar (Estilo Card Tracejado) */
+.btn-add-card {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    height: 100%;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+    color: var(--secondary);
+}
+
+.btn-add-card:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: rgba(255,255,255,0.03);
+}
+
+.btn-add-card i {
+    font-size: 2.5rem;
     margin-bottom: 0.5rem;
 }
 
-.char-info span {
-    font-size: 0.85rem;
-    color: var(--gray);
-    display: block;
-}
-
-/* --- Botões Flutuantes (FABs) --- */
-.fab-container {
+/* Botão de Deletar */
+.btn-delete {
     position: absolute;
-    bottom: 2rem;
-    right: 2rem;
-    display: flex;
-    gap: 1rem;
-    z-index: 10;
-}
-
-.fab-btn {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%; /* Redondo */
-    border: none;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    transition: var(--transition);
-    margin-top: 0;
-}
-
-.fab-btn.primary {
-    background: var(--primary);
-    color: var(--gold);
-    border: 2px solid var(--primary-hover);
-}
-
-.fab-btn.secondary {
-    background: var(--card-bg);
-    color: var(--text);
-    border: 1px solid var(--gray);
-}
-
-.fab-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-}
-
-/* Card precisa ser relativo para o botão flutuar dentro dele */
-.char-card {
-    position: relative;
-    /* ... seus outros estilos de card ... */
-}
-
-.btn-delete-char {
-    position: absolute;
-    bottom: 15px;       /* MUDANÇA: Fixado na parte de baixo */
-    right: 15px;        /* MUDANÇA: Canto direito */
-    
+    top: 10px;
+    right: 10px;
     background: transparent;
     border: none;
-    cursor: pointer;
-    
-    font-size: 1rem;    /* Tamanho do ícone */
-    color: #444;        /* Cor inicial: Cinza escuro (discreto) */
-    
+    color: var(--secondary);
+    transition: 0.2s;
     z-index: 10;
-    transition: all 0.2s ease;
-    
-    /* Um círculo leve em volta para facilitar o clique */
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
 }
 
-/* Quando passa o mouse */
-.btn-delete-char:hover {
-    color: #ff4444; /* Vira Vermelho Sangue */
-    background-color: rgba(255, 68, 68, 0.1); /* Fundo levemente avermelhado */
-    transform: scale(1.1);
+.btn-delete:hover {
+    color: var(--danger);
+    transform: scale(1.2);
 }

@@ -1,9 +1,12 @@
 package br.com.henrique.bloodcrown_cs.Models;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import br.com.henrique.bloodcrown_cs.Enums.AbilityCategoryEnum;
 import br.com.henrique.bloodcrown_cs.Enums.AbilityResourceEnum;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -47,11 +51,8 @@ public class AbilityModel {
     @Column(name = "dice_roll")
     private String diceRoll;
 
-    @Column(name = "target_attribute")
-    private String targetAttribute;
-    
-    @Column(name = "effect_value")
-    private Integer effectValue;
+    @OneToMany(mappedBy = "ability", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AbilityEffectModel> effects;
 
     @Column(name = "duration_dice")
     private String durationDice;

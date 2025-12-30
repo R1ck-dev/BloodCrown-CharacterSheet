@@ -5,7 +5,7 @@ async function createAttack(characterId, token) {
 
     // Validação de formato de dado (Ex: 1d8)
     if(!damage.match(/\d+d\d+/)) {
-        alert("A fórmula de dano precisa ter pelo menos um dado (ex: 1d6).");
+        Swal.fire({ icon: 'warning', text: "A fórmula de dano precisa ter pelo menos um dado (ex: 1d6).", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
         return;
     }
 
@@ -39,12 +39,25 @@ async function createAttack(characterId, token) {
 
     } catch (error) {
         console.error(error);
-        alert("Erro ao salvar ataque.");
+        Swal.fire({ icon: 'error', title: 'Erro', text: "Erro ao salvar ataque.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
 
 async function deleteAttack(attackId, elementToRemove, token) {
-    if (!confirm("Tem certeza que deseja apagar este ataque?")) return;
+    const result = await Swal.fire({
+        title: 'Apagar Ataque?',
+        text: "Tem certeza que deseja remover?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, apagar',
+        cancelButtonText: 'Cancelar',
+        background: '#212529', color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
         const response = await fetch(`http://localhost:8080/attacks/${attackId}`, {
             method: 'DELETE',
@@ -53,7 +66,7 @@ async function deleteAttack(attackId, elementToRemove, token) {
         if (!response.ok) throw new Error('Erro ao deletar');
         elementToRemove.remove();
     } catch (error) {
-        alert("Erro ao remover ataque.");
+        Swal.fire({ icon: 'error', text: "Erro ao remover ataque.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
 

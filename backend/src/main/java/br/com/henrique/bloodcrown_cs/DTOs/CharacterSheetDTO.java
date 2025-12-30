@@ -11,7 +11,11 @@ public record CharacterSheetDTO(
     StatusDTO status,
     ExpertiseDTO expertise,
     List<AttackDTO> attacks,
-    List<AbilityDTO> abilities
+    List<AbilityDTO> abilities,
+    List<ItemDTO> inventory,
+    String money,
+    Integer heroPoint,
+    String biography
 ) {
     
 }

@@ -3,3 +3,66 @@
   padding: 0;
   box-sizing: border-box; 
 }
+
+/* assets/css/Global.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+/* =========================================================
+   1. TEMA PADRÃO (BASE / ROXO)
+   As cores que o site usa se nenhum tema for selecionado.
+   ========================================================= */
+:root {
+    /* Cores de Identidade */
+    --primary: #7b2cbf;          /* Roxo Principal */
+    --primary-hover: #9d4edd;    /* Roxo Claro (Hover/Glow) */
+    --secondary: #9aa0a6;        /* Cinza para textos secundários */
+    
+    /* Cores de Fundo */
+    --bg-page: #050505;          /* Fundo da página */
+    --bg-card: #121212;          /* Fundo dos cards/paineis */
+    --bg-input: rgba(255,255,255,0.03);
+    
+    /* Bordas e Elementos */
+    --border-color: #333;
+    --border-focus: rgba(123, 44, 191, 0.5); /* Cor do foco no input */
+    
+    /* Cores Especiais */
+    --text-highlight: #9d4edd;   /* Destaque de texto (igual hover) */
+    --danger: #dc3545;
+    --success: #198754;
+    --warning: #ffc107;
+}
+
+/* =========================================================
+   2. TEMA BLOODCROWN (VERMELHO & DOURADO)
+   Adicione a classe "theme-blood" no <body> para ativar.
+   ========================================================= */
+body.theme-blood {
+    /* Identidade muda para Sangue e Ouro */
+    --primary: #8a0303;          /* Vermelho Sangue */
+    --primary-hover: #dc2626;    /* Vermelho Vivo */
+    
+    /* Destaques mudam para Dourado */
+    --text-highlight: #d4af37;   /* Ouro Metálico */
+    --border-focus: rgba(212, 175, 55, 0.5); /* Brilho dourado */
+    
+    /* O fundo pode ter um tom mais "infernal" se quiser */
+    --bg-page: #080000;
+}
+
+/* =========================================================
+   3. ESTILOS GERAIS (Para não repetir em todo arquivo)
+   ========================================================= */
+body {
+    background-color: var(--bg-page);
+    font-family: 'Inter', sans-serif;
+    color: #e6e9eb;
+    transition: background-color 0.5s ease; /* Transição suave ao trocar tema */
+}
+
+/* Scrollbar Bonita Global */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }

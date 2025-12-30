@@ -54,4 +54,16 @@ public class CharacterModel {
 
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AbilityModel> abilities;
+
+    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemModel> inventory;
+
+    @Column(name = "money")
+    private String money; 
+
+    @Column(name = "heroi_point")
+    private Integer heroPoint; 
+    
+    @Column(name = "biography" ,columnDefinition = "TEXT") 
+    private String biography;
 }

@@ -1,34 +1,54 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login | BloodCrown</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/Login.css">
 </head>
 <body>
-    <main class="container">
-        <section class="card">
-            <h1>Login</h1>
-            <p>Conecte-se à sua conta</p>
 
-            <form class="form" id="login-form">
-                <label for="login__email-user">Nome de Usuário</label>
-                <input type="text" name="username" id="login__username-user" placeholder="Digite seu nome">
+    <main class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card login-card p-4 rounded-3 shadow-lg">
+            
+            <div class="text-center mb-4">
+                <h2 class="text-light fw-bold">BLOOD<span style="color: #7b2cbf;">CROWN</span></h2>
+                <small class="text-secondary">RPG Manager</small>
+            </div>
 
-                <label for="login__password-user">Senha</label>
-                <input type="password" name="password" id="login__password-user" placeholder="Digite sua senha">
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="login__username-user" class="form-label text-secondary small">USUÁRIO</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="login__username-user" class="form-control bg-black text-light border-secondary" placeholder="Digite seu nome" required>
+                    </div>
+                </div>
 
-                <button type="submit">Continuar</button>
+                <div class="mb-4">
+                    <label for="login__password-user" class="form-label text-secondary small">SENHA</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="login__password-user" class="form-control bg-black text-light border-secondary" placeholder="Digite sua senha" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-purple w-100 py-2 fw-bold mb-3">ENTRAR</button>
             </form>
 
-            <p class="redirect">Não tem uma conta?
-                <a href="RegisterScreen.html">Criar agora</a>
-            </p>
-        </section>
+            <div class="text-center border-top border-secondary pt-3 mt-2">
+                <span class="text-secondary small">Não tem uma conta?</span>
+                <a href="RegisterScreen.html" class="text-decoration-none text-info small fw-bold ms-1">Criar agora</a>
+            </div>
+        </div>
     </main>
 
-    <script src="assets/js/ApiService.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="assets/css/Global.css">
     <script src="assets/js/Login.js"></script>
 </body>
 </html>

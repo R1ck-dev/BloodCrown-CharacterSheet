@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="assets/css/Sheet.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </head>
 <body class="bg-black text-light"> <main class="container-fluid p-4">
@@ -25,13 +26,26 @@
                     <input type="text" id="charClass" class="form-control rpg-input" placeholder="Ex: Irregular">
                 </div>
                 <div class="col-md-2">
-                    <label class="text-secondary small">Nível</label>
-                    <input type="number" id="charLevel" class="form-control rpg-input" placeholder="5">
-                </div>
-                <div class="col-md-4 text-end">
-                    <a href="Dashboard.html" class="btn btn-outline-secondary me-2">Sair</a>
-                    <button id="btnSave" class="btn btn-purple">SALVAR</button>
-                </div>
+                        <label class="text-secondary small">NÍVEL</label>
+                        <input type="number" id="charLevel" class="form-control rpg-input" placeholder="1">
+                    </div>
+                    
+                    <div class="col-md-1 text-center">
+                        <label class="text-warning small" style="font-size: 0.7rem;">HERÓICO</label>
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input class="form-check-input bg-dark border-warning" type="checkbox" id="charHeroPoint" style="width: 25px; height: 25px;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 text-end d-flex align-items-end justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#modalNotepad" title="Bloco de Notas">
+                            <i class="fa-solid fa-note-sticky"></i>
+                        </button>
+
+                        <a href="Dashboard.html" class="btn btn-outline-secondary"><i class="fa-solid fa-right-from-bracket"></i></a>
+                        <button id="btnRest" class="btn btn-outline-warning" title="Descanso Longo"><i class="fa-solid fa-campground"></i></button>
+                        <button id="btnSave" class="btn btn-purple">SALVAR</button>
+                    </div>
             </header>
 
             <div class="row g-4">
@@ -135,8 +149,8 @@
                         </div>
                     </div>
 
-                    <div class="defense-card d-flex flex-column align-items-center p-3 border border-secondary rounded bg-dark">
-                        
+                    <div class="defense-card d-flex flex-column align-items-center p-3 border border-secondary rounded bg-dark mb-3">
+    
                         <div class="position-relative text-center mb-2">
                             <i class="fa-solid fa-shield text-secondary" style="font-size: 3.5rem;"></i>
                             <div class="position-absolute top-50 start-50 translate-middle">
@@ -145,29 +159,36 @@
                             </div>
                         </div>
                         
-                        <div class="defense-formula d-flex align-items-center justify-content-center gap-1 text-muted" style="font-size: 0.8rem;">
-                            
+                        <div class="defense-formula d-flex align-items-center justify-content-center gap-1 text-muted mb-3" style="font-size: 0.8rem;">
                             <div class="text-center">
                                 <input type="number" id="defBase" class="formula-input text-secondary" value="10" title="Base">
                                 <div style="font-size: 0.6rem;">BASE</div>
                             </div>
                             <span>+</span>
-                            
                             <div class="text-center">
                                 <span id="defDexDisplay" class="fw-bold text-light">0</span>
                                 <div style="font-size: 0.6rem;">DES</div>
                             </div>
                             <span>+</span>
-
                             <div class="text-center">
                                 <input type="number" id="defArmor" class="formula-input text-info" placeholder="0" title="Armadura">
                                 <div style="font-size: 0.6rem;">ARM</div>
                             </div>
                             <span>+</span>
-
                             <div class="text-center">
                                 <input type="number" id="defOther" class="formula-input text-warning" placeholder="0" title="Outros">
                                 <div style="font-size: 0.6rem;">OUT</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 w-100 border-top border-secondary pt-2">
+                            <div class="text-center w-50">
+                                <label class="text-secondary small" style="font-size: 0.7rem;">RES. FÍSICA</label>
+                                <input type="number" id="resPhysical" class="form-control bg-black text-light border-secondary text-center p-0" value="0">
+                            </div>
+                            <div class="text-center w-50">
+                                <label class="text-secondary small" style="font-size: 0.7rem;">RES. MÁGICA</label>
+                                <input type="number" id="resMagical" class="form-control bg-black text-info border-secondary text-center p-0" value="0">
                             </div>
                         </div>
                     </div>
@@ -278,11 +299,23 @@
                         </div>
 
                         <div class="tab-pane fade" id="tabInv" role="tabpanel">
-                            <h6 class="text-secondary border-bottom border-secondary pb-2">Mochila</h6>
+                            
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-dark border-secondary text-warning"><i class="fa-solid fa-coins"></i></span>
+                                <input type="text" id="charMoney" class="form-control bg-black text-warning border-secondary" placeholder="Ex: 100">
                             </div>
 
-                        <div class="tab-pane fade" id="tabDesc" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-secondary m-0">Mochila</h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOpenItemModal">+ Item</button>
                             </div>
+                            <div id="inventoryList" class="d-flex flex-column gap-2"></div>
+                        </div>
+
+                        <div class="tab-pane fade h-100" id="tabDesc" role="tabpanel">
+                            <h6 class="text-secondary mb-2">Biografia & Anotações Permanentes</h6>
+                            <textarea id="charBio" class="form-control bg-black text-light border-secondary h-100 custom-scroll" style="min-height: 400px; resize: none;" placeholder="Escreva a história do seu personagem..."></textarea>
+                        </div>
 
                     </div>
                 </div> 
@@ -299,7 +332,7 @@
                 <div class="dice-info text-secondary small">
                     <div>Dados: <span id="diceRolled" class="text-light"></span></div>
                     <div>Maior: <span id="bestDice" class="text-warning fw-bold"></span></div>
-                    <div>Bônus: <span id="modifierValue" class="text-info"></span></div>
+                    <div><span id="modifierValue" class="text-info"></span></div>
                 </div>
 
                 <div class="dice-total text-end">
@@ -402,35 +435,68 @@
                                                 </select>
                                                 <div class="form-text text-muted small" style="font-size: 0.7rem;">Define o que é gasto para recuperar 1 uso.</div>
                                             </div>
-                                            <div class="col-6">
+                                            <div class="col-12">
                                                 <label class="text-secondary small">Max. Usos</label>
                                                 <input type="number" id="abilMaxUses" class="form-control bg-black text-light border-secondary text-center" value="1">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="text-secondary small">Rolagem</label>
-                                                <input type="text" id="abilDice" class="form-control bg-black text-light border-secondary" placeholder="Ex: 2d12">
                                             </div>
                                         </div>
                                     </div>
                                     <div class="p-2 border border-secondary rounded mb-3 bg-dark bg-opacity-25">
-                                        <label class="text-success small fw-bold mb-2"><i class="fa-solid fa-shield-halved"></i> EFEITO ATIVO (BUFF)</label>
-                                        <div class="row">
-                                            <div class="col-7">
-                                                <label class="text-secondary small">Atributo Alvo</label>
-                                                <select id="abilTarget" class="form-select bg-black text-light border-secondary small">
-                                                    <option value="none">Nenhum</option>
-                                                    <option value="defense">Defesa (Outros)</option>
-                                                    <option value="defenseBase">Defesa (Base)</option>
-                                                    <option value="armor">Armadura</option>
-                                                    <option value="attrForca">Força</option>
-                                                    <option value="attrDestreza">Destreza</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-5">
-                                                <label class="text-secondary small">Valor</label>
-                                                <input type="number" id="abilEffectValue" class="form-control bg-black text-light border-secondary text-center" placeholder="0">
-                                            </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="text-success small fw-bold m-0"><i class="fa-solid fa-shield-halved"></i> EFEITOS ATIVOS</label>
+                                            <button type="button" class="btn btn-sm btn-outline-success py-0" style="font-size: 0.7rem;" onclick="addEffectRow()">+ Adicionar</button>
                                         </div>
+                                        
+                                        <div id="effectsContainer" class="d-flex flex-column gap-2">
+                                            </div>
+                                        
+                                        <template id="effectRowTemplate">
+                                            <div class="input-group input-group-sm effect-row">
+                                                <select class="form-select bg-black text-light border-secondary effect-target" style="max-width: 65%;">
+                                                    <option value="none">Selecione...</option>
+                                                    <optgroup label="Defesa & Resistência">
+                                                        <option value="defOther">Defesa (Outros)</option>
+                                                        <option value="resPhysical">Res. Física</option>
+                                                        <option value="resMagical">Res. Mágica</option>
+                                                        <option value="defArmor">Armadura</option>
+                                                    </optgroup>
+                                                    <optgroup label="Atributos">
+                                                        <option value="attrForca">Força</option>
+                                                        <option value="attrDestreza">Destreza</option>
+                                                        <option value="attrConstituicao">Constituição</option>
+                                                        <option value="attrInteligencia">Inteligência</option>
+                                                        <option value="attrSabedoria">Sabedoria</option>
+                                                        <option value="attrCarisma">Carisma</option>
+                                                    </optgroup>
+                                                    <optgroup label="Perícias">
+                                                        <option value="skillAtletismo">Atletismo</option>
+                                                        <option value="skillConhecimento">Conhecimento</option>
+                                                        <option value="skillConsertar">Consertar</option>
+                                                        <option value="skillDiplomacia">Diplomacia</option>
+                                                        <option value="skillDomar">Domar</option>
+                                                        <option value="skillEmpatia">Empatia</option>
+                                                        <option value="skillFortitude">Fortitude</option>
+                                                        <option value="skillFurtividade">Furtividade</option>
+                                                        <option value="skillIniciativa">Iniciativa</option>
+                                                        <option value="skillIntimidar">Intimidação</option>
+                                                        <option value="skillIntuicao">Intuição</option>
+                                                        <option value="skillInvestigacao">Investigação</option>
+                                                        <option value="skillLabia">Lábia</option>
+                                                        <option value="skillLadinagem">Ladinagem</option>
+                                                        <option value="skillLuta">Luta</option>
+                                                        <option value="skillMagia">Magia</option>
+                                                        <option value="skillMedicina">Medicina</option>
+                                                        <option value="skillMente">Mente</option>
+                                                        <option value="skillPercepcao">Percepção</option>
+                                                        <option value="skillPontaria">Pontaria</option>
+                                                        <option value="skillReflexos">Reflexos</option>
+                                                        <option value="skillSeduzir">Seduzir</option>
+                                                        <option value="skillSobrevivencia">Sobrevivência</option>
+                                                </select>
+                                                <input type="number" class="form-control bg-black text-light border-secondary text-center effect-value" placeholder="Val" style="max-width: 25%;">
+                                                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.effect-row').remove()">X</button>
+                                            </div>
+                                        </template>
                                     </div>
                                     <div class="p-2 border border-secondary rounded bg-dark bg-opacity-25">
                                         <label class="text-warning small fw-bold mb-2"><i class="fa-regular fa-clock"></i> DURAÇÃO</label>
@@ -452,12 +518,25 @@
                 </div>
             </div>
         </div>
+        <button id="btnOpenPanel" class="position-fixed top-50 end-0 translate-middle-y btn btn-dark border border-secondary rounded-start shadow py-3" 
+                style="z-index: 1001; display: none; border-right: 0;" title="Ver Efeitos Ativos">
+            <i class="fa-solid fa-bolt text-warning"></i>
+            <span id="badgeActiveCount" class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                0
+            </span>
+        </button>
+
         <div id="activeEffectsPanel" class="position-fixed top-50 end-0 translate-middle-y p-3 rounded-start bg-dark border border-secondary border-end-0 shadow" 
-    style="width: 250px; z-index: 1000; display: none;">
-    
-            <h6 class="text-warning border-bottom border-secondary pb-2 mb-3 text-center">
-                <i class="fa-solid fa-bolt"></i> EFEITOS ATIVOS
-            </h6>
+            style="width: 250px; z-index: 1000; display: none;">
+            
+            <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                <h6 class="text-warning m-0">
+                    <i class="fa-solid fa-bolt"></i> ATIVOS
+                </h6>
+                <button id="btnClosePanel" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
             
             <div id="effectsList" class="d-flex flex-column gap-2 mb-3" style="max-height: 300px; overflow-y: auto;">
                 </div>
@@ -466,15 +545,79 @@
                 <i class="fa-solid fa-hourglass-half"></i> PASSAR TURNO
             </button>
         </div>
+        <div class="modal fade" id="modalNewItem" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark border-secondary text-light">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title">Novo Item</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formItem">
+                            <div class="mb-3">
+                                <label class="text-secondary small">NOME</label>
+                                <input type="text" id="itemName" class="form-control bg-black text-light border-secondary">
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-secondary small">DESCRIÇÃO</label>
+                                <textarea id="itemDesc" class="form-control bg-black text-light border-secondary" rows="2"></textarea>
+                            </div>
+                            <div class="p-2 border border-secondary rounded bg-dark bg-opacity-25">
+                                <label class="text-info small fw-bold mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> EFEITO MÁGICO</label>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <select id="itemTarget" class="form-select bg-black text-light border-secondary small">
+                                            <option value="none">Nenhum (Apenas Item)</option>
+                                            <optgroup label="Defesa">
+                                                <option value="defArmor">Armadura (+CA)</option>
+                                                <option value="resPhysical">Res. Física</option>
+                                                <option value="resMagical">Res. Mágica</option>
+                                            </optgroup>
+                                            <optgroup label="Economia (Custo -)">
+                                                <option value="REDUCE_MANA">Reduzir Custo Mana</option>
+                                                <option value="REDUCE_STAMINA">Reduzir Custo Estamina</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="number" id="itemValue" class="form-control bg-black text-light border-secondary text-center" placeholder="Val">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-purple" id="btnSaveItem">Criar Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalNotepad" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark border-secondary text-light">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title"><i class="fa-regular fa-note-sticky text-warning"></i> Bloco de Notas</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-secondary small">Estas notas ficam salvas no seu navegador e não vão para o banco de dados.</p>
+                        <textarea id="tempNotepad" class="form-control bg-black text-light border-secondary" rows="10" placeholder="Anote condições, iniciativas ou lembretes..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="assets/css/Global.css">
     
     <script src="assets/js/ApiService.js" defer></script>
     <script src="assets/js/DiceRoll.js"></script>
     <script src="assets/js/Attack.js"></script>
     <script src="assets/js/Defense.js"></script>
+    <script src="assets/js/Inventory.js"></script>
     
     <script src="assets/js/Abilities.js"></script>
     

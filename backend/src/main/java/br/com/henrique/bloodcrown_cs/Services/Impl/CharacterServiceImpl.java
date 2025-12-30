@@ -1,5 +1,6 @@
 package br.com.henrique.bloodcrown_cs.Services.Impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -9,7 +10,9 @@ import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttributesDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ExpertiseDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.StatusDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
@@ -40,21 +43,16 @@ public class CharacterServiceImpl implements CharacterService{
         List<CharacterModel> charactersList = characterRepository.findByFromUserId(currentUser.getId());
 
         //Coverte Model -> DTO
-        List<CharacterDTO> response = charactersList.stream()
+        return charactersList.stream()
                 .map(characterModel -> new CharacterDTO(
                     characterModel.getId(),
                     characterModel.getName(),
                     characterModel.getCharacterClass(),
                     characterModel.getLevel(),
                     characterModel.getAttacks().stream().map(atk -> new AttackDTO(
-                        atk.getId(),
-                        atk.getName(),
-                        atk.getDamageDice(),
-                        atk.getDescription()
+                        atk.getId(), atk.getName(), atk.getDamageDice(), atk.getDescription()
                     )).toList()
                 )).toList();
-
-        return response;
     }
 
 //-----------------------------------------------------------------------------------
@@ -166,7 +164,9 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getStatus().getDefense(),
             charModel.getStatus().getDefenseBase(),
             charModel.getStatus().getArmorBonus(),
-            charModel.getStatus().getOtherBonus()
+            charModel.getStatus().getOtherBonus(),
+            charModel.getStatus().getPhysicalRes(),
+            charModel.getStatus().getMagicalRes()
         );
 
         ExpertiseDTO expertise = new ExpertiseDTO(
@@ -204,22 +204,33 @@ public class CharacterServiceImpl implements CharacterService{
             )).toList();
 
         List<AbilityDTO> abilities = charModel.getAbilities().stream()
-            .map(ab -> new AbilityDTO(
-                ab.getId(),
-                ab.getName(),
-                ab.getCategory(),
-                ab.getResourceType(),
-                ab.getActionType(),
-                ab.getMaxUses(),
-                ab.getCurrentUses(),
-                ab.getDiceRoll(),
-                ab.getTargetAttribute(),
-                ab.getEffectValue(),
-                ab.getDurationDice(),
-                ab.getIsActive(),
-                ab.getTurnsRemaining(),
-                ab.getDescription()
-            )).toList();
+            .map(ab -> {
+                List<EffectDTO> effects = ab.getEffects() != null 
+                    ? ab.getEffects().stream()
+                        .map(e -> new EffectDTO(e.getTargetAttribute(), e.getEffectValue()))
+                        .toList()
+                    : new ArrayList<>();
+
+                return new AbilityDTO(
+                    ab.getId(),
+                    ab.getName(),
+                    ab.getCategory(),
+                    ab.getResourceType(),
+                    ab.getActionType(),
+                    ab.getMaxUses(),
+                    ab.getCurrentUses(),
+                    ab.getDiceRoll(),
+                    effects, 
+                    ab.getDurationDice(),
+                    ab.getIsActive(),
+                    ab.getTurnsRemaining(),
+                    ab.getDescription()
+                );
+            }).toList();
+        
+        List<ItemDTO> inventory = charModel.getInventory().stream()
+        .map(i -> new ItemDTO(i.getId(), i.getName(), i.getDescription(), i.getIsEquipped(), i.getTargetAttribute(), i.getEffectValue()))
+        .toList();
 
         return new CharacterSheetDTO(
             charModel.getId(),
@@ -230,7 +241,11 @@ public class CharacterServiceImpl implements CharacterService{
             status,
             expertise,
             attacks,
-            abilities
+            abilities,
+            inventory,
+            charModel.getMoney(),
+            charModel.getHeroPoint(),
+            charModel.getBiography()
         );
     }
 //-----------------------------------------------------------------------------------
@@ -245,6 +260,9 @@ public class CharacterServiceImpl implements CharacterService{
         charModel.setName(dto.name());
         charModel.setCharacterClass(dto.characterClass());
         charModel.setLevel(dto.level());
+        charModel.setMoney(dto.money());
+        charModel.setHeroPoint(dto.heroPoint());
+        charModel.setBiography(dto.biography());
 
         if (dto.attributes() != null) {
             charModel.getAttributes().setForca(dto.attributes().forca());
@@ -278,6 +296,14 @@ public class CharacterServiceImpl implements CharacterService{
             }
             if (dto.status().otherBonus() != null) {
                 charModel.getStatus().setOtherBonus(dto.status().otherBonus());
+            }
+
+            if (dto.status().physicalRes() != null) {
+                charModel.getStatus().setPhysicalRes(dto.status().physicalRes());
+            }
+
+            if (dto.status().magicalRes() != null) {
+                charModel.getStatus().setMagicalRes(dto.status().magicalRes());
             }
 
             Integer currHealth = dto.status().currentHealth();
@@ -332,6 +358,8 @@ public class CharacterServiceImpl implements CharacterService{
             
         }
 
+
+
         characterRepository.save(charModel);
         return dto; 
     }
@@ -345,6 +373,34 @@ public class CharacterServiceImpl implements CharacterService{
             .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
 
         characterRepository.delete(charModel);
+    }
+
+    @Override
+    public void restCharacter(String id, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
+                .orElseThrow(() -> new RuntimeException("Ficha não encontrada."));
+
+        CharacterStatus status = charModel.getStatus();
+        if (status != null) {
+            status.setCurrentHealth(status.getMaxHealth());
+            status.setCurrentMana(status.getMaxMana());
+            status.setCurrentSanity(status.getMaxSanity());
+            status.setCurrentStamina(status.getMaxStamina());
+        }
+
+        if (charModel.getAbilities() != null) {
+            for (br.com.henrique.bloodcrown_cs.Models.AbilityModel ability : charModel.getAbilities()) {
+                if (ability.getMaxUses() != null) {
+                    ability.setCurrentUses(ability.getMaxUses());
+                }
+                
+                ability.setIsActive(false);
+                ability.setTurnsRemaining(0);
+            }
+        }
+
+        characterRepository.save(charModel);
     }
 
 } 

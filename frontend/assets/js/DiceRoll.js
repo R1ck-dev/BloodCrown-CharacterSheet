@@ -1,41 +1,21 @@
+/* assets/js/DiceRoll.js - Corrigido Travamento de Animação */
+
 const skillMap = {
-    'skillAtletismo': 'attrForca',
-    'skillLuta': 'attrForca',
-
-    'skillFurtividade': 'attrDestreza',
-    'skillIniciativa': 'attrDestreza',
-    'skillLadinagem': 'attrDestreza',
-    'skillPontaria': 'attrDestreza',
-    'skillReflexos': 'attrDestreza',
-
-    'skillConhecimento': 'attrInteligencia',
-    'skillConsertar': 'attrInteligencia',
-    'skillInvestigacao': 'attrInteligencia',
-    'skillMedicina': 'attrInteligencia',
-    'skillMente': 'attrInteligencia',
-    'skillSobrevivencia': 'attrInteligencia',
-
-    'skillDiplomacia': 'attrCarisma',
-    'skillDomar': 'attrCarisma',
-    'skillEmpatia': 'attrCarisma',
-    'skillIntimidar': 'attrCarisma',
-    'skillLabia': 'attrCarisma',
-    'skillSeduzir': 'attrCarisma',
-
+    'skillAtletismo': 'attrForca', 'skillLuta': 'attrForca',
+    'skillFurtividade': 'attrDestreza', 'skillIniciativa': 'attrDestreza', 'skillLadinagem': 'attrDestreza', 'skillPontaria': 'attrDestreza', 'skillReflexos': 'attrDestreza',
+    'skillConhecimento': 'attrInteligencia', 'skillConsertar': 'attrInteligencia', 'skillInvestigacao': 'attrInteligencia', 'skillMedicina': 'attrInteligencia', 'skillMente': 'attrInteligencia', 'skillSobrevivencia': 'attrInteligencia',
+    'skillDiplomacia': 'attrCarisma', 'skillDomar': 'attrCarisma', 'skillEmpatia': 'attrCarisma', 'skillIntimidar': 'attrCarisma', 'skillLabia': 'attrCarisma', 'skillSeduzir': 'attrCarisma',
     'skillFortitude': 'attrConstituicao',
-
-    'skillIntuicao': 'attrSabedoria',
-    'skillMagia': 'attrSabedoria',
-    'skillPercepcao': 'attrSabedoria'
+    'skillIntuicao': 'attrSabedoria', 'skillMagia': 'attrSabedoria', 'skillPercepcao': 'attrSabedoria'
 }
 
-//- sourceName: Nome para mostrar no título, ex: "Teste de Luta"
-//- attrId: O ID do campo de atributo para saber quantos dados rolar
-//- skillInputId: O ID da perícia para pegar o bônus
+let toastTimer = null;
+let animationInterval = null;
+
+// --- SISTEMA D20 (PERÍCIAS/ATRIBUTOS) ---
 function rollSystem(sourceName, attrId, skillInputId = null) {
     const attrElement = document.getElementById(attrId);
     let diceCount = parseInt(attrElement.value) || 0;
-
     if (diceCount < 1) diceCount = 1;
 
     let bonus = 0;
@@ -44,93 +24,193 @@ function rollSystem(sourceName, attrId, skillInputId = null) {
         bonus = parseInt(skillElement.value) || 0; 
     }
 
-    let rolls = [];
-
+    // 1. Cálculos Reais
+    let finalRolls = [];
     for (let i = 0; i < diceCount; i++) {
-        //Math.random() gera 0.0 até 0.999
-        //Multiplica por 20 (agora 0 a 19.99)
-        //Math.ceil arredonda para cima (1 a 20)
-        const result = Math.ceil(Math.random() * 20);
-        rolls.push(result);
+        finalRolls.push(Math.ceil(Math.random() * 20));
     }
-
-    //"..." tiram os números de dentro da lista
-    const bestDice = Math.max(...rolls);
-
+    const bestDice = Math.max(...finalRolls);
     const finalResult = bestDice + bonus;
 
-    showModal(sourceName, rolls, bestDice, bonus, finalResult);
+    // 2. Chama Animação (Modo D20)
+    animateAndShow(sourceName, finalRolls, bestDice, bonus, finalResult, 20, false);
 }
 
-//Preencher o HTML do modal
-let toastTimer = null;
-
-function showModal(title, rolls, best, bonus, total) {
-    const toast = document.getElementById('diceToast');
-
-    document.getElementById('rollTitle').innerText = title;
-    document.getElementById('diceRolled').innerText = `[ ${rolls.join(', ')} ]`;
+// --- SISTEMA DE DANO ---
+function rollDamage(damageString, sourceName) {
+    const cleanStr = damageString.toLowerCase().replace(/\s/g, '');
+    const regexReal = /([+-]?)(\d+)d(\d+)|([+-]?)(\d+)/g;
     
-    const bestEl = document.getElementById('bestDice');
-    if (bestEl) bestEl.innerText = best;
+    if (!cleanStr.match(/[\d\w]/)) {
+        Swal.fire({ icon: 'warning', text: "Fórmula de dano vazia.", background: '#212529', color: '#fff', confirmButtonColor: '#8a1c1c' });
+        return;
+    }
 
-    //Se o bônus for positivo, coloca um "+" na frente
-    document.getElementById('modifierValue').innerText = bonus >= 0 ? `+${bonus}` : bonus;
+    let match;
+    let total = 0;
+    let allRolls = [];
+    let maxFaceFound = 20;
 
-    document.getElementById('finalResult').innerText = total;
+    // 1. Cálculos Reais
+    while ((match = regexReal.exec(cleanStr)) !== null) {
+        if (match[2] && match[3]) { // Dados (Ex: 2d8)
+            const sign = match[1] === '-' ? -1 : 1;
+            const count = parseInt(match[2]);
+            const faces = parseInt(match[3]);
+            if(faces > maxFaceFound) maxFaceFound = faces;
 
-    toast.classList.add('show');
+            for (let i = 0; i < count; i++) {
+                const result = Math.ceil(Math.random() * faces);
+                allRolls.push(result);
+                total += (result * sign);
+            }
+        }
+        else if (match[5]) { // Valor Fixo (Ex: +5)
+            const sign = match[4] === '-' ? -1 : 1;
+            const val = parseInt(match[5]);
+            total += (val * sign);
+        }
+    }
 
-    if(toastTimer) clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-    }, 10000);
+    // 2. Chama Animação (Modo Dano)
+    animateAndShow(sourceName, allRolls, null, 0, total, maxFaceFound, true);
 }
 
-//Funcão de configuração para percorrer o site procurando os elementos e adicionando o "clique" neles
+
+// --- LÓGICA DE ANIMAÇÃO ---
+
+function animateAndShow(title, realRollsArray, realBest, realBonus, realTotal, maxFaceSize, isDamage) {
+    const toast = document.getElementById('diceToast');
+    const titleEl = document.getElementById('rollTitle');
+    const rollsEl = document.getElementById('diceRolled');
+    const resultEl = document.getElementById('finalResult');
+    
+    // Labels Internas (Melhor Dado / Bônus / Texto Extra)
+    const bestLabel = document.getElementById('bestDice');
+    const modLabel = document.getElementById('modifierValue');
+    const extraLabelContainer = document.querySelector('#diceToast .dice-info div:nth-child(2)'); // Coluna da direita
+
+    // Limpeza de Timers e Textos Antigos
+    if (toastTimer) clearTimeout(toastTimer);
+    if (animationInterval) clearInterval(animationInterval);
+    
+    // Reset visual
+    toast.classList.add('show');
+    titleEl.innerText = title;
+    resultEl.style.color = "#ccc"; // Cor neutra durante rolagem
+    resultEl.style.transform = "scale(1)";
+
+    // Configuração Inicial de Labels
+    if(isDamage) {
+        // Modo Dano: Limpa "Melhor Dado" e prepara label de texto
+        if(bestLabel && bestLabel.parentElement) bestLabel.parentElement.innerHTML = '<small class="text-secondary" style="font-size: 0.7rem;">DADOS</small><div id="bestDice">-</div>';
+        if(extraLabelContainer) extraLabelContainer.innerHTML = '<small class="text-secondary" style="font-size: 0.7rem;">TIPO</small><div class="text-light">Dano</div>';
+    } else {
+        // Modo D20: Restaura labels originais se foram alteradas
+        if(bestLabel && bestLabel.parentElement) bestLabel.parentElement.innerHTML = '<small class="text-secondary" style="font-size: 0.7rem;">MELHOR</small><div id="bestDice" class="fs-4 fw-bold text-info"></div>';
+        if(extraLabelContainer) extraLabelContainer.innerHTML = '<small class="text-secondary" style="font-size: 0.7rem;">BÔNUS</small><div id="modifierValue" class="fs-4 fw-bold text-success"></div>';
+    }
+
+    // Re-seleciona elementos após reset de HTML
+    const currentBestEl = document.getElementById('bestDice');
+    const currentModEl = document.getElementById('modifierValue');
+
+    // Se for D20, já mostra o bônus estático
+    if (!isDamage && currentModEl) {
+        currentModEl.innerText = realBonus >= 0 ? `+${realBonus}` : realBonus;
+    }
+
+    // --- LOOP DE ANIMAÇÃO ---
+    let counter = 0;
+    const duration = 1500; 
+    const intervalTime = 100; 
+
+    animationInterval = setInterval(() => {
+        // Gera números falsos
+        const fakeRolls = realRollsArray.map(() => Math.ceil(Math.random() * maxFaceSize));
+        const fakeBest = Math.max(...fakeRolls);
+        
+        // Atualiza a lista de dados
+        rollsEl.innerText = `[ ${fakeRolls.join(', ')} ]`;
+        
+        // Atualiza o Numerozão (Result)
+        if (isDamage) {
+            // No dano, mostramos a soma dos dados + fixo (estimado)
+            const fakeTotal = fakeRolls.reduce((a, b) => a + b, 0); 
+            resultEl.innerText = fakeTotal; 
+            if(currentBestEl) currentBestEl.innerText = "-";
+        } else {
+            // No D20, mostramos Melhor + Bônus
+            resultEl.innerText = fakeBest + realBonus;
+            if(currentBestEl) currentBestEl.innerText = fakeBest;
+        }
+
+        counter += intervalTime;
+        if (counter >= duration) {
+            finishAnimation(realRollsArray, realBest, realTotal, isDamage, currentBestEl, extraLabelContainer);
+        }
+    }, intervalTime);
+}
+
+function finishAnimation(realRolls, realBest, realTotal, isDamage, bestEl, extraContainer) {
+    clearInterval(animationInterval); // PARA O LOOP
+
+    // Define os valores REAIS FINAIS
+    document.getElementById('diceRolled').innerText = `[ ${realRolls.join(', ')} ]`;
+    const resEl = document.getElementById('finalResult');
+    
+    // Força o valor final correto (sobrescrevendo qualquer valor falso do loop)
+    resEl.innerText = realTotal;
+
+    if (isDamage) {
+        if(bestEl) bestEl.innerText = realRolls.length + "d"; // Mostra qtd de dados
+        // Atualiza o texto descritivo para mostrar o total também ali, se quiser, ou deixa só no grandão
+        if(extraContainer) extraContainer.innerHTML = `<small class="text-secondary" style="font-size: 0.7rem;">TOTAL</small><div class="text-warning fw-bold">${realTotal}</div>`;
+    } else {
+        if(bestEl) bestEl.innerText = realBest;
+    }
+
+    // Efeito de Sucesso
+    resEl.style.transition = "all 0.2s ease";
+    resEl.style.color = "#d4af37"; // Gold
+    resEl.style.transform = "scale(1.3)";
+    setTimeout(() => { resEl.style.transform = "scale(1)"; }, 200);
+
+    // Auto-fechamento
+    toastTimer = setTimeout(() => {
+        document.getElementById('diceToast').classList.remove('show');
+    }, 8000);
+}
+
+// Configuração de Eventos
 function setupRollEvents() {
-    //Configura clique nas perícias
-    //Object.entries transforma o mapa em pares [chave, valor] para poder passar um por um
+    // Perícias
     for (const [skillId, attrId] of Object.entries(skillMap)) {
         const skillInput = document.getElementById(skillId);
-
         if (!skillInput) continue;
-
         const row = skillInput.closest('tr');
-
         if (row) {
             const nameCell = row.cells[0];
-
             nameCell.classList.add('clickable-roll');
             nameCell.title = "Clique para rolar";
-
             nameCell.addEventListener('click', () => {
                 const skillName = nameCell.innerText.split('(')[0].trim();
-
                 rollSystem(skillName, attrId, skillId);
             });
         }
     }
-
-    //Configurando clique nos atributos para testes puros.
+    // Atributos Puros
     const attributes = ['attrForca', 'attrDestreza', 'attrConstituicao', 'attrInteligencia', 'attrSabedoria', 'attrCarisma'];
-
     attributes.forEach(attrId => {
         const input = document.getElementById(attrId);
         if(!input) return;
-
         const box = input.closest('.attr-circle');
-
         if(box) {
             box.style.cursor = "pointer";
-            box.title = "Clique para rolar teste de atributo puro";
-
+            box.title = "Clique para rolar";
             box.addEventListener('click', (e) => {
                 if (e.target.tagName === 'INPUT') return;
-
                 const label = box.querySelector('label').innerText;
-
                 rollSystem(`Teste de ${label}`, attrId, null);
             });
         }
@@ -142,53 +222,7 @@ function setupRollEvents() {
             const toast = document.getElementById('diceToast');
             toast.classList.remove('show');
             if(toastTimer) clearTimeout(toastTimer);
+            if(animationInterval) clearInterval(animationInterval);
         });
     }
-}
-
-function rollDamage(damageString, sourceName) {
-    //Remove espaços extras
-    const cleanStr = damageString.toLowerCase().replace(/\s/g, '');
-
-    // Grupo 1: O sinal (+ ou -). Se não tiver, assume +.
-    // Grupo 2 e 3: Dados (Ex: 2d8) -> Grupo 2 é a qtd, Grupo 3 são os lados.
-    // Grupo 4: Número fixo (Ex: 5) caso não seja dado.
-    const regex = /([+-]?)(\d+)d(\d+)|([+-]?)(\d+)/g;
-    
-    let match;
-    let total = 0;
-    let allRolls = [];
-    let breakdownText = [];
-
-    if (!cleanStr.match(/[\d\w]/)) {
-        alert("Fórmula de dano vazia.");
-        return;
-    }
-
-    while ((match = regex.exec(cleanStr)) !== null) {
-        if (match[2] && match[3]) {
-            const sign = match[1] === '-' ? -1 : 1;
-            const count = parseInt(match[2]);
-            const faces = parseInt(match[3]);
-
-            for (let i = 0; i < count; i++) {
-                const result = Math.ceil(Math.random() * faces);
-                allRolls.push(result);
-                total += (result * sign);
-            }
-        }
-        else if (match[5]) {
-            const sign = match[4] === '-' ? -1 : 1;
-            const val = parseInt(match[5]);
-            total += (val * sign);
-        }
-    }
-
-    showModal(sourceName, allRolls, total, 0, total);
-
-    const labelEl = document.querySelector('#diceToast .dice-info div:nth-child(2)');
-    if(labelEl) {
-        labelEl.innerHTML = `Dano Total: <span class="text-warning fw-bold">${total}</span>`;
-    }
-
 }

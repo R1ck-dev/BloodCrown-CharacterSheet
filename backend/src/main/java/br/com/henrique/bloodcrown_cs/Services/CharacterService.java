@@ -13,4 +13,5 @@ public interface CharacterService {
     CharacterSheetDTO getCharacterById(String id, Authentication authentication); 
     CharacterSheetDTO updateCharacter(String id, CharacterSheetDTO dto, Authentication authentication);
     void deleteCharacter(String id, Authentication authentication);
+    void restCharacter(String id, Authentication authentication);
 } 

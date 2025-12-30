@@ -1,37 +1,62 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Conta</title>
+    <title>Criar Conta | BloodCrown</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/Register.css">
 </head>
 <body>
-    <main class="container">
-        <section class="card">
-            <h1>Criar Conta</h1>
-            <p>Registre-se em poucos minutos</p>
 
-            <form class="form" id="register-form">
-                <label for="register__username-user">Nome de Usuário</label>
-                <input type="text" name="username" id="register__username-user" placeholder="Seu nome de usuário">
+    <main class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card login-card p-4 rounded-3 shadow-lg">
+            
+            <div class="text-center mb-4">
+                <h2 class="text-light fw-bold">CRIAR <span style="color: #7b2cbf;">CONTA</span></h2>
+                <small class="text-secondary">Junte-se à aventura</small>
+            </div>
 
-                <label for="register__password-user">Senha</label>
-                <input type="password" name="password" id="register__password-user" placeholder="Digite sua senha">
+            <form id="register-form">
+                <div class="mb-3">
+                    <label for="register__username-user" class="form-label text-secondary small">USUÁRIO</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="register__username-user" class="form-control bg-black text-light border-secondary" placeholder="Escolha seu nome" required>
+                    </div>
+                </div>
 
-                <label for="register__confirm-password-user">Confirmando Senha</label>
-                <input type="password" name="confirm-password" id="register__confirm-password-user" placeholder="Confirme sua senha">
+                <div class="mb-3">
+                    <label for="register__password-user" class="form-label text-secondary small">SENHA</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="register__password-user" class="form-control bg-black text-light border-secondary" placeholder="Crie uma senha" required>
+                    </div>
+                </div>
 
-                <button type="submit">Continuar</button>
+                <div class="mb-4">
+                    <label for="register__confirm-password-user" class="form-label text-secondary small">CONFIRMAR SENHA</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="register__confirm-password-user" class="form-control bg-black text-light border-secondary" placeholder="Repita a senha" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-purple w-100 py-2 fw-bold mb-3">REGISTRAR</button>
             </form>
 
-            <p class="redirect">Já tem uma conta?
-                <a href="index.html">Fazer Login</a>
-            </p>
-        </section>
+            <div class="text-center border-top border-secondary pt-3 mt-2">
+                <span class="text-secondary small">Já tem uma conta?</span>
+                <a href="index.html" class="text-decoration-none text-info small fw-bold ms-1">Fazer Login</a>
+            </div>
+        </div>
     </main>
 
-    <script src="assets/js/ApiService.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="assets/css/Global.css">
     <script src="assets/js/Register.js"></script>
 </body>
 </html>

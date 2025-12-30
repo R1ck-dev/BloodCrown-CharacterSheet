@@ -66,4 +66,10 @@ public class CharacterController {
         characterService.deleteCharacter(id, authentication);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/rest")
+    public ResponseEntity<Void> restCharacter(@PathVariable String id, Authentication authentication) {
+        characterService.restCharacter(id, authentication);
+        return ResponseEntity.ok().build();
+    }
 }

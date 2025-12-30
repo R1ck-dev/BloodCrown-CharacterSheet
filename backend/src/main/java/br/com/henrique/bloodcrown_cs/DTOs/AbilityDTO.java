@@ -1,5 +1,7 @@
 package br.com.henrique.bloodcrown_cs.DTOs;
 
+import java.util.List;
+
 import br.com.henrique.bloodcrown_cs.Enums.AbilityCategoryEnum;
 import br.com.henrique.bloodcrown_cs.Enums.AbilityResourceEnum;
 
@@ -12,8 +14,7 @@ public record AbilityDTO(
     Integer maxUses,
     Integer currentUses,
     String diceRoll,
-    String targetAttribute,
-    Integer effectValue,
+    List<EffectDTO> effects,
     String durationDice,
     Boolean isActive,
     Integer turnsRemaining,

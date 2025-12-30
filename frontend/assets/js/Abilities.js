@@ -14,11 +14,18 @@ async function createAbility(characterId, token) {
     const descEl = document.getElementById('abilDesc');
     
     const maxUsesEl = document.getElementById('abilMaxUses');
-    const diceEl = document.getElementById('abilDice');
-    const targetEl = document.getElementById('abilTarget');
-    const effectEl = document.getElementById('abilEffectValue');
     const durationEl = document.getElementById('abilDuration');
     const resourceEl = document.getElementById('abilResource');
+
+    const effectsList = [];
+    document.querySelectorAll('#effectsContainer .effect-row').forEach(row => {
+        const target = row.querySelector('.effect-target').value;
+        const val = parseInt(row.querySelector('.effect-value').value) || 0;
+        
+        if(target !== 'none' && val !== 0) {
+            effectsList.push({ target: target, value: val });
+        }
+    });
 
     if (!nameEl || !maxUsesEl) {
         console.error("Erro: Campos do modal não encontrados no HTML.");
@@ -35,10 +42,9 @@ async function createAbility(characterId, token) {
         
         maxUses: parseInt(document.getElementById('abilMaxUses').value) || 1, 
         currentUses: parseInt(document.getElementById('abilMaxUses').value) || 1, 
-        diceRoll: diceEl ? diceEl.value : '',
+        diceRoll: "",
         
-        targetAttribute: targetEl ? targetEl.value : 'none',
-        effectValue: parseInt(effectEl.value) || 0,
+        effects: effectsList,
         
         durationDice: durationEl ? durationEl.value : '',
         isActive: false,
@@ -52,7 +58,7 @@ async function createAbility(characterId, token) {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) throw new Error('Erro ao criar habilidade (Backend recusou)');
+        if (!response.ok) throw new Error('Erro ao criar habilidade');
 
         const newAbility = await response.json();
         renderAbilityCard(newAbility);
@@ -64,19 +70,34 @@ async function createAbility(characterId, token) {
 
     } catch (error) {
         console.error(error);
-        alert("Erro ao salvar habilidade: " + error.message);
+        Swal.fire({ icon: 'error', title: 'Erro', text: "Erro ao salvar habilidade: " + error.message, background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
 
 async function deleteAbility(id, element, token) {
-    if(!confirm("Deletar habilidade?")) return;
+    const result = await Swal.fire({
+        title: 'Deletar Habilidade?',
+        text: "Essa ação não pode ser desfeita.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, deletar',
+        cancelButtonText: 'Cancelar',
+        background: '#212529', color: '#fff'
+    });
+
+    if(!result.isConfirmed) return;
+
     try {
         await fetch(`http://localhost:8080/abilities/${id}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         element.remove();
-    } catch (e) { alert("Erro ao deletar"); }
+    } catch (e) { 
+        Swal.fire({ icon: 'error', text: "Erro ao deletar.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
+    }
 }
 
 function renderAbilityCard(ability) {
@@ -98,7 +119,19 @@ function renderAbilityCard(ability) {
         card.title = "Clique para rolar: " + ability.diceRoll;
     }
 
-    const usesBadge = `<span class="badge bg-dark border border-secondary text-info ms-1">${ability.currentUses}/${ability.maxUses} Usos</span>`;
+    let btnColorClass = 'text-secondary';
+    if (ability.resourceType === 'MANA') btnColorClass = 'text-info';
+    if (ability.resourceType === 'STAMINA') btnColorClass = 'text-warning';
+    if (ability.resourceType === 'HYBRID') btnColorClass = 'text-white';
+
+    const usesBadge = `
+        <div class="d-flex align-items-center gap-1 bg-dark border border-secondary rounded px-2 py-0 ms-1">
+            <span class="text-info" style="font-size: 0.8rem;">${ability.currentUses}/${ability.maxUses}</span>
+            ${ability.currentUses < ability.maxUses ? 
+                `<i class="fa-solid fa-circle-plus ${btnColorClass} clickable-icon btn-recover" title="Gastar 50 para recuperar"></i>` 
+                : ''}
+        </div>
+    `;
     const actionBadge = ability.actionType ? `<span class="badge bg-secondary">${ability.actionType}</span>` : '';
 
     card.innerHTML = `
@@ -151,6 +184,14 @@ function renderAbilityCard(ability) {
         });
     }
 
+    const btnRecover = card.querySelector('.btn-recover');
+    if(btnRecover) {
+        btnRecover.addEventListener('click', (e) => {
+            e.stopPropagation();
+            recoverAbilityUse(ability.id, ability.resourceType, localStorage.getItem('authToken'));
+        });
+    }
+
     container.appendChild(card);
 }
 
@@ -175,6 +216,61 @@ async function toggleAbility(abilityId, token) {
 
     } catch (error) {
         console.error(error);
-        alert("Erro na ativação.");
+        Swal.fire({ icon: 'error', text: "Erro na ativação.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
+}
+
+async function recoverAbilityUse(abilityId, resourceType, token) {
+    let resourceToSpend = resourceType;
+
+    if (resourceType === 'HYBRID') {
+        // Modal Especial para Híbridos
+        const result = await Swal.fire({
+            title: 'Recuperar Uso',
+            text: "Qual recurso deseja gastar?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Mana (50)',
+            cancelButtonText: 'Estamina (50)',
+            confirmButtonColor: '#0dcaf0', // Ciano
+            cancelButtonColor: '#ffc107',  // Amarelo
+            background: '#212529', color: '#fff'
+        });
+        
+        // Se confirmou = Mana, se cancelou (mas não fechou) = Estamina
+        // A biblioteca trata o botão "cancelar" como dismiss. Precisamos verificar se foi um dismiss por clique no botão.
+        if (result.isConfirmed) {
+            resourceToSpend = 'MANA';
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            resourceToSpend = 'STAMINA';
+        } else {
+            return; // Clicou fora ou esc
+        }
+    }
+
+    try {
+        const response = await fetch(`http://localhost:8080/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const msg = await response.text();
+            throw new Error(msg || "Erro ao recuperar uso.");
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const charId = params.get('id');
+        if(window.loadCharacterData) window.loadCharacterData(charId, token);
+
+    } catch (error) {
+        Swal.fire({ icon: 'error', text: error.message, background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
+    }
+}
+
+function addEffectRow() {
+    const container = document.getElementById('effectsContainer');
+    const template = document.getElementById('effectRowTemplate');
+    const clone = template.content.cloneNode(true);
+    container.appendChild(clone);
 }

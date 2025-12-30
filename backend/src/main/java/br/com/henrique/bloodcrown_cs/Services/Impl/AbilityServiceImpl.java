@@ -1,18 +1,24 @@
 package br.com.henrique.bloodcrown_cs.Services.Impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
+import br.com.henrique.bloodcrown_cs.Models.AbilityEffectModel;
 import br.com.henrique.bloodcrown_cs.Models.AbilityModel;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
+import br.com.henrique.bloodcrown_cs.Models.ItemModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Repositories.AbilityRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
 
 @Service
-public class AbilityServiceImpl implements AbilityService{
+public class AbilityServiceImpl implements AbilityService {
 
     private final AbilityRepository abilityRepository;
     private final CharacterRepository characterRepository;
@@ -20,6 +26,32 @@ public class AbilityServiceImpl implements AbilityService{
     public AbilityServiceImpl(AbilityRepository abilityRepository, CharacterRepository characterRepository) {
         this.abilityRepository = abilityRepository;
         this.characterRepository = characterRepository;
+    }
+
+private AbilityDTO convertToDTO(AbilityModel ab) {
+        List<EffectDTO> effectsDto = new ArrayList<>();
+        
+        if (ab.getEffects() != null) {
+            effectsDto = ab.getEffects().stream()
+                .map(e -> new EffectDTO(e.getTargetAttribute(), e.getEffectValue()))
+                .toList();
+        }
+
+        return new AbilityDTO(
+            ab.getId(), 
+            ab.getName(), 
+            ab.getCategory(), 
+            ab.getResourceType(), 
+            ab.getActionType(),
+            ab.getMaxUses(), 
+            ab.getCurrentUses(), 
+            ab.getDiceRoll(),
+            effectsDto, 
+            ab.getDurationDice(), 
+            ab.getIsActive(), 
+            ab.getTurnsRemaining(), 
+            ab.getDescription()
+        );
     }
 
 //--------------------------------Adiciona Habilidade--------------------------------
@@ -35,42 +67,32 @@ public class AbilityServiceImpl implements AbilityService{
         ability.setName(dto.name());
         ability.setCategory(dto.category());
         ability.setActionType(dto.actionType());
-
         ability.setMaxUses(dto.maxUses());
         ability.setCurrentUses(dto.maxUses());
         ability.setDiceRoll(dto.diceRoll());
-
-        ability.setTargetAttribute(dto.targetAttribute());
-        ability.setEffectValue(dto.effectValue());
         ability.setDurationDice(dto.durationDice());
-
         ability.setIsActive(false);
         ability.setTurnsRemaining(0);
-
         ability.setDescription(dto.description());
+        ability.setResourceType(dto.resourceType());
         ability.setCharacter(charModel);
 
-        ability.setResourceType(dto.resourceType());
+        // --- LÓGICA DE EFEITOS (LISTA) ---
+        if (dto.effects() != null && !dto.effects().isEmpty()) {
+            List<AbilityEffectModel> effectsList = new ArrayList<>();
+            for (EffectDTO effDto : dto.effects()) {
+                AbilityEffectModel effect = new AbilityEffectModel();
+                effect.setTargetAttribute(effDto.target());
+                effect.setEffectValue(effDto.value());
+                effect.setAbility(ability); // Vínculo Bidirecional
+                effectsList.add(effect);
+            }
+            ability.setEffects(effectsList);
+        }
 
         AbilityModel saved = abilityRepository.save(ability);
-
-        return new AbilityDTO(
-            saved.getId(),
-            saved.getName(),
-            saved.getCategory(),
-            saved.getResourceType(),
-            saved.getActionType(),
-            saved.getMaxUses(),
-            saved.getCurrentUses(),
-            saved.getDiceRoll(),
-            saved.getTargetAttribute(),
-            saved.getEffectValue(),
-            saved.getDurationDice(),
-            saved.getIsActive(),
-            saved.getTurnsRemaining(),
-            saved.getDescription()
-        );
-    }
+        return convertToDTO(saved);
+    }   
 //-----------------------------------------------------------------------------------
 //--------------------------------Deletando Habilidade--------------------------------
 
@@ -81,7 +103,7 @@ public class AbilityServiceImpl implements AbilityService{
 //-----------------------------------------------------------------------------------
 //--------------------------------Ligando Habilidade--------------------------------
 
-@Override
+    @Override
     public AbilityDTO toggleAbility(String abilityId) {
         AbilityModel ability = abilityRepository.findById(abilityId)
                 .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
@@ -89,7 +111,7 @@ public class AbilityServiceImpl implements AbilityService{
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
         ability.setIsActive(isActivating);
 
-if (isActivating) {
+        if (isActivating) {
             if (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0) {
                 throw new RuntimeException("Sem usos disponíveis para ativar esta habilidade!");
             }
@@ -110,14 +132,8 @@ if (isActivating) {
         }
 
         AbilityModel saved = abilityRepository.save(ability);
-        
-        return new AbilityDTO(
-            saved.getId(), saved.getName(), saved.getCategory(), saved.getResourceType(), saved.getActionType(),
-            saved.getMaxUses(), saved.getCurrentUses(), saved.getDiceRoll(),
-            saved.getTargetAttribute(), saved.getEffectValue(),
-            saved.getDurationDice(), saved.getIsActive(), saved.getTurnsRemaining(),
-            saved.getDescription()
-        );
+
+        return convertToDTO(saved);
     }
 
     private int rollDice(String formula) {
@@ -151,7 +167,7 @@ if (isActivating) {
     }
 //----------------------------------------------------------------------------------
 //--------------------------------Passando Turno--------------------------------
-@Override
+    @Override
     public void advanceTurn(String characterId) {
         CharacterModel charModel = characterRepository.findById(characterId)
                 .orElseThrow(() -> new RuntimeException("Personagem não encontrado."));
@@ -174,5 +190,67 @@ if (isActivating) {
                 }
             }
         }
+    }
+//----------------------------------------------------------------------------------
+
+    @Override
+    public AbilityDTO recoverUse(String abilityId, String resourceToSpend) {
+        AbilityModel ability = abilityRepository.findById(abilityId)
+            .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
+
+        CharacterModel character = ability.getCharacter();
+
+        if (ability.getCurrentUses() >= ability.getMaxUses()) {
+            throw new RuntimeException("Os usos já estão cheios!");
+        }
+
+        boolean spendMana = false;
+        boolean spendStamina = false;
+
+        switch (ability.getResourceType()) {
+            case MANA -> spendMana = true;
+            case STAMINA -> spendStamina = true;
+            case HYBRID -> {
+                if ("MANA".equalsIgnoreCase(resourceToSpend)) spendMana = true;
+                else if ("STAMINA".equalsIgnoreCase(resourceToSpend)) spendStamina = true;
+                else throw new RuntimeException("Para habilidades híbridas, especifique MANA Ou STAMINA.");
+            }
+        }
+
+        int reduction = 0;
+
+        if (character.getInventory() != null) {
+            for (ItemModel item : character.getInventory()) {
+                if (Boolean.TRUE.equals(item.getIsEquipped())) {
+                    if ("REDUCE_MANA".equals(item.getTargetAttribute()) && spendMana) {
+                        reduction += (item.getEffectValue() != null ? item.getEffectValue() : 0);
+                    }
+                    if ("REDUCE_STAMINA".equals(item.getTargetAttribute()) && spendStamina) {
+                        reduction += (item.getEffectValue() != null ? item.getEffectValue() : 0);
+                    }
+                }
+            }
+        }
+
+        int COST = Math.max(0, 50 - reduction);
+
+        if (spendMana) {
+            if (character.getStatus().getCurrentMana() < COST) {
+                throw new RuntimeException("Mana insuficiente!");
+            }
+            character.getStatus().setCurrentMana(character.getStatus().getCurrentMana() - COST);
+        } else if (spendStamina) {
+            if (character.getStatus().getCurrentStamina() < COST) {
+                throw new RuntimeException("Estamina Insuficiente!");
+            }
+            character.getStatus().setCurrentStamina(character.getStatus().getCurrentStamina() - COST);
+        }
+
+        ability.setCurrentUses(ability.getCurrentUses() + 1);
+
+        characterRepository.save(character);
+        AbilityModel saved = abilityRepository.save(ability);
+
+        return convertToDTO(saved);
     }
 }

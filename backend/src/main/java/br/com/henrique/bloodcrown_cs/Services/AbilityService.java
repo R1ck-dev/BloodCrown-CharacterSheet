@@ -9,4 +9,5 @@ public interface AbilityService {
     void deleteAbility(String attackId);
     AbilityDTO toggleAbility(String abilityDTO);
     void advanceTurn(String characterId);
+    AbilityDTO recoverUse(String abilityId, String resourceToSpend);
 }
