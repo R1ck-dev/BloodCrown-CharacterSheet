@@ -1,3 +1,9 @@
+/* Estilos da Ficha de Personagem (Sheet).
+    Controla o layout complexo da tela de jogo, incluindo atributos,
+    inventário, habilidades e o sistema de rolagem de dados (toasts).
+*/
+
+/* Definição de variáveis locais e globais para consistência visual */
 :root{
   --bg: #070707;
   --card: #121416;
@@ -13,6 +19,7 @@
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
+/* Configuração base do corpo e html para ocupar 100% da altura */
 html,body{
   height: 100%;
   background: var(--bg);
@@ -23,11 +30,13 @@ html,body{
   line-height:1.35;
 }
 
+/* Container centralizado para conteúdo largo */
 main.container-fluid{
   max-width: 1400px;
   margin: 24px auto;
 }
 
+/* Cabeçalho da ficha (Nome, Classe, Nível) com gradiente sutil */
 .custom-header{
   background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
   border: 1px solid var(--panel-border);
@@ -37,6 +46,8 @@ main.container-fluid{
   align-items: center;
 }
 .custom-header label { font-weight: 600; color: var(--muted); font-size: 12px; }
+
+/* Estilização customizada de inputs para parecerem integrados ao fundo */
 .rpg-input{
   background: var(--input-bg);
   border: 1px solid rgba(255,255,255,0.03);
@@ -52,6 +63,7 @@ main.container-fluid{
   box-shadow: var(--focus);
 }
 
+/* Botões com gradiente roxo (Identidade visual do sistema) */
 .btn-purple{
   background: linear-gradient(90deg,var(--accent), #7a3bff);
   border: none;
@@ -63,6 +75,7 @@ main.container-fluid{
 .btn-purple:hover{ filter: brightness(1.03); transform: translateY(-1px); transition: .12s; }
 .btn-outline-danger{ border-radius: 8px; }
 
+/* Caixa que agrupa os Atributos (Força, Destreza, etc.) */
 .attributes-box{
   background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));
   border: 1px solid var(--panel-border);
@@ -72,6 +85,7 @@ main.container-fluid{
 }
 .attributes-box h5{ color: var(--muted); font-weight:600; letter-spacing:0.6px; }
 
+/* Grid responsivo para organizar os atributos em colunas */
 .attributes-grid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -87,6 +101,7 @@ main.container-fluid{
   }
 }
 
+/* Círculos estilizados para exibir o valor dos atributos */
 .attr-circle{
   width: 72px;
   height: 72px;
@@ -123,6 +138,7 @@ main.container-fluid{
   outline: none;
 }
 
+/* Caixa de Status (Vida, Mana, Sanidade) */
 .status-box{
   background: rgba(255,255,255,0.01);
   border: 1px solid var(--panel-border);
@@ -145,6 +161,7 @@ main.container-fluid{
 
 .status-input:focus{ outline: none; }
 
+/* Card de Defesa e Armadura */
 .defense-card{
   background: linear-gradient(180deg, rgba(255,255,255,0.008), rgba(255,255,255,0.006));
   border-radius: var(--radius);
@@ -153,6 +170,7 @@ main.container-fluid{
 }
 .defense-card h2{ font-size: 26px; margin-bottom: 4px; }
 
+/* Ajuste fino para o input de valor total de defesa */
 #statusDefense {
     background: transparent !important;
     border: none !important;
@@ -171,6 +189,7 @@ main.container-fluid{
 
 }
 
+/* Inputs pequenos para fórmulas de cálculo (ex: Base + Armadura) */
 .formula-input {
     background: transparent;
     border: none;
@@ -187,6 +206,7 @@ main.container-fluid{
     
 }
 
+/* Remove setas de incremento/decremento dos inputs numéricos */
 .formula-input::-webkit-outer-spin-button,
 .formula-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -214,6 +234,7 @@ main.container-fluid{
     margin-top: 2px;
 }
 
+/* Estilização geral de Cards e Tabelas escuras */
 .card.bg-dark{
   border-radius: var(--radius);
   border: 1px solid var(--panel-border);
@@ -250,6 +271,7 @@ main.container-fluid{
   box-shadow: var(--focus);
 }
 
+/* Abas de Navegação (Tabs) */
 .nav-tabs{
   border-bottom: none;
 }
@@ -282,6 +304,7 @@ main.container-fluid{
   .table thead th { font-size:13px; }
 }
 
+/* Scrollbar customizada dentro dos cards e abas */
 .card-body::-webkit-scrollbar, .tab-content::-webkit-scrollbar {
   width: 10px; height:10px;
 }
@@ -291,6 +314,10 @@ main.container-fluid{
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
+/* Notificações de Rolagem de Dados (Toast)
+    Aparecem no canto inferior direito com animação de entrada.
+*/
 .dice-toast {
     position: fixed;
     bottom: 20px;     
@@ -303,10 +330,12 @@ main.container-fluid{
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
     z-index: 9999;
     
+    /* Estado inicial: fora da tela */
     transform: translateX(120%); 
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
 }
 
+/* Estado visível da notificação */
 .dice-toast.show {
     transform: translateX(0);
 }
@@ -332,6 +361,7 @@ main.container-fluid{
 
 .text-purple { color: #9d4edd; text-shadow: 0 0 10px rgba(157, 78, 221, 0.3); }
 
+/* Barra de progresso para fechamento automático do Toast */
 .toast-progress-bar {
     position: absolute;
     bottom: 0; left: 0;
@@ -345,6 +375,7 @@ main.container-fluid{
     transition: width 10s linear; 
 }
 
+/* Elementos clicáveis que disparam rolagem de dados */
 .clickable-roll {
     cursor: pointer;
     transition: color 0.2s;
@@ -354,6 +385,7 @@ main.container-fluid{
     text-shadow: 0 0 5px #9d4edd;
 }
 
+/* Ajustes visuais das abas de navegação internas */
 .nav-tabs {
     border-bottom: 1px solid #444;
     flex-wrap: wrap; 

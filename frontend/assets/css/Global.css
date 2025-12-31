@@ -1,3 +1,8 @@
+/* Arquivo de Estilos Globais.
+    Contém reset de CSS, importação de fontes e definição de variáveis (Tokens de Design).
+*/
+
+/* Reset básico para remover margens e preenchimentos padrão */
 * {
   margin: 0;
   padding: 0;
@@ -6,6 +11,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
+/* Definição de Variáveis CSS (:root).
+    Centraliza as cores e temas do sistema para facilitar manutenção.
+    Tema Padrão: Roxo (Dark Fantasy).
+*/
 :root {
     --primary: #7b2cbf;          
     --primary-hover: #9d4edd;    
@@ -24,6 +33,9 @@
     --warning: #ffc107;
 }
 
+/* Tema Alternativo: Blood Theme (Vermelho).
+    Sobrescreve as variáveis principais para alterar a identidade visual.
+*/
 body.theme-blood {
     --primary: #8a0303;         
     --primary-hover: #dc2626;    
@@ -34,6 +46,7 @@ body.theme-blood {
     --bg-page: #080000;
 }
 
+/* Estilos base do corpo da página */
 body {
     background-color: var(--bg-page);
     font-family: 'Inter', sans-serif;
@@ -41,6 +54,7 @@ body {
     transition: background-color 0.5s ease; 
 }
 
+/* Customização da Barra de Rolagem (Scrollbar) para navegadores Webkit */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-page); }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }

@@ -1,3 +1,10 @@
+/*
+    Controlador Principal da Ficha de Personagem (Sheet).
+    Responsável por carregar dados, manipular a interface (DOM), gerenciar cálculos automáticos
+    (como barras de vida e bônus) e realizar a persistência de dados (Salvar/Auto-save).
+*/
+
+// Configuração global do componente de notificação (Toast) do SweetAlert2.
 const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
@@ -12,6 +19,12 @@ const Toast = Swal.mixin({
     }
 });
 
+/**
+ * Função utilitária para limitar a frequência de execução de uma função.
+ * Utilizada principalmente no Auto-Save para evitar requisições excessivas ao servidor.
+ * @param {Function} func - A função a ser executada.
+ * @param {number} delay - O tempo de espera em milissegundos.
+ */
 function debounce(func, delay) {
     let timer;
     return function(...args) {
@@ -20,6 +33,12 @@ function debounce(func, delay) {
     };
 }
 
+/**
+ * Recupera o valor inteiro de um input.
+ * Prioriza o atributo 'data-base-value' se existir (valor original sem buffs),
+ * caso contrário, usa o valor atual do input.
+ * @param {string} id - O ID do elemento HTML.
+ */
 const getRawValue = (id) => {
     const el = document.getElementById(id);
     if (!el) return 0;
@@ -29,6 +48,12 @@ const getRawValue = (id) => {
     return parseInt(el.value) || 0;
 };
 
+/**
+ * Define o valor de um input e atualiza seu 'data-base-value'.
+ * Essencial para distinguir entre o valor base do atributo e o valor modificado por itens/habilidades.
+ * @param {string} id - O ID do elemento.
+ * @param {number} val - O valor a ser definido.
+ */
 const setInputAndBase = (id, val) => {
     const el = document.getElementById(id);
     if (el) {
@@ -38,10 +63,17 @@ const setInputAndBase = (id, val) => {
     }
 };
 
+/**
+ * Função principal de carregamento da ficha.
+ * Busca os dados na API e popula todos os campos da interface.
+ * @param {string} id - ID do personagem.
+ * @param {string} token - Token JWT de autenticação.
+ */
 window.loadCharacterData = async function(id, token) {
     try {
         console.log("Atualizando ficha...", id);
         
+        // Exibe loading enquanto busca dados
         Swal.fire({
             title: 'Carregando...',
             background: '#000',
@@ -49,9 +81,11 @@ window.loadCharacterData = async function(id, token) {
             didOpen: () => { Swal.showLoading() }
         });
 
+        // Chama o serviço de API para buscar o JSON completo da ficha
         const charData = await getCharacterById(id, token);
         Swal.close(); 
 
+        // Popula campos de texto simples
         document.getElementById('charName').value = charData.name;
         document.getElementById('charClass').value = charData.characterClass;
         document.getElementById('charLevel').value = charData.level;
@@ -60,6 +94,7 @@ window.loadCharacterData = async function(id, token) {
         if(document.getElementById('charBio')) document.getElementById('charBio').value = charData.biography || "";
         if(document.getElementById('charHeroPoint')) document.getElementById('charHeroPoint').checked = (charData.heroPoint === 1);
 
+        // Popula Atributos
         if(charData.attributes) {
             setInputAndBase('attrForca', charData.attributes.forca);
             setInputAndBase('attrDestreza', charData.attributes.destreza);
@@ -69,6 +104,7 @@ window.loadCharacterData = async function(id, token) {
             setInputAndBase('attrCarisma', charData.attributes.carisma);
         }
 
+        // Popula Status e Barras de Progresso
         if(charData.status) {
             setInputAndBase('statusDefense', charData.status.defense);
             setInputAndBase('defBase', charData.status.defenseBase ?? 10);
@@ -77,11 +113,12 @@ window.loadCharacterData = async function(id, token) {
             setInputAndBase('resPhysical', charData.status.physicalRes);
             setInputAndBase('resMagical', charData.status.magicalRes);
 
+            // Função auxiliar para atualizar inputs de valor Atual/Máximo
             const updateBarValue = (currentId, maxId, currentVal, maxVal) => {
                 setInputAndBase(currentId, currentVal ?? maxVal);
                 setInputAndBase(maxId, maxVal);
                 const cEl = document.getElementById(currentId);
-                if(cEl) cEl.dispatchEvent(new Event('input'));
+                if(cEl) cEl.dispatchEvent(new Event('input')); // Dispara evento para atualizar visualmente a barra
             };
 
             updateBarValue('statusHealthCurrent', 'statusMaxHealth', charData.status.currentHealth, charData.status.maxHealth);
@@ -89,6 +126,7 @@ window.loadCharacterData = async function(id, token) {
             updateBarValue('statusSanityCurrent', 'statusMaxSanity', charData.status.currentSanity, charData.status.maxSanity);
             updateBarValue('statusStaminaCurrent', 'statusMaxStamina', charData.status.currentStamina, charData.status.maxStamina);
 
+            // Força a renderização visual das barras de progresso (CSS width %)
             const forceBarUpdate = (currentId, maxId, barId) => {
                 const currentEl = document.getElementById(currentId);
                 const maxEl = document.getElementById(maxId);
@@ -106,10 +144,12 @@ window.loadCharacterData = async function(id, token) {
             forceBarUpdate('statusSanityCurrent', 'statusMaxSanity', 'barSanity');
             forceBarUpdate('statusStaminaCurrent', 'statusMaxStamina', 'barStamina');
 
+            // Inicializa eventos de cálculo de defesa, se existirem
             if(window.setupDefenseEvents) setupDefenseEvents();
             if(window.calculateDefense) calculateDefense();
         }
 
+        // Popula Perícias (Expertise)
         if(charData.expertise) {
             const skillMap = {
                 'skillAtletismo': charData.expertise.atletismo,
@@ -141,6 +181,7 @@ window.loadCharacterData = async function(id, token) {
             }
         }
 
+        // Renderiza listas dinâmicas (Ataques, Habilidades, Inventário)
         document.querySelectorAll('.attacks-grid, .ability-card').forEach(e => e.remove());
         if (charData.attacks) charData.attacks.forEach(atk => renderAttackCard(atk));
         if (charData.abilities) charData.abilities.forEach(ability => renderAbilityCard(ability));
@@ -153,6 +194,7 @@ window.loadCharacterData = async function(id, token) {
             }
         }
 
+        // Recalcula todos os bônus ativos (Itens equipados + Habilidades ativas)
         updateAllBonuses(charData);
 
     } catch (error) {
@@ -167,22 +209,26 @@ window.loadCharacterData = async function(id, token) {
     }
 };
 
+// Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const token = localStorage.getItem('authToken');
 
+    // Validação de segurança básica
     if (!token) { window.location.href = 'index.html'; return; }
     if (!id) { window.location.href = 'Dashboard.html'; return; }
 
     await window.loadCharacterData(id, token);
 
+    // Evento para atualizar o valor base ao digitar manualmente
     document.addEventListener('input', (e) => {
         if (e.target.matches('input') && e.target.type !== 'checkbox' && e.target.type !== 'radio') {
             e.target.dataset.baseValue = e.target.value;
         }
     });
 
+    // Lógica para atualizar visualmente as barras de progresso ao alterar valores
     function updateBar(currentInput, maxInput, barElement) {
         if (!barElement || !currentInput || !maxInput) return;
         const current = parseInt(currentInput.value) || 0;
@@ -209,6 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         max.addEventListener('input', update);
     });
 
+    // Configuração do botão de Salvar Manual
     const performSave = async () => {
         const btnSave = document.getElementById('btnSave');
         const originalText = btnSave.innerText;
@@ -242,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnSave = document.getElementById('btnSave');
     if(btnSave) btnSave.addEventListener('click', (e) => { e.preventDefault(); performSave(); });
 
+    // Configuração do Auto-Save (Debounce de 1s ao digitar e Intervalo de 5min)
     const autoSave = debounce(() => performSave(), 1000);
     const autoSaveInputs = [
         'statusHealthCurrent', 'statusMaxHealth', 'statusManaCurrent', 'statusMaxMana',
@@ -254,6 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     setInterval(() => performSave(), 300000);
 
+    // Bloco de Notas Temporário (Local Storage)
     const notepad = document.getElementById('tempNotepad');
     if (notepad) {
         const savedNote = localStorage.getItem('rpg_notepad_' + id);
@@ -263,6 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Configuração de Modais (Ataque, Item, Habilidade)
     const btnOpenAttackModal = document.querySelector('#tabCombat button');
     if (btnOpenAttackModal) btnOpenAttackModal.addEventListener('click', (e) => {
         e.preventDefault();
@@ -272,6 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnSaveAttack = document.getElementById('btnSaveAttack');
     if (btnSaveAttack) btnSaveAttack.addEventListener('click', () => createAttack(id, token));
 
+    // Lógica para avançar turno e reduzir cooldowns
     const btnNextTurn = document.getElementById('btnNextTurn');
     if (btnNextTurn) {
         btnNextTurn.addEventListener('click', async () => {
@@ -298,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Lógica para Descanso Longo (Recuperação Total)
     const btnRest = document.getElementById('btnRest');
     if (btnRest) {
         btnRest.addEventListener('click', async (e) => {
@@ -350,6 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Painel Flutuante de Efeitos Ativos (Buffs/Debuffs)
     const btnOpenPanel = document.getElementById('btnOpenPanel');
     const btnClosePanel = document.getElementById('btnClosePanel');
     const panel = document.getElementById('activeEffectsPanel');
@@ -368,6 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Expõe a função de atualização de bônus para uso global
     window.updateAllBonusesState = function(charData) {
         updateAllBonuses(charData, isPanelMinimized, panel, btnOpenPanel);
     };
@@ -393,6 +447,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupRollEvents();
 });
 
+/**
+ * Coleta todos os dados da ficha no DOM, constrói um objeto JSON complexo
+ * e envia para a API via requisição PUT.
+ * @param {string} id - ID do personagem.
+ * @param {string} token - Token de autenticação.
+ * @param {HTMLElement} btnSave - Botão de salvar (para controle de estado).
+ */
 async function saveCharacterData(id, token, btnSave) {
     try {
         const updatedData = {
@@ -465,12 +526,20 @@ async function saveCharacterData(id, token, btnSave) {
     } catch (error) { throw error; }
 }
 
+/**
+ * Calcula e aplica os bônus de habilidades ativas e itens equipados.
+ * Percorre todas as habilidades ativas e itens, soma os modificadores
+ * e atualiza os inputs correspondentes na tela, destacando-os em verde.
+ * @param {Object} charData - Dados completos do personagem.
+ * @param {boolean} isMinimized - Estado do painel de efeitos.
+ */
 function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     const panel = panelEl || document.getElementById('activeEffectsPanel');
     const btnOpen = btnOpenEl || document.getElementById('btnOpenPanel');
     const badge = document.getElementById('badgeActiveCount');
     const list = document.getElementById('effectsList');
     
+    // Lista de todos os campos que podem receber bônus
     const allPossibleTargets = [
         'defOther', 'defArmor', 'resPhysical', 'resMagical',
         'attrForca', 'attrDestreza', 'attrConstituicao', 'attrInteligencia', 'attrSabedoria', 'attrCarisma',
@@ -479,6 +548,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         'skillIntimidar', 'skillIntuicao', 'skillInvestigacao', 'skillLabia', 'skillLadinagem', 'skillMedicina',
         'skillMente', 'skillPontaria', 'skillReflexos', 'skillSeduzir', 'skillSobrevivencia'
     ];
+    // Reseta todos os inputs para seu valor base antes de recalcular
     allPossibleTargets.forEach(id => {
         const input = document.getElementById(id);
         if(input && input.dataset.baseValue !== undefined) {
@@ -492,6 +562,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     
     if(list) list.innerHTML = '';
 
+    // Processa Habilidades Ativas
     if (charData.abilities) {
         charData.abilities.forEach(abil => {
             if (abil.isActive) {
@@ -503,6 +574,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
                     });
                 }
                 
+                // Adiciona item visual na lista do painel flutuante
                 if (list) {
                     const item = document.createElement('div');
                     item.className = 'bg-black p-2 rounded border border-secondary position-relative';
@@ -529,6 +601,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         });
     }
 
+    // Processa Itens Equipados
     if (charData.inventory) {
         charData.inventory.forEach(item => {
             if (item.isEquipped && item.targetAttribute !== 'none') {
@@ -540,6 +613,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         });
     }
 
+    // Gerencia a visibilidade do painel flutuante
     if (activeCount > 0) {
         if (isMinimized) {
             if(panel) panel.style.display = 'none';
@@ -554,6 +628,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         if(btnOpen) btnOpen.style.display = 'none';
     }
 
+    // Aplica os buffs calculados aos inputs e muda a cor para verde
     for (const [targetId, val] of Object.entries(totalBuffs)) {
         const input = document.getElementById(targetId);
         if (input) {
@@ -563,5 +638,6 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         }
     }
 
+    // Recalcula defesa final se a função estiver disponível
     if(window.calculateDefense) window.calculateDefense();
 }

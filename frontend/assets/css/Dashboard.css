@@ -1,20 +1,30 @@
+/* Estilos específicos da página de Dashboard (Mesa de Jogo).
+    Controla a aparência dos cards de personagens e o layout da grade.
+*/
+
 body {
     background-color: var(--bg-page);
+    /* Cria um gradiente radial no topo para dar profundidade à página */
     background-image: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--primary), transparent 85%) 0%, var(--bg-page) 80%);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
     color: #e6e9eb;
 }
 
+/* Utilitário para destacar texto com a cor primária */
 .text-purple {
     color: var(--text-highlight) !important;
 }
 
+/* Sobrescreve a cor de fundo da Navbar do Bootstrap */
 .navbar {
     background-color: var(--bg-card) !important;
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Estilização do Card de Personagem.
+    Define bordas, fundo e transições suaves para interação.
+*/
 .char-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -30,12 +40,14 @@ body {
 .char-card h5 { color: #fff; }
 .char-card small { color: var(--secondary); }
 
+/* Efeito de elevação e brilho ao passar o mouse sobre o card */
 .char-card:hover {
     border-color: var(--primary);
     transform: translateY(-5px);
     box-shadow: 0 10px 20px var(--border-focus);
 }
 
+/* Ícone central ou Avatar do personagem dentro do card */
 .char-avatar {
     width: 60px;
     height: 60px;
@@ -51,12 +63,16 @@ body {
     transition: 0.3s;
 }
 
+/* Muda a cor do avatar quando o card está em foco */
 .char-card:hover .char-avatar {
     background-color: var(--primary);
     color: #fff;
     border-color: var(--primary);
 }
 
+/* Botão especial estilizado como um card tracejado.
+    Usado para a ação de "Criar Novo Personagem".
+*/
 .btn-add-card {
     background-color: rgba(255, 255, 255, 0.02);
     border: 2px dashed var(--border-color);
@@ -83,6 +99,7 @@ body {
     margin-bottom: 0.5rem;
 }
 
+/* Botão de exclusão posicionado no canto superior direito do card */
 .btn-delete {
     position: absolute;
     top: 10px;

@@ -23,6 +23,10 @@ import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.CharacterService;
 
+/**
+ * Implementação das regras de negócio para a gestão de personagens.
+ * Realiza operações de CRUD, inicialização de fichas e cálculos de atualização de status.
+ */
 @Service
 public class CharacterServiceImpl implements CharacterService{
 
@@ -34,6 +38,12 @@ public class CharacterServiceImpl implements CharacterService{
 
 //--------------------------------Recupera Personagens de um Usuário--------------------------------
 
+    /**
+     * Recupera a lista de personagens vinculados ao usuário autenticado.
+     * Converte as entidades CharacterModel em DTOs resumidos (CharacterDTO) para exibição em listas.
+     * * @param authentication Contexto de segurança contendo o usuário logado.
+     * @return Lista de personagens simplificada.
+     */
     @Override
     public List<CharacterDTO> getUserCharacters(Authentication authentication) {
         //Pega o usuário logado pelo token
@@ -58,6 +68,13 @@ public class CharacterServiceImpl implements CharacterService{
 //-----------------------------------------------------------------------------------
 //--------------------------------Cria Personagem--------------------------------
 
+    /**
+     * Cria um novo personagem com valores padrão inicializados.
+     * Define atributos, perícias e status vitais como 0 ou valores base (10 para vida/mana)
+     * para evitar erros de nulos no frontend.
+     * * @param authentication Contexto de segurança contendo o usuário proprietário.
+     * @return O DTO do personagem recém-criado.
+     */
     @Override
     public CharacterDTO createCharacter(Authentication authentication) {
         UserModel currentUser = (UserModel) authentication.getPrincipal();
@@ -68,6 +85,7 @@ public class CharacterServiceImpl implements CharacterService{
         charModel.setCharacterClass("");
         charModel.setLevel(1);
 
+        // Inicializa Atributos com 0
         CharacterAttributes attr = new CharacterAttributes();
         attr.setForca(0);
         attr.setDestreza(0);
@@ -77,6 +95,7 @@ public class CharacterServiceImpl implements CharacterService{
         attr.setCarisma(0);
         charModel.setAttributes(attr);
 
+        // Define valores iniciais para recursos vitais
         Integer maxHealth = 10;
         Integer maxMana = 10;
         Integer maxStamina = 10;
@@ -97,6 +116,7 @@ public class CharacterServiceImpl implements CharacterService{
         status.setOtherBonus(0);
         charModel.setStatus(status);
 
+        // Inicializa todas as perícias com 0
         CharacterExpertise expertise = new CharacterExpertise();
         expertise.setAtletismo(0);
         expertise.setConhecimento(0);
@@ -136,6 +156,14 @@ public class CharacterServiceImpl implements CharacterService{
 //-----------------------------------------------------------------------------------
 //--------------------------------Recupera o Personagem pelo Id--------------------------------
 
+    /**
+     * Busca uma ficha completa pelo ID, validando se pertence ao usuário solicitante.
+     * Realiza a conversão de toda a árvore de objetos (Atributos, Status, Inventário, Habilidades)
+     * para o formato CharacterSheetDTO.
+     * * @param id Identificador da ficha.
+     * @param authentication Contexto de segurança.
+     * @return O DTO completo da ficha.
+     */
     @Override
     public CharacterSheetDTO getCharacterById(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -143,6 +171,7 @@ public class CharacterServiceImpl implements CharacterService{
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
                 .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
 
+        // Conversão manual de Atributos
         AttributesDTO attr = new AttributesDTO(
             charModel.getAttributes().getForca(),
             charModel.getAttributes().getDestreza(),
@@ -152,6 +181,7 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getAttributes().getConstituicao()
         );
 
+        // Conversão manual de Status
         StatusDTO status = new StatusDTO(
             charModel.getStatus().getMaxHealth(),
             charModel.getStatus().getCurrentHealth(),
@@ -169,6 +199,7 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getStatus().getMagicalRes()
         );
 
+        // Conversão manual de Perícias
         ExpertiseDTO expertise = new ExpertiseDTO(
             charModel.getExpertise().getAtletismo(),
             charModel.getExpertise().getConhecimento(),
@@ -195,6 +226,7 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getExpertise().getSobrevivencia()
         );
 
+        // Conversão de Listas (Ataques, Habilidades, Inventário)
         List<AttackDTO> attacks = charModel.getAttacks().stream()
             .map(atk -> new AttackDTO(
                 atk.getId(),
@@ -250,6 +282,15 @@ public class CharacterServiceImpl implements CharacterService{
     }
 //-----------------------------------------------------------------------------------
 
+    /**
+     * Atualiza os dados de um personagem existente.
+     * Verifica cada campo do DTO e atualiza apenas se o valor não for nulo.
+     * Implementa lógica para garantir que os valores atuais (Vida, Mana) não excedam os máximos.
+     * * @param id Identificador da ficha.
+     * @param dto DTO contendo os dados a serem atualizados.
+     * @param authentication Contexto de segurança.
+     * @return O DTO atualizado.
+     */
     @Override
     public CharacterSheetDTO updateCharacter(String id, CharacterSheetDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -264,6 +305,7 @@ public class CharacterServiceImpl implements CharacterService{
         charModel.setHeroPoint(dto.heroPoint());
         charModel.setBiography(dto.biography());
 
+        // Atualização de Atributos
         if (dto.attributes() != null) {
             charModel.getAttributes().setForca(dto.attributes().forca());
             charModel.getAttributes().setDestreza(dto.attributes().destreza());
@@ -273,6 +315,7 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getAttributes().setCarisma(dto.attributes().carisma());
         }
 
+        // Atualização de Status e verificação de limites (Caps)
         if (dto.status() != null) {
             Integer newMaxHealth = dto.status().maxHealth();
             Integer newMaxMana = dto.status().maxMana();
@@ -306,6 +349,7 @@ public class CharacterServiceImpl implements CharacterService{
                 charModel.getStatus().setMagicalRes(dto.status().magicalRes());
             }
 
+            // Lógica de Cap: Valor Atual não pode ser maior que o Máximo nem menor que 0
             Integer currHealth = dto.status().currentHealth();
             if (currHealth != null) {
                 int capped = Math.max(0, Math.min(currHealth, charModel.getStatus().getMaxHealth()));
@@ -331,6 +375,7 @@ public class CharacterServiceImpl implements CharacterService{
             }
         }
 
+        // Atualização de Perícias
         if (dto.expertise() != null) {
             charModel.getExpertise().setAtletismo(dto.expertise().atletismo());
             charModel.getExpertise().setConhecimento(dto.expertise().conhecimento());
@@ -365,6 +410,11 @@ public class CharacterServiceImpl implements CharacterService{
     }
 //-----------------------------------------------------------------------------------
 
+    /**
+     * Remove permanentemente um personagem do sistema.
+     * * @param id Identificador da ficha.
+     * @param authentication Contexto de segurança.
+     */
     @Override
     public void deleteCharacter(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -375,6 +425,13 @@ public class CharacterServiceImpl implements CharacterService{
         characterRepository.delete(charModel);
     }
 
+    /**
+     * Restaura os recursos do personagem (Vida, Mana, Estamina) aos valores máximos.
+     * Reinicia os usos e o estado de ativação de todas as habilidades.
+     * Simula um "Descanso Longo" no RPG.
+     * * @param id Identificador da ficha.
+     * @param authentication Contexto de segurança.
+     */
     @Override
     public void restCharacter(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -403,4 +460,4 @@ public class CharacterServiceImpl implements CharacterService{
         characterRepository.save(charModel);
     }
 
-} 
+}

@@ -1,3 +1,7 @@
+/* Estilos específicos da Tela de Registro.
+    Mantém a consistência visual com a tela de Login.
+*/
+
 body {
     background-color: var(--bg-page);
     background-image: radial-gradient(circle at center, color-mix(in srgb, var(--primary), transparent 90%) 0%, var(--bg-page) 100%);
@@ -5,6 +9,7 @@ body {
     color: #fff;
 }
 
+/* Card centralizado para o formulário de registro */
 .login-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -18,6 +23,7 @@ body {
     box-shadow: 0 0 15px var(--border-focus) !important;
 }
 
+/* Customização dos inputs para sobrescrever o padrão light do Bootstrap */
 .form-control {
     background-color: var(--bg-page); 
     border: 1px solid var(--border-color);
@@ -31,12 +37,14 @@ body {
     box-shadow: 0 0 0 0.25rem var(--border-focus);
 }
 
+/* Estilo dos ícones dentro dos inputs */
 .input-group-text {
     background-color: var(--bg-card);
     border-color: var(--border-color);
     color: var(--text-highlight);
 }
 
+/* Botão de registro customizado */
 .btn-purple {
     background-color: var(--primary);
     color: white;

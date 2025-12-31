@@ -1,8 +1,20 @@
+/*
+    Gerenciador de Ataques e Armas.
+    Controla a criação, renderização visual, exclusão e interação (rolagem de dano) dos ataques.
+*/
+
+/**
+ * Cria um novo ataque enviando os dados para a API.
+ * @param {string} characterId - ID do personagem.
+ * @param {string} token - Token de autenticação.
+ */
 async function createAttack(characterId, token) {
+    // Coleta os valores do modal de novo ataque
     const name = document.getElementById('atkName').value;
     const damage = document.getElementById('atkDamage').value; 
     const desc = document.getElementById('atkDesc').value;
 
+    // Validação simples de formato de dados (ex: "1d6") usando Regex
     if(!damage.match(/\d+d\d+/)) {
         Swal.fire({ icon: 'warning', text: "A fórmula de dano precisa ter pelo menos um dado (ex: 1d6).", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
         return;
@@ -15,6 +27,7 @@ async function createAttack(characterId, token) {
     };
 
     try {
+        // Envia requisição POST para persistir o ataque
         const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${characterId}`, {
             method: 'POST',
             headers: {
@@ -28,8 +41,10 @@ async function createAttack(characterId, token) {
 
         const newAttack = await response.json();
 
+        // Renderiza o novo ataque na lista imediatamente
         renderAttackCard(newAttack);
 
+        // Fecha o modal e limpa o formulário
         const modalEl = document.getElementById('modalNewAttack'); 
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
@@ -42,7 +57,14 @@ async function createAttack(characterId, token) {
     }
 }
 
+/**
+ * Remove um ataque do personagem.
+ * @param {string} attackId - ID do ataque.
+ * @param {HTMLElement} elementToRemove - O elemento HTML do card (para removê-lo da tela).
+ * @param {string} token - Token de autenticação.
+ */
 async function deleteAttack(attackId, elementToRemove, token) {
+    // Confirmação de segurança antes de excluir
     const result = await Swal.fire({
         title: 'Apagar Ataque?',
         text: "Tem certeza que deseja remover?",
@@ -58,20 +80,29 @@ async function deleteAttack(attackId, elementToRemove, token) {
     if (!result.isConfirmed) return;
 
     try {
+        // Requisição DELETE para a API
         const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${attackId}`, {
             method: 'DELETE',
             headers: {'Authorization': `Bearer ${token}`}
         });
         if (!response.ok) throw new Error('Erro ao deletar');
+        
+        // Remove o elemento do DOM após sucesso
         elementToRemove.remove();
     } catch (error) {
         Swal.fire({ icon: 'error', text: "Erro ao remover ataque.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
 
+/**
+ * Constrói e insere o HTML de um card de ataque na interface.
+ * Adiciona eventos de clique para rolagem de dano e botão de exclusão.
+ * @param {Object} attack - Objeto contendo os dados do ataque.
+ */
 function renderAttackCard(attack) {
     const container = document.getElementById('tabCombat'); 
 
+    // Inicializa o container de ataques se for o primeiro item a ser adicionado
     if (container.querySelector('.text-muted') || !container.querySelector('.attacks-grid')) {
         const btnCreate = container.querySelector('#btnOpenAttackModal'); 
         container.innerHTML = ''; 
@@ -89,9 +120,11 @@ function renderAttackCard(attack) {
 
     const list = container.querySelector('.attacks-grid');
 
+    // Cria o elemento do card
     const card = document.createElement('div');
     card.className = 'attack-card p-3 rounded bg-black border border-secondary d-flex justify-content-between align-items-center';
 
+    // Preenche o HTML interno do card com Nome, Descrição e Dados
     card.innerHTML = `
         <div class="d-flex flex-column" style="max-width: 70%;">
             <strong class="text-light fs-5 mb-1">${attack.name}</strong>
@@ -112,6 +145,7 @@ function renderAttackCard(attack) {
         </div>
     `;
 
+    // Adiciona evento ao botão de deletar (interrompe propagação para não rolar dano)
     card.querySelector('.btn-delete-atk').addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -119,11 +153,13 @@ function renderAttackCard(attack) {
         deleteAttack(attack.id, card, token);
     });
 
+    // Adiciona evento de clique no card inteiro para rolar o dano
     card.style.cursor = "pointer";
     card.addEventListener('click', (e) => {
         if (e.target.closest('.btn-delete-atk')) return;
 
         if (attack.damageDice) {
+            // Chama função global de rolagem (definida em outro script, provavelmente Dice.js ou similar)
             rollDamage(attack.damageDice, `Dano: ${attack.name}`);
         }
     });

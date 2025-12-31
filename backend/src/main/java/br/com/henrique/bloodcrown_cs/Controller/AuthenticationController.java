@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
+/**
+ * Controlador responsável pelo gerenciamento de autenticação e registro de usuários.
+ * Manipula a emissão de tokens JWT e a criação de novas contas.
+ */
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -34,6 +38,12 @@ public class AuthenticationController {
         this.tokenService = tokenService;
     }
 
+    /**
+     * Registra um novo usuário no sistema.
+     * Criptografa a senha e salva o usuário no banco de dados através do serviço.
+     * * @param registerDTO Objeto contendo os dados de registro (login, senha, role).
+     * @return ResponseEntity com status 201 (Created) e os dados do usuário criado (sem a senha).
+     */
     @PostMapping("/register")
     public ResponseEntity<ToRegisterDTO> registerUser(@RequestBody RegisterDTO registerDTO) {
         ToRegisterDTO newUser = userService.registerUser(registerDTO);
@@ -45,6 +55,12 @@ public class AuthenticationController {
         return ResponseEntity.created(location).body(newUser);
     }
 
+    /**
+     * Autentica um usuário existente e gera um token JWT.
+     * Utiliza o AuthenticationManager do Spring Security para validar as credenciais.
+     * * @param loginDTO Objeto contendo username e password.
+     * @return ResponseEntity contendo o token de acesso (JWT).
+     */
     @PostMapping("/login")
     public ResponseEntity<ToLoginDTO> loginUser(@RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.username(), loginDTO.password());

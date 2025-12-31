@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
+/**
+ * Controlador responsável por gerenciar os ataques ou armas registradas na ficha do personagem.
+ */
 @RestController
 @RequestMapping("/attacks")
 public class AttackController {
@@ -27,6 +30,13 @@ public class AttackController {
         this.attackService = attackService;
     }
 
+    /**
+     * Adiciona um novo ataque ou arma à lista do personagem.
+     * * @param id Identificador do personagem.
+     * @param attackDTO Objeto contendo os detalhes do ataque (dano, alcance, nome).
+     * @param authentication Objeto de autenticação para validar a posse do personagem.
+     * @return ResponseEntity com status 201 (Created) e o ataque criado.
+     */
     @PostMapping("/{id}")
     public ResponseEntity<AttackDTO> addAttack(@PathVariable String id, @RequestBody AttackDTO attackDTO, Authentication authentication) {
         AttackDTO newAttack = attackService.addAttack(id, attackDTO, authentication);
@@ -38,6 +48,11 @@ public class AttackController {
         return ResponseEntity.created(location).body(newAttack);
     }
 
+    /**
+     * Remove um ataque existente da ficha do personagem.
+     * * @param attackId Identificador do ataque a ser removido.
+     * @return ResponseEntity com status 204 (No Content).
+     */
     @DeleteMapping("/{attackId}")
     public ResponseEntity<Void> deleteAttack(@PathVariable String attackId) {
         attackService.deleteAttack(attackId);

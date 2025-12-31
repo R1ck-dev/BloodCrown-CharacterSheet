@@ -17,6 +17,10 @@ import br.com.henrique.bloodcrown_cs.Repositories.AbilityRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
 
+/**
+ * Implementação das regras de negócio para habilidades, magias e técnicas.
+ * Controla ativação, contagem de turnos, custos de recursos e interação com itens redutores de custo.
+ */
 @Service
 public class AbilityServiceImpl implements AbilityService {
 
@@ -28,6 +32,9 @@ public class AbilityServiceImpl implements AbilityService {
         this.characterRepository = characterRepository;
     }
 
+    /**
+     * Converte uma entidade AbilityModel para AbilityDTO, incluindo a lista de efeitos.
+     */
 private AbilityDTO convertToDTO(AbilityModel ab) {
         List<EffectDTO> effectsDto = new ArrayList<>();
         
@@ -56,6 +63,15 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
 //--------------------------------Adiciona Habilidade--------------------------------
 
+    /**
+     * Adiciona uma nova habilidade ao personagem.
+     * Mapeia os campos básicos e processa a lista de efeitos associados, estabelecendo
+     * o relacionamento bidirecional entre Habilidade e Efeito.
+     * * @param characterId Identificador do personagem.
+     * @param dto Dados da nova habilidade.
+     * @param authentication Contexto de segurança.
+     * @return O DTO da habilidade persistida.
+     */
     @Override
     public AbilityDTO addAbility(String characterId, AbilityDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -103,6 +119,13 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 //-----------------------------------------------------------------------------------
 //--------------------------------Ligando Habilidade--------------------------------
 
+    /**
+     * Alterna o estado de ativação da habilidade (Ativa <-> Inativa).
+     * Se for ativada, consome 1 uso, calcula a duração em turnos (se houver dados de duração)
+     * e atualiza o status. Se não houver usos, impede a ativação.
+     * * @param abilityId Identificador da habilidade.
+     * @return O DTO atualizado com o novo estado.
+     */
     @Override
     public AbilityDTO toggleAbility(String abilityId) {
         AbilityModel ability = abilityRepository.findById(abilityId)
@@ -136,6 +159,12 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         return convertToDTO(saved);
     }
 
+    /**
+     * Interpreta e calcula rolagens de dados em formato String (ex: "1d6+3").
+     * Utiliza Math.random para simular os resultados dos dados.
+     * * @param formula A string representando os dados.
+     * @return O resultado numérico total da rolagem.
+     */
     private int rollDice(String formula) {
         try {
             String clean = formula.toLowerCase().replace(" ", "");
@@ -167,6 +196,12 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
     }
 //----------------------------------------------------------------------------------
 //--------------------------------Passando Turno--------------------------------
+    /**
+     * Avança o turno para o personagem.
+     * Verifica todas as habilidades ativas e decrementa o contador `turnsRemaining`.
+     * Se o contador chegar a 0, desativa a habilidade automaticamente.
+     * * @param characterId Identificador do personagem.
+     */
     @Override
     public void advanceTurn(String characterId) {
         CharacterModel charModel = characterRepository.findById(characterId)
@@ -193,6 +228,14 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
     }
 //----------------------------------------------------------------------------------
 
+    /**
+     * Recupera cargas de uso de uma habilidade gastando recursos (Mana ou Estamina).
+     * Verifica se o personagem possui itens equipados que reduzem o custo de recuperação.
+     * Aplica o custo ao recurso do personagem e incrementa o uso da habilidade.
+     * * @param abilityId Identificador da habilidade.
+     * @param resourceToSpend Tipo de recurso a ser gasto (para habilidades híbridas).
+     * @return O DTO atualizado.
+     */
     @Override
     public AbilityDTO recoverUse(String abilityId, String resourceToSpend) {
         AbilityModel ability = abilityRepository.findById(abilityId)
@@ -219,6 +262,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
         int reduction = 0;
 
+        // Verifica itens equipados que reduzem custo
         if (character.getInventory() != null) {
             for (ItemModel item : character.getInventory()) {
                 if (Boolean.TRUE.equals(item.getIsEquipped())) {

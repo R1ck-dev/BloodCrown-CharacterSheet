@@ -11,6 +11,10 @@ import br.com.henrique.bloodcrown_cs.Repositories.AttackRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.AttackService;
 
+/**
+ * Implementação da lógica de negócios para ataques e armas.
+ * Garante que apenas o proprietário do personagem possa adicionar ou modificar ataques.
+ */
 @Service
 public class AttackServiceImpl implements AttackService{
 
@@ -24,6 +28,15 @@ public class AttackServiceImpl implements AttackService{
 
 //--------------------------------Adiciona Ataques--------------------------------
 
+    /**
+     * Cria e associa um novo ataque a um personagem.
+     * Realiza uma verificação de segurança buscando o personagem pelo ID e pelo ID do Usuário logado,
+     * garantindo que um usuário não altere a ficha de outro.
+     * * @param characterId Identificador do personagem.
+     * @param dto Dados do ataque (nome, dano, descrição).
+     * @param authentication Contexto de segurança do usuário atual.
+     * @return O DTO do ataque salvo.
+     */
     @Override
     public AttackDTO addAttack(String characterId, AttackDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
@@ -51,6 +64,10 @@ public class AttackServiceImpl implements AttackService{
 //--------------------------------------------------------------------------------
 //--------------------------------Deletar Ataques--------------------------------
 
+    /**
+     * Remove um ataque do banco de dados pelo seu ID.
+     * * @param attackId Identificador do ataque.
+     */
     @Override
     public void deleteAttack(String attackId) {
         attackRepository.deleteById(attackId);

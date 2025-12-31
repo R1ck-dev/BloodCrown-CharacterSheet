@@ -20,30 +20,53 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Representa um Usuário do sistema e implementa a interface UserDetails do Spring Security.
+ * Gerencia as credenciais de acesso e as permissões (Roles).
+ */
 @Entity
 @Table(name = "users")
 @Data
 public class UserModel implements UserDetails{
+    /**
+     * Identificador único do usuário.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", columnDefinition = "VARCHAR(36)", updatable = false, unique = true, nullable = false)
     private String id;
 
+    /**
+     * Nome de usuário (Login). Deve ser único no sistema.
+     */
     @Column(name = "username", length = 25, updatable = true, unique = true, nullable = false)
     private String username;
 
+    /**
+     * Hash da senha do usuário (criptografada).
+     */
     @Column(name = "password_hash", length = 255, updatable = true, unique = false, nullable = false)
     private String password;
 
     // mappedBy -> indicando um relacionamento, informando que a "cabeça da relação" é a classe Characters, no campo determinado como "fromUser"
     // cascade = CascadeType.ALL -> Se deletar o usuário, o BD deleta todas as fichas dele automaticamente
+    /**
+     * Lista de personagens criados por este usuário.
+     */
     @OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL)
     private List<CharacterModel> charactersList;
 
+    /**
+     * Papel ou nível de acesso do usuário (ex: ADMIN, USER).
+     */
     @Column(name = "roles", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRoleEnum role;
 
+    /**
+     * Retorna as autoridades concedidas ao usuário com base em seu papel (Role).
+     * @return Coleção de GrantedAuthority.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role == UserRoleEnum.ROLE_ADMIN) {

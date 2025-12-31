@@ -1,10 +1,16 @@
+/* Estilos específicos da Tela de Login.
+    Foca na centralização do card e customização dos inputs do Bootstrap.
+*/
+
 body {
     background-color: var(--bg-page);
+    /* Gradiente radial centralizado para focar a atenção no formulário */
     background-image: radial-gradient(circle at center, color-mix(in srgb, var(--primary), transparent 90%) 0%, var(--bg-page) 100%);
     font-family: 'Inter', sans-serif;
     color: #fff;
 }
 
+/* Container do formulário de login */
 .login-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -13,17 +19,20 @@ body {
     transition: transform 0.3s ease;
 }
 
+/* Efeito de brilho na borda ao passar o mouse */
 .login-card:hover {
     border-color: var(--primary);
     box-shadow: 0 0 15px var(--border-focus) !important;
 }
 
+/* Customização dos campos de input para o tema escuro */
 .form-control {
     background-color: var(--bg-page); 
     border: 1px solid var(--border-color);
     color: white;
 }
 
+/* Estado de foco dos inputs (clique) */
 .form-control:focus {
     background-color: var(--bg-page);
     color: white;
@@ -31,12 +40,14 @@ body {
     box-shadow: 0 0 0 0.25rem var(--border-focus);
 }
 
+/* Ícones laterais dos inputs (Input Group Addon) */
 .input-group-text {
     background-color: var(--bg-card);
     border-color: var(--border-color);
     color: var(--text-highlight);
 }
 
+/* Botão de ação principal (Roxo) */
 .btn-purple {
     background-color: var(--primary);
     color: white;

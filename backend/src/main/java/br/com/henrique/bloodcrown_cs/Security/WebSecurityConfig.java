@@ -19,6 +19,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/**
+ * Classe de configuração principal do Spring Security.
+ * Define as regras de autenticação, criptografia de senhas, gerenciamento de sessão
+ * e políticas de CORS (Cross-Origin Resource Sharing).
+ */
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
@@ -29,16 +34,31 @@ public class WebSecurityConfig {
         this.securityFilter = securityFilter;
     }
 
+    /**
+     * Define o algoritmo de criptografia de senhas (BCrypt) utilizado pelo sistema.
+     * Essencial para garantir que as senhas não sejam salvas em texto plano no banco.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Expõe o AuthenticationManager do Spring como um Bean para ser utilizado nos Controllers.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Configura a cadeia de filtros de segurança (Security Filter Chain).
+     * - Desabilita CSRF (padrão para APIs Stateless).
+     * - Configura CORS.
+     * - Define a sessão como STATELESS (sem estado, obrigando o uso de token em cada requisição).
+     * - Define as regras de autorização para cada endpoint (rotas públicas vs privadas).
+     * - Adiciona o filtro de token personalizado antes do filtro padrão do Spring.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -61,6 +81,11 @@ public class WebSecurityConfig {
                 .build();
     }
 
+    /**
+     * Define as configurações de CORS (Cross-Origin Resource Sharing).
+     * Permite que o Frontend (hospedado no Netlify ou rodando localmente)
+     * faça requisições para esta API.
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

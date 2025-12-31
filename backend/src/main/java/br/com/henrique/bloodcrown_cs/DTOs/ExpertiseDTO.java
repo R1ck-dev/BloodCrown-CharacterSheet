@@ -1,5 +1,10 @@
 package br.com.henrique.bloodcrown_cs.DTOs;
 
+/**
+ * Representa o conjunto completo de Perícias (Skills) de um personagem.
+ * Cada campo armazena o valor numérico (bônus) associado à respectiva competência.
+ * Utilizado para persistência e visualização na ficha.
+ */
 public record ExpertiseDTO(
     Integer atletismo,
     Integer conhecimento,
