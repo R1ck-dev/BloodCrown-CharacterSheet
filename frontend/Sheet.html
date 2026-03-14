@@ -459,6 +459,12 @@
                                                         <option value="resPhysical">Res. Física</option>
                                                         <option value="resMagical">Res. Mágica</option>
                                                         <option value="defArmor">Armadura</option>
+                                                        <option value="statusHealthCurrent">PV Temporário</option>
+                                                        <option value="statusManaCurrent">Mana Temporária</option>
+                                                        <option value="statusStaminaCurrent">Stamina Temporária</option>
+                                                        <option value="statusSanityCurrent">Sanidade Temporária</option>
+                                                        <option value="extraDamage">Dano Adicional (ativo)</option>
+                                                        <option value="extraTurns">Turnos Adicionais (ativo)</option>
                                                     </optgroup>
                                                     <optgroup label="Atributos">
                                                         <option value="attrForca">Força</option>
@@ -503,7 +509,11 @@
                                         <div class="row align-items-center">
                                             <div class="col-12">
                                                 <label class="text-secondary small">Dados de Turnos</label>
-                                                <input type="text" id="abilDuration" class="form-control bg-black text-light border-secondary" placeholder="Ex: 1d4">
+                                                <input type="text" id="abilDuration" class="form-control bg-black text-light border-secondary" placeholder="Ex: 1d4 ou Insta">
+                                            </div>
+                                            <div class="col-12 mt-2">
+                                                <label class="text-secondary small">Condição (opcional)</label>
+                                                <input type="text" id="abilCondition" class="form-control bg-black text-light border-secondary" placeholder="Ex: Somente se alvo estiver marcado">
                                             </div>
                                         </div>
                                     </div>

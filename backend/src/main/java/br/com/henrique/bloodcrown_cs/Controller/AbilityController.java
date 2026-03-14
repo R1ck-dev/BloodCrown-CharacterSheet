@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,6 +49,11 @@ public class AbilityController {
         return ResponseEntity.created(location).body(newAbility);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<AbilityDTO> updateAbility(@PathVariable String id, @RequestBody AbilityDTO abilityDTO, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.updateAbility(id, abilityDTO, authentication));
+    }
+
     /**
      * Remove uma habilidade da ficha do personagem.
      * * @param id Identificador da habilidade a ser removida.
@@ -65,8 +71,8 @@ public class AbilityController {
      * @return ResponseEntity com a habilidade atualizada.
      */
     @PostMapping("/{abilityId}/toggle")
-    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId) {
-        return ResponseEntity.ok(abilityService.toggleAbility(abilityId));
+    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId, @RequestParam(required = false) Integer extraUses, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.toggleAbility(abilityId, extraUses, authentication));
     }
 
     /**

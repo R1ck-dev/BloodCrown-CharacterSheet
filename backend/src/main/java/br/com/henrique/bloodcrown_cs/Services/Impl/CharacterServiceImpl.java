@@ -256,7 +256,8 @@ public class CharacterServiceImpl implements CharacterService{
                     ab.getDurationDice(),
                     ab.getIsActive(),
                     ab.getTurnsRemaining(),
-                    ab.getDescription()
+                    ab.getDescription(),
+                    ab.getConditionText()
                 );
             }).toList();
         
@@ -442,7 +443,6 @@ public class CharacterServiceImpl implements CharacterService{
         if (status != null) {
             status.setCurrentHealth(status.getMaxHealth());
             status.setCurrentMana(status.getMaxMana());
-            status.setCurrentSanity(status.getMaxSanity());
             status.setCurrentStamina(status.getMaxStamina());
         }
 
