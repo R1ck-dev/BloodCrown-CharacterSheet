@@ -31,6 +31,7 @@ async function createAbility(characterId, token) {
     const maxUsesEl = document.getElementById('abilMaxUses');
     const durationEl = document.getElementById('abilDuration');
     const resourceEl = document.getElementById('abilResource');
+    const conditionEl = document.getElementById('abilCondition');
 
     // Coleta a lista de efeitos adicionados dinamicamente no modal
     const effectsList = [];
@@ -56,6 +57,7 @@ async function createAbility(characterId, token) {
         category: categoryEl.value,
         actionType: actionEl.value,
         description: descEl.value,
+        conditionText: conditionEl ? conditionEl.value : '',
 
         resourceType: resourceEl ? resourceEl.value : 'MANA',
         
@@ -168,14 +170,15 @@ function renderAbilityCard(ability) {
     if (ability.resourceType === 'HYBRID') btnColorClass = 'text-white';
 
     // Badge de Usos com botão de recuperação condicional
-    const usesBadge = `
+    const hasSkillPoints = (ability.maxUses || 0) > 0;
+    const usesBadge = hasSkillPoints ? `
         <div class="d-flex align-items-center gap-1 bg-dark border border-secondary rounded px-2 py-0 ms-1">
             <span class="text-info" style="font-size: 0.8rem;">${ability.currentUses}/${ability.maxUses}</span>
             ${ability.currentUses < ability.maxUses ? 
                 `<i class="fa-solid fa-circle-plus ${btnColorClass} clickable-icon btn-recover" title="Gastar 50 para recuperar"></i>` 
                 : ''}
         </div>
-    `;
+    ` : '';
     const actionBadge = ability.actionType ? `<span class="badge bg-secondary">${ability.actionType}</span>` : '';
 
     // Monta o HTML interno
@@ -188,21 +191,81 @@ function renderAbilityCard(ability) {
                     ${usesBadge}
                 </div>
             </div>
-            <button type="button" class="btn btn-sm btn-link text-secondary p-0 btn-del-abil"><i class="fa-solid fa-trash"></i></button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-link text-info p-0 btn-edit-abil"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="btn btn-sm btn-link text-secondary p-0 btn-del-abil"><i class="fa-solid fa-trash"></i></button>
+            </div>
         </div>
         
         <p class="text-secondary small mb-0 text-break" style="white-space: pre-wrap;">${ability.description}</p>
+        ${ability.conditionText ? `<span class="badge bg-info-subtle text-info-emphasis mt-2">Condição: ${ability.conditionText}</span>` : ''}
         
         <div class="d-flex justify-content-between align-items-end mt-2">
             <div>
-                ${ (ability.targetAttribute !== 'none' || ability.durationDice) ? 
-                    `<button type="button" class="btn btn-sm btn-outline-warning py-0 px-2 small btn-activate" style="font-size: 0.7rem;">ATIVAR</button>` 
+                ${ (hasSkillPoints && (ability.targetAttribute !== 'none' || ability.durationDice)) ? 
+                    `<button type="button" class="btn btn-sm btn-outline-warning py-0 px-2 small btn-activate" style="font-size: 0.7rem;">ATIVAR</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 small btn-activate-extra" style="font-size: 0.7rem;">RETIRAR PH</button>` 
                     : '' 
                 }
             </div>
             ${hasRoll ? `<div class="text-purple small fw-bold"><i class="fa-solid fa-dice-d20"></i> ${ability.diceRoll}</div>` : ''}
         </div>
     `;
+
+
+    card.querySelector('.btn-edit-abil').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const res = await Swal.fire({
+            title: 'Editar Habilidade',
+            html: `
+                <input id="swalAbilName" class="swal2-input" value="${ability.name || ''}" placeholder="Nome">
+                <input id="swalAbilUses" class="swal2-input" type="number" value="${ability.maxUses || 0}" placeholder="PH Máximo">
+                <input id="swalAbilCurrentUses" class="swal2-input" type="number" value="${ability.currentUses || 0}" placeholder="PH Atual">
+                <input id="swalAbilDuration" class="swal2-input" value="${ability.durationDice || ''}" placeholder="Duração (1d4 ou Insta)">
+                <input id="swalAbilCondition" class="swal2-input" value="${ability.conditionText || ''}" placeholder="Condição (opcional)">
+                <textarea id="swalAbilDesc" class="swal2-textarea" placeholder="Descrição">${ability.description || ''}</textarea>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Salvar',
+            cancelButtonText: 'Cancelar',
+            background: '#212529', color: '#fff',
+            preConfirm: () => {
+                const maxUses = Math.max(0, parseInt(document.getElementById('swalAbilUses').value) || 0);
+                const currentUsesRaw = parseInt(document.getElementById('swalAbilCurrentUses').value);
+                const currentUses = Number.isNaN(currentUsesRaw) ? maxUses : Math.min(maxUses, Math.max(0, currentUsesRaw));
+
+                return {
+                    name: document.getElementById('swalAbilName').value,
+                    category: ability.category || 'CLASS',
+                    resourceType: ability.resourceType || 'MANA',
+                    actionType: ability.actionType || '',
+                    maxUses,
+                    currentUses,
+                    diceRoll: ability.diceRoll || '',
+                    durationDice: document.getElementById('swalAbilDuration').value,
+                    description: document.getElementById('swalAbilDesc').value,
+                    conditionText: document.getElementById('swalAbilCondition').value
+                };
+            }
+        });
+        if (!res.isConfirmed) return;
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${ability.id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(res.value)
+            });
+            if (!response.ok) {
+                const msg = await response.text();
+                throw new Error(msg || `Erro ao editar habilidade (HTTP ${response.status})`);
+            }
+            const params = new URLSearchParams(window.location.search);
+            if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
+        } catch (error) {
+            Swal.fire({ icon: 'error', text: error.message || 'Erro ao editar habilidade.', background: '#212529', color: '#fff' });
+        }
+    });
 
     // Evento de Deletar
     card.querySelector('.btn-del-abil').addEventListener('click', (e) => {
@@ -213,6 +276,9 @@ function renderAbilityCard(ability) {
     // Evento de Ativar/Desativar (Toggle)
     const btnActivate = card.querySelector('.btn-activate');
     if(btnActivate) {
+        if ((ability.durationDice || '').toLowerCase() === 'insta') {
+            btnActivate.title = 'Insta: consome PH e não fica ativa por turnos';
+        }
         // Altera o estilo se já estiver ativa
         if (ability.isActive) {
             btnActivate.classList.replace('btn-outline-warning', 'btn-warning');
@@ -221,7 +287,25 @@ function renderAbilityCard(ability) {
         btnActivate.addEventListener('click', (e) => {
             e.stopPropagation();
             const token = localStorage.getItem('authToken');
-            toggleAbility(ability.id, token);
+toggleAbility(ability.id, token);
+        });
+    }
+
+    const btnActivateExtra = card.querySelector('.btn-activate-extra');
+    if (btnActivateExtra) {
+        btnActivateExtra.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const { value } = await Swal.fire({
+                title: 'Retirar PH extra',
+                input: 'number',
+                inputLabel: 'Quantidade adicional',
+                inputValue: 1,
+                inputAttributes: { min: 1, step: 1 },
+                showCancelButton: true,
+                background: '#212529', color: '#fff'
+            });
+            if (!value) return;
+            toggleAbility(ability.id, localStorage.getItem('authToken'), parseInt(value));
         });
     }
 
@@ -251,9 +335,9 @@ function renderAbilityCard(ability) {
  * @param {string} abilityId - ID da habilidade.
  * @param {string} token - Token de autenticação.
  */
-async function toggleAbility(abilityId, token) {
+async function toggleAbility(abilityId, token, extraUses = 0) {
     try {
-        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/toggle`, {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/toggle?extraUses=${extraUses}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });

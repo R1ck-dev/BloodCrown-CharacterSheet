@@ -36,7 +36,8 @@ public record AbilityDTO(
     String durationDice,
     Boolean isActive,
     Integer turnsRemaining,
-    String description
+    String description,
+    String conditionText
 ) {
     
 }
