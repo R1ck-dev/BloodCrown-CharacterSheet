@@ -31,6 +31,10 @@
     --danger: #dc3545;
     --success: #198754;
     --warning: #ffc107;
+
+    --accent-soft: rgba(123, 44, 191, 0.2);
+    --header-gradient: linear-gradient(120deg, rgba(123,44,191,0.12), rgba(0,0,0,0));
+    --card-glow: rgba(123,44,191,0.16);
 }
 
 /* Estilos base do corpo da página */
@@ -56,46 +60,66 @@ body.theme-padrao {
     --bg-page: #050505;
     --bg-card: #121212;
     --border-color: #333;
+    --secondary: #9aa0a6;
+    --accent-soft: rgba(123, 44, 191, 0.2);
+    --header-gradient: linear-gradient(120deg, rgba(123,44,191,0.16), rgba(0,0,0,0));
+    --card-glow: rgba(123,44,191,0.16);
 }
 
 body.theme-sozoku {
     --primary: #9b111e;
     --primary-hover: #c1121f;
-    --text-highlight: #8a2be2;
+    --text-highlight: #b14cff;
     --border-focus: rgba(155, 17, 30, 0.45);
     --bg-page: #050505;
     --bg-card: #120909;
     --border-color: #2a1a1a;
+    --secondary: #b08ea0;
+    --accent-soft: rgba(155, 17, 30, 0.26);
+    --header-gradient: linear-gradient(120deg, rgba(155,17,30,0.22), rgba(108,41,173,0.12), rgba(0,0,0,0));
+    --card-glow: rgba(155,17,30,0.2);
 }
 
 body.theme-nozomu {
-    --primary: #7b2cbf;
-    --primary-hover: #9d4edd;
-    --text-highlight: #f5f5f5;
-    --border-focus: rgba(157, 78, 221, 0.5);
-    --bg-page: #050505;
-    --bg-card: #111111;
-    --border-color: #3a3a3a;
+    --primary: #5a189a;
+    --primary-hover: #7b2cbf;
+    --text-highlight: #f4ecff;
+    --border-focus: rgba(212, 196, 255, 0.45);
+    --bg-page: #07070c;
+    --bg-card: #12131b;
+    --border-color: #3f4257;
+    --secondary: #c9c3d9;
+    --accent-soft: rgba(194, 170, 255, 0.18);
+    --header-gradient: linear-gradient(120deg, rgba(120,120,160,0.2), rgba(90,24,154,0.2), rgba(0,0,0,0));
+    --card-glow: rgba(212, 196, 255, 0.22);
 }
 
 body.theme-ryusei {
     --primary: #198754;
     --primary-hover: #20a566;
-    --text-highlight: #dc3545;
+    --text-highlight: #ff6b6b;
     --border-focus: rgba(25, 135, 84, 0.5);
     --bg-page: #040704;
     --bg-card: #0f1610;
     --border-color: #223326;
+    --secondary: #9bb4a0;
+    --accent-soft: rgba(25, 135, 84, 0.2);
+    --header-gradient: linear-gradient(120deg, rgba(25,135,84,0.2), rgba(220,53,69,0.15), rgba(0,0,0,0));
+    --card-glow: rgba(25,135,84,0.18);
 }
 
 body.theme-mestre {
     --primary: #d4af37;
     --primary-hover: #e5c55c;
-    --text-highlight: #b22222;
+    --text-highlight: #c94b4b;
     --border-focus: rgba(212, 175, 55, 0.5);
     --bg-page: #0b0a08;
     --bg-card: #14120d;
     --border-color: #4a3d1a;
+    --secondary: #c0b498;
+    --accent-soft: rgba(212, 175, 55, 0.22);
+    --header-gradient: linear-gradient(120deg, rgba(212,175,55,0.22), rgba(178,34,34,0.16), rgba(0,0,0,0));
+    --card-glow: rgba(212,175,55,0.2);
 }
 
 
@@ -137,4 +161,28 @@ body[class*="theme-"] .text-purple,
 body[class*="theme-"] .btn-link.text-info,
 body[class*="theme-"] .navbar-brand span {
     color: var(--text-highlight) !important;
+}
+
+
+body[class*="theme-"] .custom-header,
+body[class*="theme-"] .theme-box {
+    background-image: var(--header-gradient) !important;
+}
+
+body[class*="theme-"] .btn-purple {
+    box-shadow: 0 6px 20px var(--card-glow) !important;
+}
+
+body[class*="theme-"] .status-box,
+body[class*="theme-"] .attributes-box,
+body[class*="theme-"] .card,
+body[class*="theme-"] .tab-content,
+body[class*="theme-"] .ability-card,
+body[class*="theme-"] .attack-card {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-soft), transparent 45%), 0 8px 20px color-mix(in srgb, var(--card-glow), transparent 60%);
+}
+
+body[class*="theme-"] .nav-tabs .nav-link.active {
+    border-bottom-color: var(--primary) !important;
+    color: #fff !important;
 }

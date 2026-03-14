@@ -43,16 +43,6 @@
                             <i class="fa-solid fa-note-sticky"></i>
                         </button>
 
-                        <div class="d-flex flex-column align-items-start me-1">
-                                <label class="small text-secondary mb-1">Tema</label>
-                                <select class="form-select form-select-sm theme-picker" aria-label="Selecionar tema">
-                                    <option value="padrao">Padrão</option>
-                                    <option value="sozoku">Sozoku</option>
-                                    <option value="nozomu">Nozomu</option>
-                                    <option value="ryusei">Ryusei</option>
-                                    <option value="mestre">Mestre</option>
-                                </select>
-                            </div>
                             <a href="Dashboard.html" class="btn btn-outline-secondary"><i class="fa-solid fa-right-from-bracket"></i></a>
                         <button id="btnRest" class="btn btn-outline-warning" title="Descanso Longo"><i class="fa-solid fa-campground"></i></button>
                         <button id="btnSave" class="btn btn-purple">SALVAR</button>
@@ -61,7 +51,22 @@
 
             <div class="row g-4">
                 
-                <div class="col-lg-3 d-flex flex-column gap-4">
+                                <div class="col-lg-3 d-flex flex-column gap-4">
+                    
+                    <div class="theme-box p-3 rounded border border-secondary bg-dark">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary m-0">TEMA VISUAL</h6>
+                            <i class="fa-solid fa-palette text-purple"></i>
+                        </div>
+                        <select class="form-select form-select-sm theme-picker" aria-label="Selecionar tema da ficha">
+                            <option value="padrao">Padrão</option>
+                            <option value="sozoku">Sozoku</option>
+                            <option value="nozomu">Nozomu</option>
+                            <option value="ryusei">Ryusei</option>
+                            <option value="mestre">Mestre</option>
+                        </select>
+                        <small class="text-secondary d-block mt-2">O tema altera cores de painéis, bordas, destaques e botões.</small>
+                    </div>
                     
                     <div class="attributes-box text-center">
                         <h5 class="text-secondary mb-3">ATRIBUTOS</h5>
