@@ -124,29 +124,41 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
             throw new RuntimeException("Permissão negada para editar essa habilidade.");
         }
 
-        ability.setName(dto.name());
-        ability.setCategory(dto.category());
-        ability.setActionType(dto.actionType());
-        ability.setMaxUses(dto.maxUses());
-        ability.setCurrentUses(dto.currentUses());
-        ability.setDiceRoll(dto.diceRoll());
-        ability.setDurationDice(dto.durationDice());
-        ability.setDescription(dto.description());
-        ability.setResourceType(dto.resourceType());
-        ability.setConditionText(dto.conditionText());
+        if (dto.name() != null) ability.setName(dto.name());
+        if (dto.category() != null) ability.setCategory(dto.category());
+        if (dto.actionType() != null) ability.setActionType(dto.actionType());
+        if (dto.diceRoll() != null) ability.setDiceRoll(dto.diceRoll());
+        if (dto.durationDice() != null) ability.setDurationDice(dto.durationDice());
+        if (dto.description() != null) ability.setDescription(dto.description());
+        if (dto.resourceType() != null) ability.setResourceType(dto.resourceType());
+        if (dto.conditionText() != null) ability.setConditionText(dto.conditionText());
 
-        if (dto.effects() == null || dto.effects().isEmpty()) {
-            ability.setEffects(new ArrayList<>());
-        } else {
-            List<AbilityEffectModel> effectsList = new ArrayList<>();
-            for (EffectDTO effDto : dto.effects()) {
-                AbilityEffectModel effect = new AbilityEffectModel();
-                effect.setTargetAttribute(effDto.target());
-                effect.setEffectValue(effDto.value());
-                effect.setAbility(ability);
-                effectsList.add(effect);
+        Integer nextMaxUses = dto.maxUses() != null ? dto.maxUses() : ability.getMaxUses();
+        if (nextMaxUses == null) nextMaxUses = 0;
+        if (nextMaxUses < 0) nextMaxUses = 0;
+        ability.setMaxUses(nextMaxUses);
+
+        Integer nextCurrentUses = dto.currentUses() != null ? dto.currentUses() : ability.getCurrentUses();
+        if (nextCurrentUses == null) nextCurrentUses = nextMaxUses;
+        if (nextCurrentUses < 0) nextCurrentUses = 0;
+        if (nextCurrentUses > nextMaxUses) nextCurrentUses = nextMaxUses;
+        ability.setCurrentUses(nextCurrentUses);
+
+        if (dto.effects() != null) {
+            if (dto.effects().isEmpty()) {
+                ability.setEffects(new ArrayList<>());
+            } else {
+                List<AbilityEffectModel> effectsList = new ArrayList<>();
+                for (EffectDTO effDto : dto.effects()) {
+                    if (effDto == null || effDto.target() == null) continue;
+                    AbilityEffectModel effect = new AbilityEffectModel();
+                    effect.setTargetAttribute(effDto.target());
+                    effect.setEffectValue(effDto.value() != null ? effDto.value() : 0);
+                    effect.setAbility(ability);
+                    effectsList.add(effect);
+                }
+                ability.setEffects(effectsList);
             }
-            ability.setEffects(effectsList);
         }
 
         AbilityModel saved = abilityRepository.save(ability);

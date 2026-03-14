@@ -229,15 +229,28 @@ function renderAbilityCard(ability) {
             confirmButtonText: 'Salvar',
             cancelButtonText: 'Cancelar',
             background: '#212529', color: '#fff',
-            preConfirm: () => ({
-                ...ability,
-                name: document.getElementById('swalAbilName').value,
-                maxUses: parseInt(document.getElementById('swalAbilUses').value) || 0,
-                currentUses: parseInt(document.getElementById('swalAbilCurrentUses').value) || 0,
-                durationDice: document.getElementById('swalAbilDuration').value,
-                conditionText: document.getElementById('swalAbilCondition').value,
-                description: document.getElementById('swalAbilDesc').value
-            })
+            preConfirm: () => {
+                const maxUses = Math.max(0, parseInt(document.getElementById('swalAbilUses').value) || 0);
+                const currentUsesRaw = parseInt(document.getElementById('swalAbilCurrentUses').value);
+                const currentUses = Number.isNaN(currentUsesRaw) ? maxUses : Math.min(maxUses, Math.max(0, currentUsesRaw));
+
+                return {
+                    id: ability.id,
+                    name: document.getElementById('swalAbilName').value,
+                    category: ability.category,
+                    resourceType: ability.resourceType || 'MANA',
+                    actionType: ability.actionType || '',
+                    maxUses,
+                    currentUses,
+                    diceRoll: ability.diceRoll || '',
+                    effects: Array.isArray(ability.effects) ? ability.effects : [],
+                    durationDice: document.getElementById('swalAbilDuration').value,
+                    isActive: Boolean(ability.isActive),
+                    turnsRemaining: ability.turnsRemaining,
+                    description: document.getElementById('swalAbilDesc').value,
+                    conditionText: document.getElementById('swalAbilCondition').value
+                };
+            }
         });
         if (!res.isConfirmed) return;
         try {
@@ -247,11 +260,14 @@ function renderAbilityCard(ability) {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(res.value)
             });
-            if (!response.ok) throw new Error('Erro ao editar habilidade');
+            if (!response.ok) {
+                const msg = await response.text();
+                throw new Error(msg || 'Erro ao editar habilidade');
+            }
             const params = new URLSearchParams(window.location.search);
             if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
         } catch (error) {
-            Swal.fire({ icon: 'error', text: 'Erro ao editar habilidade.', background: '#212529', color: '#fff' });
+            Swal.fire({ icon: 'error', text: error.message || 'Erro ao editar habilidade.', background: '#212529', color: '#fff' });
         }
     });
 
