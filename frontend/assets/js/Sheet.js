@@ -87,6 +87,7 @@ window.loadCharacterData = async function(id, token) {
 
         // Popula campos de texto simples
         document.getElementById('charName').value = charData.name;
+        document.title = `Ficha - ${charData.name || 'Personagem'} | BloodCrown`;
         document.getElementById('charClass').value = charData.characterClass;
         document.getElementById('charLevel').value = charData.level;
 
@@ -357,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const result = await Swal.fire({
                 title: 'Descanso Longo?',
-                text: "Isso recuperará toda Vida, Mana, Sanidade, Estamina e resetará usos de habilidades.",
+                text: "Isso recuperará Vida, Mana e Estamina, além de resetar usos de habilidades. Sanidade fica manual.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#7b2cbf', 
@@ -384,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 Swal.fire({
                     title: 'Renovado!',
-                    text: 'Você está pronto para a aventura.',
+                    text: 'Descanso aplicado. A Sanidade permanece manual.',
                     icon: 'success',
                     background: '#212529',
                     color: '#fff',
@@ -560,6 +561,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     const totalBuffs = {};
     let activeCount = 0;
     
+    
     if(list) list.innerHTML = '';
 
     // Processa Habilidades Ativas
@@ -567,8 +569,25 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         charData.abilities.forEach(abil => {
             if (abil.isActive) {
                 activeCount++;
+                let hasTemporaryStatusBonus = false;
+                let extraDamageEntries = [];
+                let extraTurnEntries = [];
+
                 if (abil.effects) {
                     abil.effects.forEach(eff => {
+                        const tempStatusTargets = ['statusHealthCurrent','statusManaCurrent','statusStaminaCurrent','statusSanityCurrent'];
+                        if (tempStatusTargets.includes(eff.target)) {
+                            hasTemporaryStatusBonus = true;
+                            return;
+                        }
+                        if (eff.target === 'extraDamage') {
+                            extraDamageEntries.push(`+${eff.value} Dano (${abil.name})`);
+                            return;
+                        }
+                        if (eff.target === 'extraTurns') {
+                            extraTurnEntries.push(`+${eff.value} turnos (${abil.name})`);
+                            return;
+                        }
                         if (!totalBuffs[eff.target]) totalBuffs[eff.target] = 0;
                         totalBuffs[eff.target] += eff.value;
                     });
@@ -594,6 +613,9 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
                             <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">${durationText}</span>
                         </div>
                         ${buffText}
+                        ${extraDamageEntries.length ? `<div class="text-danger small mt-1">${extraDamageEntries.join(" • ")}</div>` : ""}
+                        ${extraTurnEntries.length ? `<div class="text-warning small">${extraTurnEntries.join(" • ")}</div>` : ""}
+                        ${hasTemporaryStatusBonus ? `<div class="text-info small">Bônus temporários em recursos ativos.</div>` : ""}
                     `;
                     list.appendChild(item);
                 }
