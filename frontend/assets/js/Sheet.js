@@ -560,6 +560,9 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
 
     const totalBuffs = {};
     let activeCount = 0;
+    let hasTemporaryStatusBonus = false;
+    let extraDamageEntries = [];
+    let extraTurnEntries = [];
     
     
     if(list) list.innerHTML = '';
