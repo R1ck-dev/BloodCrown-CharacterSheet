@@ -62,6 +62,27 @@ public class AttackServiceImpl implements AttackService{
     }
 
 //--------------------------------------------------------------------------------
+
+    @Override
+    public AttackDTO updateAttack(String attackId, AttackDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AttackModel attack = attackRepository.findById(attackId)
+                .orElseThrow(() -> new RuntimeException("Ataque não encontrado."));
+
+        if (attack.getCharacter() == null || attack.getCharacter().getFromUser() == null ||
+                !user.getId().equals(attack.getCharacter().getFromUser().getId())) {
+            throw new RuntimeException("Permissão negada para editar esse ataque.");
+        }
+
+        attack.setName(dto.name());
+        attack.setDamageDice(dto.damageDice());
+        attack.setDescription(dto.description());
+
+        AttackModel saved = attackRepository.save(attack);
+        return new AttackDTO(saved.getId(), saved.getName(), saved.getDamageDice(), saved.getDescription());
+    }
+
 //--------------------------------Deletar Ataques--------------------------------
 
     /**

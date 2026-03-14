@@ -1,3 +1,5 @@
+let allCharactersCache = [];
+
 /*
     Controlador do Dashboard (Mesa de Jogo).
     Gerencia a autenticação da sessão, a listagem de personagens e as ações de 
@@ -42,6 +44,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Carrega a lista de personagens do usuário
     await loadCharacters(token);
+
+    const searchInput = document.getElementById('searchCharacters');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.trim().toLowerCase();
+            const filtered = allCharactersCache.filter(c => (c.name || "").toLowerCase().includes(term));
+            renderCharacterList(filtered, token);
+        });
+    }
 });
 
 /**
@@ -66,9 +77,22 @@ async function loadCharacters(token) {
         if (!response.ok) throw new Error('Falha ao buscar fichas');
 
         const characters = await response.json();
+        allCharactersCache = characters;
         listElement.innerHTML = ''; 
 
-        // Itera sobre os personagens para criar os elementos HTML (Cards)
+        renderCharacterList(characters, token);
+
+    } catch (error) {
+        console.error(error);
+        listElement.innerHTML = '<div class="alert alert-dark text-center w-100">Erro ao carregar dados. Tente fazer login novamente.</div>';
+    }
+}
+
+function renderCharacterList(characters, token) {
+    const listElement = document.getElementById('charList');
+    listElement.innerHTML = "";
+
+    // Itera sobre os personagens para criar os elementos HTML (Cards)
         characters.forEach(char => {
             const initial = char.name ? char.name.charAt(0).toUpperCase() : '?';
             const charClass = char.characterClass || 'Desconhecido';
@@ -120,11 +144,6 @@ async function loadCharacters(token) {
             </div>
         `;
         listElement.appendChild(addCol);
-
-    } catch (error) {
-        console.error(error);
-        listElement.innerHTML = '<div class="alert alert-dark text-center w-100">Erro ao carregar dados. Tente fazer login novamente.</div>';
-    }
 }
 
 /**

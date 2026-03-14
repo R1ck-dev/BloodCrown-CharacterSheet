@@ -19,6 +19,8 @@ public interface AbilityService {
      */
     AbilityDTO addAbility(String characterId, AbilityDTO dto, Authentication authentication);
 
+    AbilityDTO updateAbility(String abilityId, AbilityDTO dto, Authentication authentication);
+
     /**
      * Remove uma habilidade da ficha.
      * * @param attackId Identificador da habilidade (nota: o nome do parâmetro sugere attackId, mas refere-se à habilidade).
@@ -30,7 +32,7 @@ public interface AbilityService {
      * * @param abilityDTO ID da habilidade (recebido como string).
      * @return A habilidade com o estado atualizado.
      */
-    AbilityDTO toggleAbility(String abilityDTO);
+    AbilityDTO toggleAbility(String abilityDTO, Integer extraUses, Authentication authentication);
 
     /**
      * Processa o avanço de turno para um personagem.
