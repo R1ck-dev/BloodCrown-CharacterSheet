@@ -31,7 +31,7 @@ async function createItem(characterId, token) {
 
         // Recarrega os dados da ficha para refletir o novo item
         const params = new URLSearchParams(window.location.search);
-        if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
+        if(window.loadCharacterData) await window.loadCharacterData(params.get('id'), token);
         
         // Fecha o modal e limpa o formulário
         bootstrap.Modal.getInstance(document.getElementById('modalNewItem')).hide();
@@ -58,7 +58,7 @@ async function toggleEquipItem(itemId, token) {
         
         // Atualiza a ficha completa (necessário para recalcular atributos afetados pelo item)
         const params = new URLSearchParams(window.location.search);
-        if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
+        if(window.loadCharacterData) await window.loadCharacterData(params.get('id'), token);
 
     } catch (e) { console.error(e); }
 }
@@ -93,7 +93,7 @@ async function deleteItem(itemId, token) {
         });
         // Atualiza a lista de itens
         const params = new URLSearchParams(window.location.search);
-        if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
+        if(window.loadCharacterData) await window.loadCharacterData(params.get('id'), token);
     } catch (e) { 
         Swal.fire({ icon: 'error', title: 'Erro', text: "Erro ao deletar item.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }

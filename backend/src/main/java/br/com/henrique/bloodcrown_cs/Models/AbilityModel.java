@@ -111,6 +111,9 @@ public class AbilityModel {
     @Column(length = 2000)
     private String description;
 
+    @Column(name = "condition_text", length = 500)
+    private String conditionText;
+
     /**
      * Referência ao personagem que possui esta habilidade.
      * Relacionamento ManyToOne: Muitas habilidades pertencem a um único personagem.
