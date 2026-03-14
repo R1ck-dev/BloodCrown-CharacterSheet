@@ -33,19 +33,6 @@
     --warning: #ffc107;
 }
 
-/* Tema Alternativo: Blood Theme (Vermelho).
-    Sobrescreve as variáveis principais para alterar a identidade visual.
-*/
-body.theme-blood {
-    --primary: #8a0303;         
-    --primary-hover: #dc2626;    
-    
-    --text-highlight: #d4af37;  
-    --border-focus: rgba(212, 175, 55, 0.5); 
-    
-    --bg-page: #080000;
-}
-
 /* Estilos base do corpo da página */
 body {
     background-color: var(--bg-page);
@@ -59,3 +46,61 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg-page); }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Temas oficiais */
+body.theme-padrao {
+    --primary: #7b2cbf;
+    --primary-hover: #9d4edd;
+    --text-highlight: #9d4edd;
+    --border-focus: rgba(123, 44, 191, 0.5);
+    --bg-page: #050505;
+    --bg-card: #121212;
+    --border-color: #333;
+}
+
+body.theme-sozoku {
+    --primary: #9b111e;
+    --primary-hover: #c1121f;
+    --text-highlight: #8a2be2;
+    --border-focus: rgba(155, 17, 30, 0.45);
+    --bg-page: #050505;
+    --bg-card: #120909;
+    --border-color: #2a1a1a;
+}
+
+body.theme-nozomu {
+    --primary: #7b2cbf;
+    --primary-hover: #9d4edd;
+    --text-highlight: #f5f5f5;
+    --border-focus: rgba(157, 78, 221, 0.5);
+    --bg-page: #050505;
+    --bg-card: #111111;
+    --border-color: #3a3a3a;
+}
+
+body.theme-ryusei {
+    --primary: #198754;
+    --primary-hover: #20a566;
+    --text-highlight: #dc3545;
+    --border-focus: rgba(25, 135, 84, 0.5);
+    --bg-page: #040704;
+    --bg-card: #0f1610;
+    --border-color: #223326;
+}
+
+body.theme-mestre {
+    --primary: #d4af37;
+    --primary-hover: #e5c55c;
+    --text-highlight: #b22222;
+    --border-focus: rgba(212, 175, 55, 0.5);
+    --bg-page: #faf7ef;
+    --bg-card: #ffffff;
+    --border-color: #d6c08a;
+}
+
+.theme-picker {
+    min-width: 150px;
+    background-color: var(--bg-card);
+    color: var(--text-highlight);
+    border: 1px solid var(--border-color);
+}

@@ -235,18 +235,14 @@ function renderAbilityCard(ability) {
                 const currentUses = Number.isNaN(currentUsesRaw) ? maxUses : Math.min(maxUses, Math.max(0, currentUsesRaw));
 
                 return {
-                    id: ability.id,
                     name: document.getElementById('swalAbilName').value,
-                    category: ability.category,
+                    category: ability.category || 'CLASS',
                     resourceType: ability.resourceType || 'MANA',
                     actionType: ability.actionType || '',
                     maxUses,
                     currentUses,
                     diceRoll: ability.diceRoll || '',
-                    effects: Array.isArray(ability.effects) ? ability.effects : [],
                     durationDice: document.getElementById('swalAbilDuration').value,
-                    isActive: Boolean(ability.isActive),
-                    turnsRemaining: ability.turnsRemaining,
                     description: document.getElementById('swalAbilDesc').value,
                     conditionText: document.getElementById('swalAbilCondition').value
                 };
@@ -262,7 +258,7 @@ function renderAbilityCard(ability) {
             });
             if (!response.ok) {
                 const msg = await response.text();
-                throw new Error(msg || 'Erro ao editar habilidade');
+                throw new Error(msg || `Erro ao editar habilidade (HTTP ${response.status})`);
             }
             const params = new URLSearchParams(window.location.search);
             if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);

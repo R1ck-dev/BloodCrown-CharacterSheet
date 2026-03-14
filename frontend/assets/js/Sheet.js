@@ -564,6 +564,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     let extraDamageEntries = [];
     let extraTurnEntries = [];
     
+    
     if(list) list.innerHTML = '';
 
     // Processa Habilidades Ativas
@@ -571,6 +572,10 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         charData.abilities.forEach(abil => {
             if (abil.isActive) {
                 activeCount++;
+                let hasTemporaryStatusBonus = false;
+                let extraDamageEntries = [];
+                let extraTurnEntries = [];
+
                 if (abil.effects) {
                     abil.effects.forEach(eff => {
                         const tempStatusTargets = ['statusHealthCurrent','statusManaCurrent','statusStaminaCurrent','statusSanityCurrent'];
@@ -599,7 +604,11 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
                     if (abil.turnsRemaining !== null) durationText = `${abil.turnsRemaining} trns`;
                     
                     let buffText = '';
-                    if (abil.effects) {
+                    let hasTemporaryStatusBonus = false;
+                let extraDamageEntries = [];
+                let extraTurnEntries = [];
+
+                if (abil.effects) {
                         buffText = abil.effects.map(eff => {
                             let niceName = eff.target.replace('skill','').replace('attr','');
                             return `<div class="text-success small" style="font-size: 0.7rem;">+${eff.value} ${niceName}</div>`;
