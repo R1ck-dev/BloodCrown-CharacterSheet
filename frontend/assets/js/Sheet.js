@@ -560,6 +560,11 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
 
     const totalBuffs = {};
     let activeCount = 0;
+    let hasTemporaryStatusBonus = false;
+    let extraDamageEntries = [];
+    let extraTurnEntries = [];
+    
+    
     
     
     if(list) list.innerHTML = '';
@@ -601,7 +606,11 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
                     if (abil.turnsRemaining !== null) durationText = `${abil.turnsRemaining} trns`;
                     
                     let buffText = '';
-                    if (abil.effects) {
+                    let hasTemporaryStatusBonus = false;
+                let extraDamageEntries = [];
+                let extraTurnEntries = [];
+
+                if (abil.effects) {
                         buffText = abil.effects.map(eff => {
                             let niceName = eff.target.replace('skill','').replace('attr','');
                             return `<div class="text-success small" style="font-size: 0.7rem;">+${eff.value} ${niceName}</div>`;
