@@ -565,6 +565,7 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
     let extraTurnEntries = [];
     
     
+    
     if(list) list.innerHTML = '';
 
     // Processa Habilidades Ativas

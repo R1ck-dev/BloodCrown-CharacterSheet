@@ -93,14 +93,48 @@ body.theme-mestre {
     --primary-hover: #e5c55c;
     --text-highlight: #b22222;
     --border-focus: rgba(212, 175, 55, 0.5);
-    --bg-page: #faf7ef;
-    --bg-card: #ffffff;
-    --border-color: #d6c08a;
+    --bg-page: #0b0a08;
+    --bg-card: #14120d;
+    --border-color: #4a3d1a;
 }
 
-.theme-picker {
+
+
+.theme-picker,
+.theme-picker.form-select {
     min-width: 150px;
-    background-color: var(--bg-card);
-    color: var(--text-highlight);
-    border: 1px solid var(--border-color);
+    background-color: var(--bg-card) !important;
+    color: #e6e9eb !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.theme-picker:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--primary), transparent 75%) !important;
+}
+
+.theme-picker option {
+    background-color: #101010;
+    color: #f2f2f2;
+}
+
+/* Integração com utilitários Bootstrap para os temas */
+body[class*="theme-"] .bg-black {
+    background-color: var(--bg-page) !important;
+}
+
+body[class*="theme-"] .bg-dark,
+body[class*="theme-"] .card,
+body[class*="theme-"] .modal-content {
+    background-color: var(--bg-card) !important;
+}
+
+body[class*="theme-"] .border-secondary {
+    border-color: var(--border-color) !important;
+}
+
+body[class*="theme-"] .text-purple,
+body[class*="theme-"] .btn-link.text-info,
+body[class*="theme-"] .navbar-brand span {
+    color: var(--text-highlight) !important;
 }
