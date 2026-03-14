@@ -122,6 +122,7 @@ function renderAttackCard(attack) {
 
     // Cria o elemento do card
     const card = document.createElement('div');
+    card.dataset.attack = JSON.stringify(attack);
     card.className = 'attack-card p-3 rounded bg-black border border-secondary d-flex justify-content-between align-items-center';
 
     // Preenche o HTML interno do card com Nome, Descrição e Dados
@@ -139,11 +140,20 @@ function renderAttackCard(attack) {
             
             <div style="border-left: 1px solid #333; height: 30px; margin: 0 5px;"></div>
 
+            <button type="button" class="btn btn-sm btn-outline-dark text-info border-0 btn-edit-atk" title="Editar"><i class="fa-solid fa-pen"></i></button>
             <button type="button" class="btn btn-sm btn-outline-dark text-secondary border-0 btn-delete-atk" title="Apagar">
                 <i class="fa-solid fa-trash"></i>
             </button>
         </div>
     `;
+
+    card.querySelector('.btn-edit-atk').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const token = localStorage.getItem('authToken');
+        const currentAttack = JSON.parse(card.dataset.attack || '{}');
+        updateAttack(attack.id, token, card, currentAttack);
+    });
 
     // Adiciona evento ao botão de deletar (interrompe propagação para não rolar dano)
     card.querySelector('.btn-delete-atk').addEventListener('click', (e) => {
@@ -165,4 +175,40 @@ function renderAttackCard(attack) {
     });
 
     list.appendChild(card);
+}
+
+async function updateAttack(attackId, token, card, currentAttack) {
+    const result = await Swal.fire({
+        title: 'Editar Ataque',
+        html: `
+            <input id="swalAtkName" class="swal2-input" placeholder="Nome" value="${currentAttack.name || ''}">
+            <input id="swalAtkDamage" class="swal2-input" placeholder="Dano" value="${currentAttack.damageDice || ''}">
+            <textarea id="swalAtkDesc" class="swal2-textarea" placeholder="Descrição">${currentAttack.description || ''}</textarea>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        background: '#212529', color: '#fff',
+        preConfirm: () => ({
+            name: document.getElementById('swalAtkName').value,
+            damageDice: document.getElementById('swalAtkDamage').value,
+            description: document.getElementById('swalAtkDesc').value
+        })
+    });
+    if (!result.isConfirmed) return;
+    try {
+        const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${attackId}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(result.value)
+        });
+        if (!response.ok) throw new Error('Erro ao editar ataque');
+        const updated = await response.json();
+        card.querySelector('strong').innerText = updated.name;
+        card.querySelector('.text-danger').innerText = updated.damageDice;
+        card.querySelector('small.text-secondary.text-break').innerText = updated.description || '';
+        card.dataset.attack = JSON.stringify(updated);
+    } catch (error) {
+        Swal.fire({ icon: 'error', text: 'Erro ao editar ataque.', background: '#212529', color: '#fff' });
+    }
 }

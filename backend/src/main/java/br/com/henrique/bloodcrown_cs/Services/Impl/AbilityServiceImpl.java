@@ -57,7 +57,8 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
             ab.getDurationDice(), 
             ab.getIsActive(), 
             ab.getTurnsRemaining(), 
-            ab.getDescription()
+            ab.getDescription(),
+            ab.getConditionText()
         );
     }
 
@@ -91,6 +92,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         ability.setTurnsRemaining(0);
         ability.setDescription(dto.description());
         ability.setResourceType(dto.resourceType());
+        ability.setConditionText(dto.conditionText());
         ability.setCharacter(charModel);
 
         // --- LÓGICA DE EFEITOS (LISTA) ---
@@ -110,6 +112,59 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         return convertToDTO(saved);
     }   
 //-----------------------------------------------------------------------------------
+
+    @Override
+    public AbilityDTO updateAbility(String abilityId, AbilityDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        AbilityModel ability = abilityRepository.findById(abilityId)
+                .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
+
+        if (ability.getCharacter() == null || ability.getCharacter().getFromUser() == null ||
+                !user.getId().equals(ability.getCharacter().getFromUser().getId())) {
+            throw new RuntimeException("Permissão negada para editar essa habilidade.");
+        }
+
+        if (dto.name() != null) ability.setName(dto.name());
+        if (dto.category() != null) ability.setCategory(dto.category());
+        if (dto.actionType() != null) ability.setActionType(dto.actionType());
+        if (dto.diceRoll() != null) ability.setDiceRoll(dto.diceRoll());
+        if (dto.durationDice() != null) ability.setDurationDice(dto.durationDice());
+        if (dto.description() != null) ability.setDescription(dto.description());
+        if (dto.resourceType() != null) ability.setResourceType(dto.resourceType());
+        if (dto.conditionText() != null) ability.setConditionText(dto.conditionText());
+
+        Integer nextMaxUses = dto.maxUses() != null ? dto.maxUses() : ability.getMaxUses();
+        if (nextMaxUses == null) nextMaxUses = 0;
+        if (nextMaxUses < 0) nextMaxUses = 0;
+        ability.setMaxUses(nextMaxUses);
+
+        Integer nextCurrentUses = dto.currentUses() != null ? dto.currentUses() : ability.getCurrentUses();
+        if (nextCurrentUses == null) nextCurrentUses = nextMaxUses;
+        if (nextCurrentUses < 0) nextCurrentUses = 0;
+        if (nextCurrentUses > nextMaxUses) nextCurrentUses = nextMaxUses;
+        ability.setCurrentUses(nextCurrentUses);
+
+        if (dto.effects() != null) {
+            if (dto.effects().isEmpty()) {
+                ability.setEffects(new ArrayList<>());
+            } else {
+                List<AbilityEffectModel> effectsList = new ArrayList<>();
+                for (EffectDTO effDto : dto.effects()) {
+                    if (effDto == null || effDto.target() == null) continue;
+                    AbilityEffectModel effect = new AbilityEffectModel();
+                    effect.setTargetAttribute(effDto.target());
+                    effect.setEffectValue(effDto.value() != null ? effDto.value() : 0);
+                    effect.setAbility(ability);
+                    effectsList.add(effect);
+                }
+                ability.setEffects(effectsList);
+            }
+        }
+
+        AbilityModel saved = abilityRepository.save(ability);
+        return convertToDTO(saved);
+    }
+
 //--------------------------------Deletando Habilidade--------------------------------
 
     @Override
@@ -127,9 +182,15 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      * @return O DTO atualizado com o novo estado.
      */
     @Override
-    public AbilityDTO toggleAbility(String abilityId) {
+    public AbilityDTO toggleAbility(String abilityId, Integer extraUses, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
         AbilityModel ability = abilityRepository.findById(abilityId)
                 .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
+
+        if (ability.getCharacter() == null || ability.getCharacter().getFromUser() == null ||
+                !user.getId().equals(ability.getCharacter().getFromUser().getId())) {
+            throw new RuntimeException("Permissão negada para editar essa habilidade.");
+        }
 
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
         ability.setIsActive(isActivating);
@@ -139,10 +200,17 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
                 throw new RuntimeException("Sem usos disponíveis para ativar esta habilidade!");
             }
 
-            ability.setCurrentUses(ability.getCurrentUses() - 1);
+            int spend = 1 + (extraUses != null && extraUses > 0 ? extraUses : 0);
+            if (ability.getCurrentUses() < spend) {
+                throw new RuntimeException("Usos insuficientes para esse gasto.");
+            }
+            ability.setCurrentUses(ability.getCurrentUses() - spend);
 
             ability.setIsActive(true);
-            if (ability.getDurationDice() != null && !ability.getDurationDice().isBlank()) {
+            if (ability.getDurationDice() != null && ability.getDurationDice().equalsIgnoreCase("insta")) {
+                ability.setIsActive(false);
+                ability.setTurnsRemaining(0);
+            } else if (ability.getDurationDice() != null && !ability.getDurationDice().isBlank()) {
                 int turns = rollDice(ability.getDurationDice());
                 ability.setTurnsRemaining(turns);
             } else {

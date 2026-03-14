@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
@@ -46,6 +47,15 @@ public class AttackController {
                 .buildAndExpand(newAttack.id()).toUri();
 
         return ResponseEntity.created(location).body(newAttack);
+    }
+
+    /**
+     * Atualiza um ataque existente da ficha do personagem.
+     */
+
+    @PutMapping("/{attackId}")
+    public ResponseEntity<AttackDTO> updateAttack(@PathVariable String attackId, @RequestBody AttackDTO attackDTO, Authentication authentication) {
+        return ResponseEntity.ok(attackService.updateAttack(attackId, attackDTO, authentication));
     }
 
     /**
