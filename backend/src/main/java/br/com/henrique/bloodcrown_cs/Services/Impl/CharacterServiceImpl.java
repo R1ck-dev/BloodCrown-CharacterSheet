@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
@@ -15,6 +16,7 @@ import br.com.henrique.bloodcrown_cs.DTOs.ExpertiseDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.StatusDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
+import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterAttributes;
@@ -169,9 +171,16 @@ public class CharacterServiceImpl implements CharacterService{
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
+                .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
 
-        // Conversão manual de Atributos
+        return convertToSheetDTO(charModel);
+    }
+
+    /**
+     * Converte uma entidade CharacterModel completa em CharacterSheetDTO,
+     * mapeando atributos, status, perícias e as listas de ataques/habilidades/itens.
+     */
+    private CharacterSheetDTO convertToSheetDTO(CharacterModel charModel) {
         AttributesDTO attr = new AttributesDTO(
             charModel.getAttributes().getForca(),
             charModel.getAttributes().getDestreza(),
@@ -181,7 +190,6 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getAttributes().getConstituicao()
         );
 
-        // Conversão manual de Status
         StatusDTO status = new StatusDTO(
             charModel.getStatus().getMaxHealth(),
             charModel.getStatus().getCurrentHealth(),
@@ -199,7 +207,6 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getStatus().getMagicalRes()
         );
 
-        // Conversão manual de Perícias
         ExpertiseDTO expertise = new ExpertiseDTO(
             charModel.getExpertise().getAtletismo(),
             charModel.getExpertise().getConhecimento(),
@@ -226,7 +233,6 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getExpertise().getSobrevivencia()
         );
 
-        // Conversão de Listas (Ataques, Habilidades, Inventário)
         List<AttackDTO> attacks = charModel.getAttacks().stream()
             .map(atk -> new AttackDTO(
                 atk.getId(),
@@ -237,7 +243,7 @@ public class CharacterServiceImpl implements CharacterService{
 
         List<AbilityDTO> abilities = charModel.getAbilities().stream()
             .map(ab -> {
-                List<EffectDTO> effects = ab.getEffects() != null 
+                List<EffectDTO> effects = ab.getEffects() != null
                     ? ab.getEffects().stream()
                         .map(e -> new EffectDTO(e.getTargetAttribute(), e.getEffectValue()))
                         .toList()
@@ -252,17 +258,17 @@ public class CharacterServiceImpl implements CharacterService{
                     ab.getMaxUses(),
                     ab.getCurrentUses(),
                     ab.getDiceRoll(),
-                    effects, 
+                    effects,
                     ab.getDurationDice(),
                     ab.getIsActive(),
                     ab.getTurnsRemaining(),
                     ab.getDescription()
                 );
             }).toList();
-        
+
         List<ItemDTO> inventory = charModel.getInventory().stream()
-        .map(i -> new ItemDTO(i.getId(), i.getName(), i.getDescription(), i.getIsEquipped(), i.getTargetAttribute(), i.getEffectValue()))
-        .toList();
+            .map(i -> new ItemDTO(i.getId(), i.getName(), i.getDescription(), i.getIsEquipped(), i.getTargetAttribute(), i.getEffectValue()))
+            .toList();
 
         return new CharacterSheetDTO(
             charModel.getId(),
@@ -292,11 +298,12 @@ public class CharacterServiceImpl implements CharacterService{
      * @return O DTO atualizado.
      */
     @Override
+    @Transactional
     public CharacterSheetDTO updateCharacter(String id, CharacterSheetDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
+                .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
 
         charModel.setName(dto.name());
         charModel.setCharacterClass(dto.characterClass());
@@ -405,8 +412,8 @@ public class CharacterServiceImpl implements CharacterService{
 
 
 
-        characterRepository.save(charModel);
-        return dto; 
+        CharacterModel saved = characterRepository.save(charModel);
+        return convertToSheetDTO(saved);
     }
 //-----------------------------------------------------------------------------------
 
@@ -420,7 +427,7 @@ public class CharacterServiceImpl implements CharacterService{
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
-            .orElseThrow(() -> new RuntimeException("Ficha não encontrada ou permissão negada."));
+            .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
 
         characterRepository.delete(charModel);
     }
@@ -436,7 +443,7 @@ public class CharacterServiceImpl implements CharacterService{
     public void restCharacter(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException("Ficha não encontrada."));
+                .orElseThrow(() -> new NotFoundException("Ficha não encontrada."));
 
         CharacterStatus status = charModel.getStatus();
         if (status != null) {

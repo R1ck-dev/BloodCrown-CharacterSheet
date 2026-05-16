@@ -54,42 +54,35 @@ public class AbilityController {
      * @return ResponseEntity com status 204 (No Content).
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAbility(@PathVariable String id) {
-        abilityService.deleteAbility(id);
+    public ResponseEntity<Void> deleteAbility(@PathVariable String id, Authentication authentication) {
+        abilityService.deleteAbility(id, authentication);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Alterna o estado de ativação de uma habilidade (se aplicável).
-     * * @param abilityId Identificador da habilidade.
-     * @return ResponseEntity com a habilidade atualizada.
      */
     @PostMapping("/{abilityId}/toggle")
-    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId) {
-        return ResponseEntity.ok(abilityService.toggleAbility(abilityId));
+    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.toggleAbility(abilityId, authentication));
     }
 
     /**
      * Avança o turno para o personagem, reduzindo os tempos de recarga (cooldowns)
      * das habilidades ativas.
-     * * @param characterId Identificador do personagem.
-     * @return ResponseEntity com status 200 (OK).
      */
     @PostMapping("/next-turn/{characterId}")
-    public ResponseEntity<Void> advanceTurn(@PathVariable String characterId) {
-        abilityService.advanceTurn(characterId);
+    public ResponseEntity<Void> advanceTurn(@PathVariable String characterId, Authentication authentication) {
+        abilityService.advanceTurn(characterId, authentication);
         return ResponseEntity.ok().build();
     }
 
     /**
      * Recupera o uso de uma habilidade ou consome recursos para ativá-la.
-     * * @param abilityId Identificador da habilidade.
-     * @param resource Tipo de recurso a ser utilizado/recuperado (padrão "MANA").
-     * @return ResponseEntity com a habilidade atualizada.
      */
     @PostMapping("/{abilityId}/recover")
-    public ResponseEntity<AbilityDTO> recoverUse(@PathVariable String abilityId, @RequestParam(defaultValue = "MANA") String resource) {
-        return ResponseEntity.ok(abilityService.recoverUse(abilityId, resource));
+    public ResponseEntity<AbilityDTO> recoverUse(@PathVariable String abilityId, @RequestParam(defaultValue = "MANA") String resource, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.recoverUse(abilityId, resource, authentication));
     }
-    
+
 }

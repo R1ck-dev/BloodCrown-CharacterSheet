@@ -39,37 +39,20 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
 
         try {
-            // Realiza a requisição POST para o endpoint de registro da API
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                    role: 'USER' // Define o papel padrão como Usuário comum
-                })
-            });
+            // Cadastro via camada centralizada (ApiService)
+            await registerUser(username, password);
 
-            // Verifica se a resposta da API foi bem-sucedida (Status 2xx)
-            if (response.ok) {
-                // Exibe mensagem de sucesso e redireciona para a tela de login
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Bem-vindo!',
-                    text: 'Usuário cadastrado com sucesso!',
-                    background: '#212529',
-                    color: '#fff',
-                    confirmButtonColor: '#7b2cbf'
-                }).then(() => {
-                    window.location.href = 'index.html'; 
-                });
-            } else {
-                // Processa mensagens de erro retornadas pelo backend
-                const errorText = await response.text(); 
-                throw new Error(errorText || 'Erro ao criar conta.');
-            }
+            // Exibe mensagem de sucesso e redireciona para a tela de login
+            Swal.fire({
+                icon: 'success',
+                title: 'Bem-vindo!',
+                text: 'Usuário cadastrado com sucesso!',
+                background: '#212529',
+                color: '#fff',
+                confirmButtonColor: '#7b2cbf'
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
 
         } catch (error) {
             // Loga o erro no console para depuração

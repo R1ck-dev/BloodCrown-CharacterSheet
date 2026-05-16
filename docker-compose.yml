@@ -38,15 +38,21 @@ services:
       SPRING_DATASOURCE_PASSWORD: admin_password
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      # Segredo JWT - valor default apenas para dev local. Em produção (Render),
-      # defina JWT_SECRET no painel de variáveis de ambiente com um valor próprio.
-      JWT_SECRET: ${JWT_SECRET:-dev-only-local-secret-do-not-use-in-production-0123456789abcdef}
+      # Segredo JWT - exigido. Crie um arquivo .env na raiz copiando .env.example
+      # e defina JWT_SECRET com um valor proprio (ver instrucoes no .env.example).
+      # Em producao (Render), defina JWT_SECRET no painel de variaveis de ambiente.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET nao definido. Crie .env na raiz a partir de .env.example e defina JWT_SECRET=<valor-aleatorio>.}
 
   frontend:
     build: ./frontend
     container_name: bloodcrown-web
     ports:
       - "80:80"
+    # Monta o diretorio do front como volume read-only - edicoes no host refletem
+    # imediatamente sem precisar rebuildar a imagem. O nginx.conf ja vem da imagem
+    # (COPY no Dockerfile), entao so o conteudo estatico e sobrescrito.
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
     depends_on:
       - backend
 

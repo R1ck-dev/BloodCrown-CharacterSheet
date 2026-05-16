@@ -27,19 +27,7 @@ async function createAttack(characterId, token) {
     };
 
     try {
-        // Envia requisição POST para persistir o ataque
-        const response = await fetch(`${API_BASE_URL}/attacks/${characterId}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(attackData)
-        });
-
-        if (!response.ok) throw new Error('Erro ao criar ataque');
-
-        const newAttack = await response.json();
+        const newAttack = await apiCreateAttack(characterId, attackData, token);
 
         // Renderiza o novo ataque na lista imediatamente
         renderAttackCard(newAttack);
@@ -80,13 +68,8 @@ async function deleteAttack(attackId, elementToRemove, token) {
     if (!result.isConfirmed) return;
 
     try {
-        // Requisição DELETE para a API
-        const response = await fetch(`${API_BASE_URL}/attacks/${attackId}`, {
-            method: 'DELETE',
-            headers: {'Authorization': `Bearer ${token}`}
-        });
-        if (!response.ok) throw new Error('Erro ao deletar');
-        
+        await apiDeleteAttack(attackId, token);
+
         // Remove o elemento do DOM após sucesso
         elementToRemove.remove();
     } catch (error) {
@@ -124,19 +107,20 @@ function renderAttackCard(attack) {
     const card = document.createElement('div');
     card.className = 'attack-card p-3 rounded bg-black border border-secondary d-flex justify-content-between align-items-center';
 
-    // Preenche o HTML interno do card com Nome, Descrição e Dados
+    // Monta a estrutura sem interpolar dados do usuário (proteção XSS).
+    // Os campos dinâmicos são preenchidos com textContent abaixo.
     card.innerHTML = `
         <div class="d-flex flex-column" style="max-width: 70%;">
-            <strong class="text-light fs-5 mb-1">${attack.name}</strong>
-            <small class="text-secondary text-break" style="font-size: 0.8rem;">${attack.description || ''}</small>
+            <strong class="text-light fs-5 mb-1 atk-name"></strong>
+            <small class="text-secondary text-break atk-desc" style="font-size: 0.8rem;"></small>
         </div>
-        
+
         <div class="d-flex align-items-center gap-3">
-            <div class="text-end pointer-events-none"> 
-                <div class="text-danger fw-bold fs-4">${attack.damageDice}</div>
+            <div class="text-end pointer-events-none">
+                <div class="text-danger fw-bold fs-4 atk-dice"></div>
                 <small class="text-secondary" style="font-size: 0.7rem;">ROLAR DANO</small>
             </div>
-            
+
             <div style="border-left: 1px solid #333; height: 30px; margin: 0 5px;"></div>
 
             <button type="button" class="btn btn-sm btn-outline-dark text-secondary border-0 btn-delete-atk" title="Apagar">
@@ -144,6 +128,9 @@ function renderAttackCard(attack) {
             </button>
         </div>
     `;
+    card.querySelector('.atk-name').textContent = attack.name || '';
+    card.querySelector('.atk-desc').textContent = attack.description || '';
+    card.querySelector('.atk-dice').textContent = attack.damageDice || '';
 
     // Adiciona evento ao botão de deletar (interrompe propagação para não rolar dano)
     card.querySelector('.btn-delete-atk').addEventListener('click', (e) => {

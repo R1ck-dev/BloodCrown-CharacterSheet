@@ -5,9 +5,12 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
+import br.com.henrique.bloodcrown_cs.Exceptions.BadRequestException;
+import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.AbilityEffectModel;
 import br.com.henrique.bloodcrown_cs.Models.AbilityModel;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
@@ -77,7 +80,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(characterId, user.getId())
-                .orElseThrow(() -> new RuntimeException("Personagem não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
 
         AbilityModel ability = new AbilityModel();
         ability.setName(dto.name());
@@ -113,8 +116,13 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 //--------------------------------Deletando Habilidade--------------------------------
 
     @Override
-    public void deleteAbility(String abilityId) {
-        abilityRepository.deleteById(abilityId);
+    public void deleteAbility(String abilityId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
+
+        abilityRepository.delete(ability);
     }
 //-----------------------------------------------------------------------------------
 //--------------------------------Ligando Habilidade--------------------------------
@@ -123,20 +131,20 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      * Alterna o estado de ativação da habilidade (Ativa <-> Inativa).
      * Se for ativada, consome 1 uso, calcula a duração em turnos (se houver dados de duração)
      * e atualiza o status. Se não houver usos, impede a ativação.
-     * * @param abilityId Identificador da habilidade.
-     * @return O DTO atualizado com o novo estado.
      */
     @Override
-    public AbilityDTO toggleAbility(String abilityId) {
-        AbilityModel ability = abilityRepository.findById(abilityId)
-                .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
+    public AbilityDTO toggleAbility(String abilityId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
 
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
         ability.setIsActive(isActivating);
 
         if (isActivating) {
             if (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0) {
-                throw new RuntimeException("Sem usos disponíveis para ativar esta habilidade!");
+                throw new BadRequestException("Sem usos disponíveis para ativar esta habilidade!");
             }
 
             ability.setCurrentUses(ability.getCurrentUses() - 1);
@@ -203,9 +211,12 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      * * @param characterId Identificador do personagem.
      */
     @Override
-    public void advanceTurn(String characterId) {
-        CharacterModel charModel = characterRepository.findById(characterId)
-                .orElseThrow(() -> new RuntimeException("Personagem não encontrado."));
+    @Transactional
+    public void advanceTurn(String characterId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        CharacterModel charModel = characterRepository.findByIdAndFromUserId(characterId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
 
         for (AbilityModel ability : charModel.getAbilities()) {
             
@@ -237,14 +248,17 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      * @return O DTO atualizado.
      */
     @Override
-    public AbilityDTO recoverUse(String abilityId, String resourceToSpend) {
-        AbilityModel ability = abilityRepository.findById(abilityId)
-            .orElseThrow(() -> new RuntimeException("Habilidade não encontrada."));
+    @Transactional
+    public AbilityDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
+            .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
 
         CharacterModel character = ability.getCharacter();
 
         if (ability.getCurrentUses() >= ability.getMaxUses()) {
-            throw new RuntimeException("Os usos já estão cheios!");
+            throw new BadRequestException("Os usos já estão cheios!");
         }
 
         boolean spendMana = false;
@@ -256,7 +270,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
             case HYBRID -> {
                 if ("MANA".equalsIgnoreCase(resourceToSpend)) spendMana = true;
                 else if ("STAMINA".equalsIgnoreCase(resourceToSpend)) spendStamina = true;
-                else throw new RuntimeException("Para habilidades híbridas, especifique MANA Ou STAMINA.");
+                else throw new BadRequestException("Para habilidades híbridas, especifique MANA ou STAMINA.");
             }
         }
 
@@ -280,12 +294,12 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
         if (spendMana) {
             if (character.getStatus().getCurrentMana() < COST) {
-                throw new RuntimeException("Mana insuficiente!");
+                throw new BadRequestException("Mana insuficiente!");
             }
             character.getStatus().setCurrentMana(character.getStatus().getCurrentMana() - COST);
         } else if (spendStamina) {
             if (character.getStatus().getCurrentStamina() < COST) {
-                throw new RuntimeException("Estamina Insuficiente!");
+                throw new BadRequestException("Estamina insuficiente!");
             }
             character.getStatus().setCurrentStamina(character.getStatus().getCurrentStamina() - COST);
         }

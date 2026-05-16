@@ -49,14 +49,12 @@ public class AttackController {
     }
 
     /**
-     * Remove um ataque existente da ficha do personagem.
-     * * @param attackId Identificador do ataque a ser removido.
-     * @return ResponseEntity com status 204 (No Content).
+     * Remove um ataque existente da ficha do personagem. Valida ownership.
      */
     @DeleteMapping("/{attackId}")
-    public ResponseEntity<Void> deleteAttack(@PathVariable String attackId) {
-        attackService.deleteAttack(attackId);
+    public ResponseEntity<Void> deleteAttack(@PathVariable String attackId, Authentication authentication) {
+        attackService.deleteAttack(attackId, authentication);
         return ResponseEntity.noContent().build();
     }
-    
+
 }

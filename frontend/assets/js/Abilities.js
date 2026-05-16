@@ -72,16 +72,7 @@ async function createAbility(characterId, token) {
     };
 
     try {
-        // Envia requisição POST para criar a habilidade
-        const response = await fetch(`${API_BASE_URL}/abilities/${characterId}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) throw new Error('Erro ao criar habilidade');
-
-        const newAbility = await response.json();
+        const newAbility = await apiCreateAbility(characterId, data, token);
         // Renderiza a nova habilidade na aba correta imediatamente
         renderAbilityCard(newAbility);
 
@@ -120,14 +111,10 @@ async function deleteAbility(id, element, token) {
     if(!result.isConfirmed) return;
 
     try {
-        // Envia requisição DELETE
-        await fetch(`${API_BASE_URL}/abilities/${id}`, { 
-            method: 'DELETE', 
-            headers: { 'Authorization': `Bearer ${token}` } 
-        });
+        await apiDeleteAbility(id, token);
         // Remove do DOM se sucesso
         element.remove();
-    } catch (e) { 
+    } catch (e) {
         Swal.fire({ icon: 'error', text: "Erro ao deletar.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
@@ -253,20 +240,12 @@ function renderAbilityCard(ability) {
  */
 async function toggleAbility(abilityId, token) {
     try {
-        const response = await fetch(`${API_BASE_URL}/abilities/${abilityId}/toggle`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) {
-            const errorMsg = await response.text();
-            throw new Error(errorMsg || 'Erro ao ativar habilidade');
-        } 
+        await apiToggleAbility(abilityId, token);
 
         // Recarrega a ficha para atualizar bônus de status e cooldowns
         const params = new URLSearchParams(window.location.search);
         const charId = params.get('id');
-        
+
         if(window.loadCharacterData) {
             window.loadCharacterData(charId, token);
         }
@@ -310,16 +289,7 @@ async function recoverAbilityUse(abilityId, resourceType, token) {
     }
 
     try {
-        // Envia requisição com o recurso escolhido
-        const response = await fetch(`${API_BASE_URL}/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) {
-            const msg = await response.text();
-            throw new Error(msg || "Erro ao recuperar uso.");
-        }
+        await apiRecoverAbility(abilityId, resourceToSpend, token);
 
         // Recarrega a ficha para atualizar as barras de recurso
         const params = new URLSearchParams(window.location.search);

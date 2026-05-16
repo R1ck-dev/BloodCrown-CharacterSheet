@@ -23,52 +23,32 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
 
         try {
-            // Envia requisição de autenticação para a API
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password
-                })
+            // Autenticação via camada centralizada (ApiService)
+            const token = await loginUser(username, password);
+
+            // Armazena o token JWT no LocalStorage para sessões futuras
+            localStorage.setItem('authToken', token);
+
+            // Exibe notificação de sucesso (Toast) no canto da tela
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                background: '#212529',
+                color: '#fff'
             });
 
-            if (response.ok) {
-                // Processa o sucesso da autenticação
-                const data = await response.json(); 
-                
-                const token = data.token; 
-                
-                // Armazena o token JWT no LocalStorage para sessões futuras
-                localStorage.setItem('authToken', token);
+            Toast.fire({
+                icon: 'success',
+                title: 'Login realizado com sucesso!'
+            });
 
-                // Exibe notificação de sucesso (Toast) no canto da tela
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                    background: '#212529',
-                    color: '#fff'
-                });
-
-                Toast.fire({
-                    icon: 'success',
-                    title: 'Login realizado com sucesso!'
-                });
-
-                // Aguarda 1 segundo e redireciona para o Dashboard
-                setTimeout(() => {
-                    window.location.href = 'Dashboard.html';
-                }, 1000);
-
-            } else {
-                // Lança erro caso as credenciais sejam inválidas
-                throw new Error('Usuário ou senha incorretos.');
-            }
+            // Aguarda 1 segundo e redireciona para o Dashboard
+            setTimeout(() => {
+                window.location.href = 'Dashboard.html';
+            }, 1000);
 
         } catch (error) {
             console.error('Erro:', error);

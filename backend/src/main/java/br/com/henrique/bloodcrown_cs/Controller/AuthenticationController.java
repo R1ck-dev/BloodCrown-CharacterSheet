@@ -16,6 +16,7 @@ import br.com.henrique.bloodcrown_cs.DTOs.Responses.ToRegisterDTO;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Security.TokenService;
 import br.com.henrique.bloodcrown_cs.Services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -45,7 +46,7 @@ public class AuthenticationController {
      * @return ResponseEntity com status 201 (Created) e os dados do usuário criado (sem a senha).
      */
     @PostMapping("/register")
-    public ResponseEntity<ToRegisterDTO> registerUser(@RequestBody RegisterDTO registerDTO) {
+    public ResponseEntity<ToRegisterDTO> registerUser(@Valid @RequestBody RegisterDTO registerDTO) {
         ToRegisterDTO newUser = userService.registerUser(registerDTO);
 
         URI location = ServletUriComponentsBuilder
@@ -62,7 +63,7 @@ public class AuthenticationController {
      * @return ResponseEntity contendo o token de acesso (JWT).
      */
     @PostMapping("/login")
-    public ResponseEntity<ToLoginDTO> loginUser(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<ToLoginDTO> loginUser(@Valid @RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.username(), loginDTO.password());
 
         var auth = this.authenticationManager.authenticate(usernamePassword);

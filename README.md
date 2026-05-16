@@ -123,7 +123,18 @@ git clone https://github.com/R1ck-dev/BloodCrown-CharacterSheet.git
 cd BloodCrown-CharacterSheet
 ```
 
-2. Suba o ambiente com Docker Compose:
+2. Crie o arquivo `.env` na raiz copiando o exemplo e defina `JWT_SECRET` com um valor próprio (string longa e aleatória, pelo menos 32 bytes):
+
+```bash
+cp .env.example .env
+# Edite o .env e substitua o valor de JWT_SECRET.
+# Sugestão (PowerShell): [Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))
+# Sugestão (Linux/macOS): openssl rand -base64 48
+```
+
+O `docker-compose` recusa subir sem essa variável definida.
+
+3. Suba o ambiente com Docker Compose:
 
 ```bash
 docker-compose up --build
