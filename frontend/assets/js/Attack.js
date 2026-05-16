@@ -28,7 +28,7 @@ async function createAttack(characterId, token) {
 
     try {
         // Envia requisição POST para persistir o ataque
-        const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${characterId}`, {
+        const response = await fetch(`${API_BASE_URL}/attacks/${characterId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -81,7 +81,7 @@ async function deleteAttack(attackId, elementToRemove, token) {
 
     try {
         // Requisição DELETE para a API
-        const response = await fetch(`https://bloodcrown-api.onrender.com/attacks/${attackId}`, {
+        const response = await fetch(`${API_BASE_URL}/attacks/${attackId}`, {
             method: 'DELETE',
             headers: {'Authorization': `Bearer ${token}`}
         });

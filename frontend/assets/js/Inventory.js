@@ -21,7 +21,7 @@ async function createItem(characterId, token) {
 
     try {
         // Envia requisição POST para criar o item
-        const response = await fetch(`https://bloodcrown-api.onrender.com/items/${characterId}`, {
+        const response = await fetch(`${API_BASE_URL}/items/${characterId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -51,7 +51,7 @@ async function createItem(characterId, token) {
  */
 async function toggleEquipItem(itemId, token) {
     try {
-        await fetch(`https://bloodcrown-api.onrender.com/items/${itemId}/toggle`, {
+        await fetch(`${API_BASE_URL}/items/${itemId}/toggle`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -87,7 +87,7 @@ async function deleteItem(itemId, token) {
 
     try {
         // Envia requisição DELETE
-        await fetch(`https://bloodcrown-api.onrender.com/items/${itemId}`, {
+        await fetch(`${API_BASE_URL}/items/${itemId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

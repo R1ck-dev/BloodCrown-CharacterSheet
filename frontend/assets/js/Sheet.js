@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnNextTurn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnNextTurn.disabled = true;
             try {
-                const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/next-turn/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/abilities/next-turn/${id}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRest.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnRest.disabled = true;
             try {
-                const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${id}/rest`, {
+                const response = await fetch(`${API_BASE_URL}/characters/${id}/rest`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -517,7 +517,7 @@ async function saveCharacterData(id, token, btnSave) {
             }
         };
 
-        const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)

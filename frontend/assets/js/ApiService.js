@@ -3,8 +3,12 @@
     Centraliza as URLs e métodos de fetch para reutilização em diferentes partes do sistema.
 */
 
-// Define a URL base da API hospedada no Render
-const API_BASE_URL = 'https://bloodcrown-api.onrender.com'
+// Define a URL base da API com detecção automática de ambiente.
+// Em localhost/127.0.0.1 aponta para o backend rodando em :8080 (Docker Compose ou Maven local).
+// Em qualquer outro host (Netlify, etc.) aponta para a API de produção no Render.
+const API_BASE_URL = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8080'
+    : 'https://bloodcrown-api.onrender.com';
 
 /**
  * Realiza o registro de um novo usuário.
