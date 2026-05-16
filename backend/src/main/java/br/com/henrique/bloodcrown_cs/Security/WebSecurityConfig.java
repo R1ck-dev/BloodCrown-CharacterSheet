@@ -91,10 +91,12 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5500",      
-            "http://localhost:8080",      
-            "http://127.0.0.1:5500",      
-            "https://bloodcrown.netlify.app" 
+            "http://localhost",           // nginx do Docker Compose (porta 80 default)
+            "http://localhost:5500",      // VS Code Live Server
+            "http://localhost:8080",      // backend acessando a si mesmo (raro)
+            "http://127.0.0.1",           // equivalente IPv4 do nginx
+            "http://127.0.0.1:5500",      // equivalente IPv4 do Live Server
+            "https://bloodcrown.netlify.app"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
