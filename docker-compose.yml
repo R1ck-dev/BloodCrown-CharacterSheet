@@ -10,9 +10,19 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin_password
     ports:
-      - "3306:3306"
+      # 3307 externo evita conflito com MySQL nativo do Windows na porta 3306.
+      # Backend dentro do compose ainda usa 3306 (porta interna do container).
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    # Garante que o backend só inicia quando o MySQL responder a "ping" — sem
+    # isso, o Spring Boot pode tentar conectar antes do DB terminar de subir e
+    # morrer com "Communications link failure".
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   backend:
     build: ./backend
@@ -20,13 +30,17 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bloodcrown_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin_password
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Segredo JWT - valor default apenas para dev local. Em produção (Render),
+      # defina JWT_SECRET no painel de variáveis de ambiente com um valor próprio.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-local-secret-do-not-use-in-production-0123456789abcdef}
 
   frontend:
     build: ./frontend
