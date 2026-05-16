@@ -54,11 +54,14 @@ public class CharacterServiceImpl implements CharacterService{
     }
 
     /**
-     * Garante que o character tenha actionPool. Setter idempotente —
-     * só cria se for null (retrocompat com personagens criados antes da feature).
+     * Garante que o character tenha actionPool com valores não-null.
+     * Hibernate instancia o @Embedded mesmo com todas as colunas NULL no DB
+     * (personagens criados antes da feature), então checar `pool == null` não basta —
+     * é preciso checar se ao menos um campo crítico veio populado.
      */
     private void ensureActionPool(CharacterModel character) {
-        if (character.getActionPool() == null) {
+        CharacterActionPool pool = character.getActionPool();
+        if (pool == null || pool.getMaxStandard() == null) {
             character.setActionPool(buildDefaultActionPool());
         }
     }
@@ -213,7 +216,10 @@ public class CharacterServiceImpl implements CharacterService{
                 .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
 
         // Retrocompat: personagens criados antes da feature não têm actionPool persistido.
+        // Salva o backfill 1x por character — após o primeiro save, ensureActionPool não
+        // dispara mais (campos viram não-null), então o save extra não se repete.
         ensureActionPool(charModel);
+        characterRepository.save(charModel);
 
         return convertToSheetDTO(charModel);
     }
