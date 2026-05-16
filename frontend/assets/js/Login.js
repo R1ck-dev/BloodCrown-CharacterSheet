@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Envia requisição de autenticação para a API
-            const response = await fetch('https://bloodcrown-api.onrender.com/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

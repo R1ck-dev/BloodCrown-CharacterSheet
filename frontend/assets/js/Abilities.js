@@ -73,7 +73,7 @@ async function createAbility(characterId, token) {
 
     try {
         // Envia requisição POST para criar a habilidade
-        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${characterId}`, {
+        const response = await fetch(`${API_BASE_URL}/abilities/${characterId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -121,7 +121,7 @@ async function deleteAbility(id, element, token) {
 
     try {
         // Envia requisição DELETE
-        await fetch(`https://bloodcrown-api.onrender.com/abilities/${id}`, { 
+        await fetch(`${API_BASE_URL}/abilities/${id}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
@@ -253,7 +253,7 @@ function renderAbilityCard(ability) {
  */
 async function toggleAbility(abilityId, token) {
     try {
-        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/toggle`, {
+        const response = await fetch(`${API_BASE_URL}/abilities/${abilityId}/toggle`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -311,7 +311,7 @@ async function recoverAbilityUse(abilityId, resourceType, token) {
 
     try {
         // Envia requisição com o recurso escolhido
-        const response = await fetch(`https://bloodcrown-api.onrender.com/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
+        const response = await fetch(`${API_BASE_URL}/abilities/${abilityId}/recover?resource=${resourceToSpend}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Realiza a requisição POST para o endpoint de registro da API
-            const response = await fetch('https://bloodcrown-api.onrender.com/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

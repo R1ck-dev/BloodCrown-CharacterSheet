@@ -55,7 +55,7 @@ async function loadCharacters(token) {
 
     try {
         // Requisição GET para listar personagens
-        const response = await fetch('https://bloodcrown-api.onrender.com/characters', {
+        const response = await fetch(`${API_BASE_URL}/characters`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -140,7 +140,7 @@ async function createCharacter(token) {
     });
 
     try {
-        const response = await fetch('https://bloodcrown-api.onrender.com/characters', {
+        const response = await fetch(`${API_BASE_URL}/characters`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -181,7 +181,7 @@ async function deleteCharacter(event, charId, token) {
 
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`https://bloodcrown-api.onrender.com/characters/${charId}`, {
+            const response = await fetch(`${API_BASE_URL}/characters/${charId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
