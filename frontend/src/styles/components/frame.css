@@ -1,0 +1,60 @@
+/* ============================================================================
+   BloodCrown — HeraldicFrame
+   Moldura ornamentada com cantos filigrana (SVG via componente React),
+   borda hairline dourada interna e shadow esculpido.
+   ============================================================================ */
+
+.bc-frame {
+  position: relative;
+  background: var(--bc-gradient-surface);
+  border: 1px solid var(--bc-edge);
+  box-shadow: var(--bc-shadow-frame);
+  backdrop-filter: blur(var(--bc-blur-sm));
+}
+
+.bc-frame__inner {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Slot para FiligreeCorner SVG */
+.bc-frame__corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  opacity: 0.85;
+  color: var(--bc-gold);
+}
+
+.bc-frame__corner--tl { top: -1px; left: -1px; }
+.bc-frame__corner--tr { top: -1px; right: -1px; transform: scaleX(-1); }
+.bc-frame__corner--bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.bc-frame__corner--br { bottom: -1px; right: -1px; transform: scale(-1, -1); }
+
+/* --- Variantes --- */
+
+/* Solid: sem blur, sem gradient (modais cheios) */
+.bc-frame--solid {
+  background: var(--bc-surface-2);
+  backdrop-filter: none;
+}
+
+/* Glass: blur forte (overlays, login) */
+.bc-frame--glass {
+  background:
+    linear-gradient(180deg, rgba(26, 24, 32, 0.85) 0%, rgba(18, 16, 20, 0.95) 100%);
+  backdrop-filter: blur(var(--bc-blur-md));
+}
+
+/* Tamanhos */
+.bc-frame--padded {
+  padding: var(--bc-space-8);
+}
+
+.bc-frame--padded-sm {
+  padding: var(--bc-space-5);
+}

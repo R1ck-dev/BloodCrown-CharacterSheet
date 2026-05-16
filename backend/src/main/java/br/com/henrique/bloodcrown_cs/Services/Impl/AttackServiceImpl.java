@@ -63,6 +63,27 @@ public class AttackServiceImpl implements AttackService{
     }
 
 //--------------------------------------------------------------------------------
+//--------------------------------Atualizar Ataques-------------------------------
+
+    /**
+     * Atualiza um ataque existente (nome, fórmula de dano, descrição). Valida ownership.
+     */
+    @Override
+    public AttackDTO updateAttack(String attackId, AttackDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AttackModel attack = attackRepository.findByIdAndCharacter_FromUserId(attackId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Ataque não encontrado."));
+
+        attack.setName(dto.name());
+        attack.setDamageDice(dto.damageDice());
+        attack.setDescription(dto.description());
+
+        AttackModel saved = attackRepository.save(attack);
+        return new AttackDTO(saved.getId(), saved.getName(), saved.getDamageDice(), saved.getDescription());
+    }
+
+//--------------------------------------------------------------------------------
 //--------------------------------Deletar Ataques--------------------------------
 
     /**

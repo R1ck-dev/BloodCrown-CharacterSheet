@@ -12,13 +12,17 @@ import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
  * @param characterClass Classe ou arquétipo do personagem.
  * @param level Nível atual.
  * @param attacks Lista resumida de ataques disponíveis.
+ * @param currentHealth Pontos de Vida atuais (para indicador no Dashboard).
+ * @param maxHealth Pontos de Vida máximos (para indicador no Dashboard).
  */
 public record CharacterDTO(
-    String id, 
-    String name, 
-    String characterClass, 
+    String id,
+    String name,
+    String characterClass,
     Integer level,
-    List<AttackDTO> attacks
+    List<AttackDTO> attacks,
+    Integer currentHealth,
+    Integer maxHealth
 ) {
-    
+
 }

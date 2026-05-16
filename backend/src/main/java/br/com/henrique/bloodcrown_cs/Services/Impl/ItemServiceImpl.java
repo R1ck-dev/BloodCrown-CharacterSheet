@@ -51,6 +51,27 @@ public class ItemServiceImpl implements ItemService {
     }
 
     /**
+     * Atualiza um item existente (nome, descrição, efeito mágico). Preserva isEquipped
+     * (state runtime); editar definição não desequipa. Valida ownership.
+     */
+    @Override
+    public ItemDTO updateItem(String itemId, ItemDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        ItemModel item = itemRepository.findByIdAndCharacter_FromUserId(itemId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Item não encontrado."));
+
+        item.setName(dto.name());
+        item.setDescription(dto.description());
+        item.setTargetAttribute(dto.targetAttribute());
+        item.setEffectValue(dto.effectValue());
+        // isEquipped intocado — toggle continua sendo via endpoint dedicado
+
+        ItemModel saved = itemRepository.save(item);
+        return convertToDTO(saved);
+    }
+
+    /**
      * Remove um item do banco de dados através do seu ID. Valida ownership.
      */
     @Override

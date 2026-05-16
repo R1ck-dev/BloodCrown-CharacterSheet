@@ -1,0 +1,57 @@
+/* ============================================================================
+   BloodCrown — Divider
+   Linha horizontal com glyph central opcional (✦, ◆, ✶, "Iniciação", etc.)
+   ============================================================================ */
+
+.bc-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--bc-space-3);
+  color: rgba(212, 175, 55, 0.35);
+}
+
+.bc-divider::before,
+.bc-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+}
+
+.bc-divider__glyph {
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: rgba(212, 175, 55, 0.6);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* --- Variantes --- */
+
+.bc-divider--solid::before,
+.bc-divider--solid::after {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+.bc-divider--blood::before,
+.bc-divider--blood::after {
+  background: linear-gradient(90deg, transparent, rgba(185, 28, 28, 0.4), transparent);
+}
+
+.bc-divider--blood .bc-divider__glyph {
+  color: rgba(252, 165, 165, 0.6);
+}
+
+.bc-divider--vertical {
+  flex-direction: column;
+  height: 100%;
+  width: auto;
+}
+
+.bc-divider--vertical::before,
+.bc-divider--vertical::after {
+  width: 1px;
+  height: auto;
+  background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+}

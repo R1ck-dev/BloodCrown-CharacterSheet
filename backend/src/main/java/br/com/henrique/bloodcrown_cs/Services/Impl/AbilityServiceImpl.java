@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
+import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 import br.com.henrique.bloodcrown_cs.Exceptions.BadRequestException;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.AbilityEffectModel;
@@ -16,6 +17,7 @@ import br.com.henrique.bloodcrown_cs.Models.AbilityModel;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 import br.com.henrique.bloodcrown_cs.Models.ItemModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
 import br.com.henrique.bloodcrown_cs.Repositories.AbilityRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
@@ -113,6 +115,59 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         return convertToDTO(saved);
     }   
 //-----------------------------------------------------------------------------------
+//--------------------------------Atualizando Habilidade------------------------------
+
+    /**
+     * Atualiza a definição de uma habilidade existente. Preserva o estado runtime
+     * (currentUses, isActive, turnsRemaining); se maxUses for reduzido abaixo do
+     * currentUses, faz cap. Substitui a lista de efeitos por inteiro (orphanRemoval
+     * garante remoção dos antigos pelo JPA).
+     */
+    @Override
+    @Transactional
+    public AbilityDTO updateAbility(String abilityId, AbilityDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
+
+        ability.setName(dto.name());
+        ability.setCategory(dto.category());
+        ability.setActionType(dto.actionType());
+        ability.setDiceRoll(dto.diceRoll());
+        ability.setDurationDice(dto.durationDice());
+        ability.setDescription(dto.description());
+        ability.setResourceType(dto.resourceType());
+
+        // maxUses muda; cap em currentUses se diminuiu
+        Integer newMax = dto.maxUses();
+        ability.setMaxUses(newMax);
+        if (newMax != null && ability.getCurrentUses() != null && ability.getCurrentUses() > newMax) {
+            ability.setCurrentUses(newMax);
+        }
+
+        // Substitui lista de efeitos por inteiro (orphanRemoval cuida da remoção).
+        // Guarda contra registros legados em que effects pode estar null no banco.
+        if (ability.getEffects() == null) {
+            ability.setEffects(new ArrayList<>());
+        } else {
+            ability.getEffects().clear();
+        }
+        if (dto.effects() != null) {
+            for (EffectDTO effDto : dto.effects()) {
+                AbilityEffectModel effect = new AbilityEffectModel();
+                effect.setTargetAttribute(effDto.target());
+                effect.setEffectValue(effDto.value());
+                effect.setAbility(ability);
+                ability.getEffects().add(effect);
+            }
+        }
+
+        AbilityModel saved = abilityRepository.save(ability);
+        return convertToDTO(saved);
+    }
+
+//-----------------------------------------------------------------------------------
 //--------------------------------Deletando Habilidade--------------------------------
 
     @Override
@@ -129,26 +184,40 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
     /**
      * Alterna o estado de ativação da habilidade (Ativa <-> Inativa).
-     * Se for ativada, consome 1 uso, calcula a duração em turnos (se houver dados de duração)
-     * e atualiza o status. Se não houver usos, impede a ativação.
+     * Se for ativada: valida pool de ações (com hierarquia D&D-like se spendAs for fornecido),
+     * consome 1 do pool correspondente, consome 1 uso, calcula duração em turnos.
+     * Se não houver usos ou pool, impede a ativação.
+     *
+     * @param spendAs tipo de ação a gastar; null = usa o actionType da habilidade.
      */
     @Override
-    public AbilityDTO toggleAbility(String abilityId, Authentication authentication) {
+    @Transactional
+    public AbilityDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
 
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
-        ability.setIsActive(isActivating);
 
         if (isActivating) {
             if (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0) {
                 throw new BadRequestException("Sem usos disponíveis para ativar esta habilidade!");
             }
 
-            ability.setCurrentUses(ability.getCurrentUses() - 1);
+            // Resolve tipo de ação necessária (normaliza string legada) + tipo a gastar.
+            ActionTypeEnum required = ActionTypeEnum.fromString(ability.getActionType());
+            ActionTypeEnum spent = spendAs != null ? spendAs : required;
 
+            if (!spent.canSubstitute(required)) {
+                throw new BadRequestException(
+                    "Ação " + spent + " não pode substituir " + required + "."
+                );
+            }
+
+            consumeFromPool(ability.getCharacter(), spent);
+
+            ability.setCurrentUses(ability.getCurrentUses() - 1);
             ability.setIsActive(true);
             if (ability.getDurationDice() != null && !ability.getDurationDice().isBlank()) {
                 int turns = rollDice(ability.getDurationDice());
@@ -156,7 +225,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
             } else {
                 ability.setTurnsRemaining(null);
             }
-            
+
         } else {
             ability.setIsActive(false);
             ability.setTurnsRemaining(0);
@@ -165,6 +234,74 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         AbilityModel saved = abilityRepository.save(ability);
 
         return convertToDTO(saved);
+    }
+
+    /**
+     * Decrementa 1 do contador correspondente no pool. FREE não consome.
+     * Lança BadRequestException se pool zerado pro tipo solicitado.
+     * Cria pool default se ainda não existe (retrocompat com personagens antigos).
+     */
+    private void consumeFromPool(CharacterModel character, ActionTypeEnum type) {
+        if (type == ActionTypeEnum.FREE) return;
+
+        CharacterActionPool pool = character.getActionPool();
+        if (pool == null) {
+            pool = new CharacterActionPool();
+            pool.setMaxStandard(1);  pool.setCurrentStandard(1);
+            pool.setMaxBonus(3);     pool.setCurrentBonus(3);
+            pool.setMaxMovement(1);  pool.setCurrentMovement(1);
+            pool.setMaxReaction(2);  pool.setCurrentReaction(2);
+            character.setActionPool(pool);
+        }
+
+        switch (type) {
+            case STANDARD -> {
+                if (pool.getCurrentStandard() == null || pool.getCurrentStandard() <= 0) {
+                    throw new BadRequestException("Sem Ação Padrão disponível no turno.");
+                }
+                pool.setCurrentStandard(pool.getCurrentStandard() - 1);
+            }
+            case BONUS -> {
+                if (pool.getCurrentBonus() == null || pool.getCurrentBonus() <= 0) {
+                    throw new BadRequestException("Sem Ação Bônus disponível no turno.");
+                }
+                pool.setCurrentBonus(pool.getCurrentBonus() - 1);
+            }
+            case MOVEMENT -> {
+                if (pool.getCurrentMovement() == null || pool.getCurrentMovement() <= 0) {
+                    throw new BadRequestException("Sem Ação de Movimento disponível no turno.");
+                }
+                pool.setCurrentMovement(pool.getCurrentMovement() - 1);
+            }
+            case REACTION -> {
+                if (pool.getCurrentReaction() == null || pool.getCurrentReaction() <= 0) {
+                    throw new BadRequestException("Sem Reação disponível no turno.");
+                }
+                pool.setCurrentReaction(pool.getCurrentReaction() - 1);
+            }
+            case FULL -> {
+                // Exige Padrão, Bônus e Movimento intactos (current == max).
+                // Categorias com max null sao ignoradas (sem nada pra gastar).
+                if (!isCategoryIntact(pool.getCurrentStandard(), pool.getMaxStandard())
+                 || !isCategoryIntact(pool.getCurrentBonus(),    pool.getMaxBonus())
+                 || !isCategoryIntact(pool.getCurrentMovement(), pool.getMaxMovement())) {
+                    throw new BadRequestException(
+                        "Ação Completa exige que nenhuma outra ação tenha sido usada neste turno."
+                    );
+                }
+                // Drena tudo (exceto reações).
+                if (pool.getMaxStandard() != null) pool.setCurrentStandard(0);
+                if (pool.getMaxBonus()    != null) pool.setCurrentBonus(0);
+                if (pool.getMaxMovement() != null) pool.setCurrentMovement(0);
+            }
+            case FREE -> { /* noop — já filtrado acima */ }
+        }
+    }
+
+    /** Pool intacto pra essa categoria (current == max, ou max null/0). */
+    private boolean isCategoryIntact(Integer current, Integer max) {
+        if (max == null || max == 0) return true;
+        return current != null && current.intValue() == max.intValue();
     }
 
     /**
@@ -219,11 +356,11 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
                 .orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
 
         for (AbilityModel ability : charModel.getAbilities()) {
-            
+
             if (Boolean.TRUE.equals(ability.getIsActive())) {
-                
+
                 if (ability.getTurnsRemaining() != null && ability.getTurnsRemaining() > 0) {
-                    
+
                     int newValue = ability.getTurnsRemaining() - 1;
                     ability.setTurnsRemaining(newValue);
 
@@ -231,11 +368,26 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
                         ability.setIsActive(false);
                         ability.setTurnsRemaining(0);
                     }
-                    
+
                     abilityRepository.save(ability);
                 }
             }
         }
+
+        // Novo turno: pool de ações volta aos máximos.
+        // Cria pool default se ainda não existe (retrocompat).
+        CharacterActionPool pool = charModel.getActionPool();
+        if (pool == null) {
+            pool = new CharacterActionPool();
+            pool.setMaxStandard(1);  pool.setMaxBonus(3);
+            pool.setMaxMovement(1);  pool.setMaxReaction(2);
+            charModel.setActionPool(pool);
+        }
+        pool.setCurrentStandard(pool.getMaxStandard());
+        pool.setCurrentBonus(pool.getMaxBonus());
+        pool.setCurrentMovement(pool.getMaxMovement());
+        pool.setCurrentReaction(pool.getMaxReaction());
+        characterRepository.save(charModel);
     }
 //----------------------------------------------------------------------------------
 

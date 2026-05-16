@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
 
 /**
@@ -49,6 +51,16 @@ public class AbilityController {
     }
 
     /**
+     * Atualiza a definição de uma habilidade existente.
+     * Preserva estado runtime (currentUses, isActive, turnsRemaining) e substitui
+     * a lista de efeitos por inteiro.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<AbilityDTO> updateAbility(@PathVariable String id, @RequestBody AbilityDTO abilityDTO, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.updateAbility(id, abilityDTO, authentication));
+    }
+
+    /**
      * Remove uma habilidade da ficha do personagem.
      * * @param id Identificador da habilidade a ser removida.
      * @return ResponseEntity com status 204 (No Content).
@@ -60,11 +72,17 @@ public class AbilityController {
     }
 
     /**
-     * Alterna o estado de ativação de uma habilidade (se aplicável).
+     * Alterna o estado de ativação de uma habilidade.
+     * Query param opcional {@code spendAs} permite substituir o tipo de ação consumido
+     * (D&D-like: gastar STANDARD pra cobrir uma BONUS, por exemplo).
      */
     @PostMapping("/{abilityId}/toggle")
-    public ResponseEntity<AbilityDTO> toggleAbility(@PathVariable String abilityId, Authentication authentication) {
-        return ResponseEntity.ok(abilityService.toggleAbility(abilityId, authentication));
+    public ResponseEntity<AbilityDTO> toggleAbility(
+        @PathVariable String abilityId,
+        @RequestParam(required = false) ActionTypeEnum spendAs,
+        Authentication authentication
+    ) {
+        return ResponseEntity.ok(abilityService.toggleAbility(abilityId, spendAs, authentication));
     }
 
     /**

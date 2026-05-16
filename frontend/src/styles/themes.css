@@ -1,0 +1,197 @@
+/* ============================================================================
+   BloodCrown — Themes
+   Paletas alternativas extraidas de personagens do universo do RPG.
+   Cada bloco [data-theme="..."] sobrescreve APENAS tokens semanticos de cor;
+   spacing/typography/shadows/radii/motion ficam intactos.
+
+   Status funcional (success/info/warning) tambem fica intacto — verde/azul/
+   amarelo sao linguagem funcional universal, nao trocam com tema.
+
+   Como aplicar: setAttribute('data-theme', 'sylvie') no <html>. Sem atributo
+   vale o :root padrao definido em tokens.css.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   SYLVIE — Demonia Cosmica
+   Magenta-violeta + dourado quente + vermelho-rubi sobre violeta noturno.
+   --------------------------------------------------------------------------- */
+[data-theme="sylvie"] {
+  --bc-purple:       #7B1FA2;
+  --bc-purple-hover: #9D3FBD;
+  --bc-purple-dark:  #5C1379;
+  --bc-purple-deep:  #3E0A52;
+  --bc-purple-soft:  #C5A2DE;
+
+  --bc-gold:         #D4A24C;
+  --bc-gold-bright:  #F5C870;
+  --bc-gold-dim:     #8A6920;
+  --bc-gold-pale:    #E6C575;
+
+  --bc-blood:        #B71C3C;
+  --bc-blood-bright: #D9335B;
+  --bc-blood-pulse:  #E94560;
+  --bc-blood-deep:   #5C0F1F;
+
+  --bc-oled:         #0E0822;
+  --bc-surface-1:    #15102A;
+  --bc-surface-2:    #1D1635;
+  --bc-surface-3:    #2A2042;
+
+  --bc-ink:          #F3E8EB;
+  --bc-ink-dim:      #B5A3B0;
+  --bc-ink-faint:    #6E5A6E;
+  --bc-ink-gold:     #E6C575;
+
+  --bc-edge:         rgba(212, 162, 76, 0.18);
+  --bc-edge-bright:  rgba(212, 162, 76, 0.50);
+  --bc-edge-purple:  rgba(123, 31, 162, 0.35);
+  --bc-edge-strong:  rgba(212, 162, 76, 0.60);
+}
+
+/* ---------------------------------------------------------------------------
+   SHITONAMA — Donzela Perola
+   Cyan-teal + prata + coral suave sobre midnight-ice. Mantem base dark.
+   --------------------------------------------------------------------------- */
+[data-theme="shitonama"] {
+  --bc-purple:       #26C6DA;
+  --bc-purple-hover: #4DD4E5;
+  --bc-purple-dark:  #00838F;
+  --bc-purple-deep:  #006064;
+  --bc-purple-soft:  #B2EBF2;
+
+  --bc-gold:         #C8D0D7;
+  --bc-gold-bright:  #E5EBF0;
+  --bc-gold-dim:     #889299;
+  --bc-gold-pale:    #DCE2E7;
+
+  --bc-blood:        #F48FB1;
+  --bc-blood-bright: #FF80AB;
+  --bc-blood-pulse:  #FF4081;
+  --bc-blood-deep:   #C2185B;
+
+  --bc-oled:         #0B141C;
+  --bc-surface-1:    #131E29;
+  --bc-surface-2:    #1B2935;
+  --bc-surface-3:    #243341;
+
+  --bc-ink:          #EAF4F8;
+  --bc-ink-dim:      #9FB3C0;
+  --bc-ink-faint:    #59707E;
+  --bc-ink-gold:     #DCE2E7;
+
+  --bc-edge:         rgba(200, 208, 215, 0.20);
+  --bc-edge-bright:  rgba(200, 208, 215, 0.55);
+  --bc-edge-purple:  rgba(38, 198, 218, 0.35);
+  --bc-edge-strong:  rgba(200, 208, 215, 0.65);
+}
+
+/* ---------------------------------------------------------------------------
+   SOZOKU — Imperador Vermelho
+   Bordeaux + cobre rosado + sangue saturado sobre castanho-vinho.
+   --------------------------------------------------------------------------- */
+[data-theme="sozoku"] {
+  --bc-purple:       #7B1F2C;
+  --bc-purple-hover: #A02B3C;
+  --bc-purple-dark:  #5A1422;
+  --bc-purple-deep:  #3E0E18;
+  --bc-purple-soft:  #C28B92;
+
+  --bc-gold:         #C97B6F;
+  --bc-gold-bright:  #E59A8E;
+  --bc-gold-dim:     #8F4E45;
+  --bc-gold-pale:    #D9A299;
+
+  --bc-blood:        #8B0000;
+  --bc-blood-bright: #B30000;
+  --bc-blood-pulse:  #D32F2F;
+  --bc-blood-deep:   #4A0303;
+
+  --bc-oled:         #1A0810;
+  --bc-surface-1:    #221018;
+  --bc-surface-2:    #2D1820;
+  --bc-surface-3:    #381F28;
+
+  --bc-ink:          #F5E6D5;
+  --bc-ink-dim:      #B8A28A;
+  --bc-ink-faint:    #6E5A48;
+  --bc-ink-gold:     #D9A299;
+
+  --bc-edge:         rgba(201, 123, 111, 0.20);
+  --bc-edge-bright:  rgba(201, 123, 111, 0.50);
+  --bc-edge-purple:  rgba(123, 31, 44, 0.40);
+  --bc-edge-strong:  rgba(201, 123, 111, 0.60);
+}
+
+/* ---------------------------------------------------------------------------
+   RYUSEI — Necromante Toxico
+   Verde-veneno glowing + amarelo-osso + vermelho-praga sobre carvao negro.
+   --------------------------------------------------------------------------- */
+[data-theme="ryusei"] {
+  --bc-purple:       #00E676;
+  --bc-purple-hover: #4DF59F;
+  --bc-purple-dark:  #00A152;
+  --bc-purple-deep:  #00682E;
+  --bc-purple-soft:  #A5F3C7;
+
+  --bc-gold:         #CDDC39;
+  --bc-gold-bright:  #E6F056;
+  --bc-gold-dim:     #7C8721;
+  --bc-gold-pale:    #DDE96C;
+
+  --bc-blood:        #FF1744;
+  --bc-blood-bright: #FF5577;
+  --bc-blood-pulse:  #FF1744;
+  --bc-blood-deep:   #8E0010;
+
+  --bc-oled:         #050708;
+  --bc-surface-1:    #0A0E10;
+  --bc-surface-2:    #121818;
+  --bc-surface-3:    #1A2222;
+
+  --bc-ink:          #D7F5E0;
+  --bc-ink-dim:      #8AAA90;
+  --bc-ink-faint:    #4A5C50;
+  --bc-ink-gold:     #DDE96C;
+
+  --bc-edge:         rgba(0, 230, 118, 0.18);
+  --bc-edge-bright:  rgba(0, 230, 118, 0.50);
+  --bc-edge-purple:  rgba(0, 230, 118, 0.35);
+  --bc-edge-strong:  rgba(0, 230, 118, 0.60);
+}
+
+/* ---------------------------------------------------------------------------
+   NOZOMU — Arcano Elfico
+   Amethyst profundo + dourado-mostarda suave sobre indigo-negro.
+   --------------------------------------------------------------------------- */
+[data-theme="nozomu"] {
+  --bc-purple:       #5E35B1;
+  --bc-purple-hover: #7C53D0;
+  --bc-purple-dark:  #4527A0;
+  --bc-purple-deep:  #311B92;
+  --bc-purple-soft:  #B39DDB;
+
+  --bc-gold:         #C9A55A;
+  --bc-gold-bright:  #E6C275;
+  --bc-gold-dim:     #82672E;
+  --bc-gold-pale:    #D9B975;
+
+  --bc-blood:        #8E0E0E;
+  --bc-blood-bright: #B53030;
+  --bc-blood-pulse:  #D33A3A;
+  --bc-blood-deep:   #4A0707;
+
+  --bc-oled:         #0A0B1C;
+  --bc-surface-1:    #11132A;
+  --bc-surface-2:    #1A1D38;
+  --bc-surface-3:    #232745;
+
+  --bc-ink:          #E0DCEA;
+  --bc-ink-dim:      #9C97B5;
+  --bc-ink-faint:    #55516E;
+  --bc-ink-gold:     #D9B975;
+
+  --bc-edge:         rgba(201, 165, 90, 0.18);
+  --bc-edge-bright:  rgba(201, 165, 90, 0.50);
+  --bc-edge-purple:  rgba(94, 53, 177, 0.35);
+  --bc-edge-strong:  rgba(201, 165, 90, 0.60);
+}

@@ -3,6 +3,7 @@ package br.com.henrique.bloodcrown_cs.Services;
 import org.springframework.security.core.Authentication;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 
 /**
  * Interface que gerencia a lógica complexa de habilidades e magias.
@@ -20,15 +21,27 @@ public interface AbilityService {
     AbilityDTO addAbility(String characterId, AbilityDTO dto, Authentication authentication);
 
     /**
+     * Atualiza a definição de uma habilidade existente (nome, categoria, ação, descrição,
+     * recurso, maxUses, fórmula, duração, efeitos). Preserva o estado runtime
+     * (currentUses, isActive, turnsRemaining); se maxUses diminuir abaixo de currentUses,
+     * faz cap em maxUses. Substitui a lista de efeitos por inteiro (orphanRemoval).
+     */
+    AbilityDTO updateAbility(String abilityId, AbilityDTO dto, Authentication authentication);
+
+    /**
      * Remove uma habilidade da ficha. Valida que a habilidade pertence ao usuário autenticado.
      */
     void deleteAbility(String abilityId, Authentication authentication);
 
     /**
-     * Ativa ou desativa uma habilidade (ex: posturas ou buffs sustentados).
+     * Ativa ou desativa uma habilidade. Quando ativando, consome 1 do pool de ações
+     * correspondente. {@code spendAs} permite substituir o tipo padrão por um maior
+     * (D&D-like): ex. gastar STANDARD pra cobrir uma habilidade BONUS.
      * Valida que a habilidade pertence ao usuário autenticado.
+     *
+     * @param spendAs tipo de ação a debitar do pool; null = usa o actionType da habilidade.
      */
-    AbilityDTO toggleAbility(String abilityId, Authentication authentication);
+    AbilityDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication);
 
     /**
      * Processa o avanço de turno para um personagem. Valida que o personagem pertence ao usuário autenticado.
