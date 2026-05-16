@@ -1,6 +1,7 @@
 package br.com.henrique.bloodcrown_cs.Controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,35 +27,27 @@ public class ItemController {
     }
 
     /**
-     * Adiciona um novo item ao inventário de um personagem específico.
-     * * @param characterId Identificador do personagem que receberá o item.
-     * @param dto Objeto contendo os dados do item (nome, peso, tipo, etc.).
-     * @return ResponseEntity com o item criado.
+     * Adiciona um novo item ao inventário de um personagem específico. Valida ownership.
      */
     @PostMapping("/{characterId}")
-    public ResponseEntity<ItemDTO> addItem(@PathVariable String characterId, @RequestBody ItemDTO dto) {
-        return ResponseEntity.ok(itemService.addItem(characterId, dto));
+    public ResponseEntity<ItemDTO> addItem(@PathVariable String characterId, @RequestBody ItemDTO dto, Authentication authentication) {
+        return ResponseEntity.ok(itemService.addItem(characterId, dto, authentication));
     }
 
     /**
-     * Remove um item do inventário.
-     * * @param itemId Identificador único do item a ser removido.
-     * @return ResponseEntity com status 204 (No Content).
+     * Remove um item do inventário. Valida ownership.
      */
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> deleteItem(@PathVariable String itemId) {
-        itemService.deleteItem(itemId);
+    public ResponseEntity<Void> deleteItem(@PathVariable String itemId, Authentication authentication) {
+        itemService.deleteItem(itemId, authentication);
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * Alterna o estado de um item entre "Equipado" e "Desequipado".
-     * Essa ação pode desencadear recálculos de atributos do personagem no serviço.
-     * * @param itemId Identificador do item.
-     * @return ResponseEntity com o item atualizado refletindo o novo estado.
+     * Alterna o estado de um item entre "Equipado" e "Desequipado". Valida ownership.
      */
     @PostMapping("/{itemId}/toggle")
-    public ResponseEntity<ItemDTO> toggleEquip(@PathVariable String itemId) {
-        return ResponseEntity.ok(itemService.toggleEquip(itemId));
+    public ResponseEntity<ItemDTO> toggleEquip(@PathVariable String itemId, Authentication authentication) {
+        return ResponseEntity.ok(itemService.toggleEquip(itemId, authentication));
     }
 }

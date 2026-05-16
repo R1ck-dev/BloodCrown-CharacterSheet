@@ -19,8 +19,7 @@ public interface AttackService {
     AttackDTO addAttack(String characterId, AttackDTO dto, Authentication authentication);
 
     /**
-     * Remove um ataque da ficha do personagem.
-     * * @param attackId Identificador do ataque a ser removido.
+     * Remove um ataque da ficha do personagem. Valida que o ataque pertence ao usuário autenticado.
      */
-    void deleteAttack(String attackId);
+    void deleteAttack(String attackId, Authentication authentication);
 }

@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
+import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.AttackModel;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
@@ -42,7 +43,7 @@ public class AttackServiceImpl implements AttackService{
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(characterId, user.getId())
-                .orElseThrow(() -> new RuntimeException("Personagem não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
 
         AttackModel attack = new AttackModel();
         attack.setName(dto.name());
@@ -65,12 +66,16 @@ public class AttackServiceImpl implements AttackService{
 //--------------------------------Deletar Ataques--------------------------------
 
     /**
-     * Remove um ataque do banco de dados pelo seu ID.
-     * * @param attackId Identificador do ataque.
+     * Remove um ataque do banco de dados pelo seu ID. Valida ownership.
      */
     @Override
-    public void deleteAttack(String attackId) {
-        attackRepository.deleteById(attackId);
+    public void deleteAttack(String attackId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        AttackModel attack = attackRepository.findByIdAndCharacter_FromUserId(attackId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Ataque não encontrado."));
+
+        attackRepository.delete(attack);
     }
-    
+
 }

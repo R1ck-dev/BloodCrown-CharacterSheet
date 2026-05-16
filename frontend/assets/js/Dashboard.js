@@ -54,19 +54,9 @@ async function loadCharacters(token) {
     listElement.innerHTML = '<div class="text-center text-secondary mt-5"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><p class="mt-2">Carregando fichas...</p></div>';
 
     try {
-        // Requisição GET para listar personagens
-        const response = await fetch(`${API_BASE_URL}/characters`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) throw new Error('Falha ao buscar fichas');
-
-        const characters = await response.json();
-        listElement.innerHTML = ''; 
+        // Lista personagens via camada centralizada
+        const characters = await apiListCharacters(token);
+        listElement.innerHTML = '';
 
         // Itera sobre os personagens para criar os elementos HTML (Cards)
         characters.forEach(char => {
@@ -140,15 +130,8 @@ async function createCharacter(token) {
     });
 
     try {
-        const response = await fetch(`${API_BASE_URL}/characters`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const newChar = await apiCreateCharacter(token);
 
-        if (!response.ok) throw new Error('Erro ao criar ficha');
-
-        const newChar = await response.json();
-        
         // Redireciona para a Sheet.html com o ID do novo personagem
         window.location.href = `Sheet.html?id=${newChar.id}`;
 
@@ -181,12 +164,7 @@ async function deleteCharacter(event, charId, token) {
 
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`${API_BASE_URL}/characters/${charId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Erro ao deletar');
+            await apiDeleteCharacter(charId, token);
 
             Swal.fire({
                 icon: 'success',

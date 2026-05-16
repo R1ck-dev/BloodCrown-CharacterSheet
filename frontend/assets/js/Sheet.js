@@ -144,8 +144,7 @@ window.loadCharacterData = async function(id, token) {
             forceBarUpdate('statusSanityCurrent', 'statusMaxSanity', 'barSanity');
             forceBarUpdate('statusStaminaCurrent', 'statusMaxStamina', 'barStamina');
 
-            // Inicializa eventos de cálculo de defesa, se existirem
-            if(window.setupDefenseEvents) setupDefenseEvents();
+            // Recalcula defesa após popular os campos (listeners de input ficam no DOMContentLoaded)
             if(window.calculateDefense) calculateDefense();
         }
 
@@ -330,12 +329,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnNextTurn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnNextTurn.disabled = true;
             try {
-                const response = await fetch(`${API_BASE_URL}/abilities/next-turn/${id}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) throw new Error('Erro ao passar turno.');
-                
+                await apiAdvanceTurn(id, token);
+
                 await window.loadCharacterData(id, token);
                 Toast.fire({ icon: 'info', title: 'Turno avançado' });
 
@@ -374,12 +369,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRest.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btnRest.disabled = true;
             try {
-                const response = await fetch(`${API_BASE_URL}/characters/${id}/rest`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) throw new Error('Erro ao realizar descanso.');
-                
+                await apiRestCharacter(id, token);
+
                 await window.loadCharacterData(id, token);
                 
                 Swal.fire({
@@ -445,6 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnSaveAbility').addEventListener('click', () => createAbility(id, token));
     
     setupRollEvents();
+    if(window.setupDefenseEvents) setupDefenseEvents();
 });
 
 /**
@@ -517,12 +509,7 @@ async function saveCharacterData(id, token, btnSave) {
             }
         };
 
-        const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData)
-        });
-        if (!response.ok) throw new Error('Erro ao salvar ficha.');
+        await apiUpdateCharacter(id, updatedData, token);
     } catch (error) { throw error; }
 }
 

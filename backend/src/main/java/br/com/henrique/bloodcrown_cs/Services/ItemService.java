@@ -1,5 +1,7 @@
 package br.com.henrique.bloodcrown_cs.Services;
 
+import org.springframework.security.core.Authentication;
+
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 
 /**
@@ -8,25 +10,17 @@ import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 public interface ItemService {
 
     /**
-     * Adiciona um novo item ao inventário de um personagem.
-     * * @param characterId Identificador do personagem proprietário.
-     * @param dto Dados do item a ser criado.
-     * @return O item persistido com seu ID gerado.
+     * Adiciona um novo item ao inventário de um personagem. Valida ownership.
      */
-    ItemDTO addItem(String characterId, ItemDTO dto);
+    ItemDTO addItem(String characterId, ItemDTO dto, Authentication authentication);
 
     /**
-     * Remove um item do banco de dados.
-     * * @param itemId Identificador do item a ser removido.
+     * Remove um item do banco de dados. Valida que o item pertence ao usuário autenticado.
      */
-    void deleteItem(String itemId);
+    void deleteItem(String itemId, Authentication authentication);
 
     /**
-     * Alterna o estado de "Equipado" de um item.
-     * Se o item for equipado/desequipado, deve disparar a lógica de recálculo
-     * dos atributos do personagem (ex: Defesa, Bônus).
-     * * @param itemId Identificador do item.
-     * @return O item com o estado atualizado.
+     * Alterna o estado de "Equipado" de um item. Valida ownership.
      */
-    ItemDTO toggleEquip(String itemId);
+    ItemDTO toggleEquip(String itemId, Authentication authentication);
 }

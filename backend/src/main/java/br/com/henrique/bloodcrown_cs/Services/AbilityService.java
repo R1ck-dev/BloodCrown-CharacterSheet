@@ -20,31 +20,23 @@ public interface AbilityService {
     AbilityDTO addAbility(String characterId, AbilityDTO dto, Authentication authentication);
 
     /**
-     * Remove uma habilidade da ficha.
-     * * @param attackId Identificador da habilidade (nota: o nome do parâmetro sugere attackId, mas refere-se à habilidade).
+     * Remove uma habilidade da ficha. Valida que a habilidade pertence ao usuário autenticado.
      */
-    void deleteAbility(String attackId);
+    void deleteAbility(String abilityId, Authentication authentication);
 
     /**
      * Ativa ou desativa uma habilidade (ex: posturas ou buffs sustentados).
-     * * @param abilityDTO ID da habilidade (recebido como string).
-     * @return A habilidade com o estado atualizado.
+     * Valida que a habilidade pertence ao usuário autenticado.
      */
-    AbilityDTO toggleAbility(String abilityDTO);
+    AbilityDTO toggleAbility(String abilityId, Authentication authentication);
 
     /**
-     * Processa o avanço de turno para um personagem.
-     * Responsável por reduzir os contadores de "cooldown" (tempo de recarga) de todas as habilidades ativas.
-     * * @param characterId Identificador do personagem.
+     * Processa o avanço de turno para um personagem. Valida que o personagem pertence ao usuário autenticado.
      */
-    void advanceTurn(String characterId);
+    void advanceTurn(String characterId, Authentication authentication);
 
     /**
-     * Gerencia o uso e recuperação de cargas de uma habilidade.
-     * Pode consumir recursos (Mana/Estamina) para recuperar usos ou recarregar slots.
-     * * @param abilityId Identificador da habilidade.
-     * @param resourceToSpend Tipo de recurso a ser gasto na operação (opcional).
-     * @return A habilidade com os contadores de uso atualizados.
+     * Gerencia o uso e recuperação de cargas de uma habilidade. Valida ownership.
      */
-    AbilityDTO recoverUse(String abilityId, String resourceToSpend);
+    AbilityDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication);
 }

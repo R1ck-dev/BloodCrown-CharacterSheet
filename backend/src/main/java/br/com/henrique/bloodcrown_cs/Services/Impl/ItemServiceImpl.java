@@ -1,10 +1,13 @@
 package br.com.henrique.bloodcrown_cs.Services.Impl;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
+import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 import br.com.henrique.bloodcrown_cs.Models.ItemModel;
+import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.ItemRepository;
 import br.com.henrique.bloodcrown_cs.Services.ItemService;
@@ -26,16 +29,14 @@ public class ItemServiceImpl implements ItemService {
 
     /**
      * Adiciona um novo item ao inventário de um personagem específico.
-     * Busca o personagem no banco de dados, cria uma nova entidade de item,
-     * preenche com os dados do DTO e persiste a relação.
-     * * @param characterId ID do personagem proprietário.
-     * @param dto Dados do novo item.
-     * @return O DTO do item persistido.
+     * Valida que o personagem pertence ao usuário autenticado.
      */
     @Override
-    public ItemDTO addItem(String characterId, ItemDTO dto) {
-        CharacterModel character = characterRepository.findById(characterId)
-                .orElseThrow(() -> new RuntimeException("Personagem não encontrado"));
+    public ItemDTO addItem(String characterId, ItemDTO dto, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        CharacterModel character = characterRepository.findByIdAndFromUserId(characterId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
 
         ItemModel item = new ItemModel();
         item.setName(dto.name());
@@ -50,25 +51,28 @@ public class ItemServiceImpl implements ItemService {
     }
 
     /**
-     * Remove um item do banco de dados através do seu ID.
-     * * @param itemId Identificador do item a ser excluído.
+     * Remove um item do banco de dados através do seu ID. Valida ownership.
      */
     @Override
-    public void deleteItem(String itemId) {
-        itemRepository.deleteById(itemId);
+    public void deleteItem(String itemId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        ItemModel item = itemRepository.findByIdAndCharacter_FromUserId(itemId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Item não encontrado."));
+
+        itemRepository.delete(item);
     }
 
     /**
-     * Alterna o estado de equipamento de um item (Equipado <-> Desequipado).
-     * Recupera o item, inverte o valor booleano atual e salva a alteração.
-     * * @param itemId Identificador do item.
-     * @return O DTO do item com o estado atualizado.
+     * Alterna o estado de equipamento de um item (Equipado <-> Desequipado). Valida ownership.
      */
     @Override
-    public ItemDTO toggleEquip(String itemId) {
-        ItemModel item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item não encontrado"));
-        
+    public ItemDTO toggleEquip(String itemId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        ItemModel item = itemRepository.findByIdAndCharacter_FromUserId(itemId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Item não encontrado."));
+
         item.setIsEquipped(!Boolean.TRUE.equals(item.getIsEquipped()));
         ItemModel saved = itemRepository.save(item);
         return convertToDTO(saved);

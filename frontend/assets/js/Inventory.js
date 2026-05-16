@@ -20,14 +20,7 @@ async function createItem(characterId, token) {
     };
 
     try {
-        // Envia requisição POST para criar o item
-        const response = await fetch(`${API_BASE_URL}/items/${characterId}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) throw new Error('Erro ao criar item');
+        await apiCreateItem(characterId, data, token);
 
         // Recarrega os dados da ficha para refletir o novo item
         const params = new URLSearchParams(window.location.search);
@@ -51,11 +44,8 @@ async function createItem(characterId, token) {
  */
 async function toggleEquipItem(itemId, token) {
     try {
-        await fetch(`${API_BASE_URL}/items/${itemId}/toggle`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
+        await apiToggleItem(itemId, token);
+
         // Atualiza a ficha completa (necessário para recalcular atributos afetados pelo item)
         const params = new URLSearchParams(window.location.search);
         if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
@@ -86,15 +76,11 @@ async function deleteItem(itemId, token) {
     if(!result.isConfirmed) return;
 
     try {
-        // Envia requisição DELETE
-        await fetch(`${API_BASE_URL}/items/${itemId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        await apiDeleteItem(itemId, token);
         // Atualiza a lista de itens
         const params = new URLSearchParams(window.location.search);
         if(window.loadCharacterData) window.loadCharacterData(params.get('id'), token);
-    } catch (e) { 
+    } catch (e) {
         Swal.fire({ icon: 'error', title: 'Erro', text: "Erro ao deletar item.", background: '#212529', color: '#fff', confirmButtonColor: '#7b2cbf' });
     }
 }
