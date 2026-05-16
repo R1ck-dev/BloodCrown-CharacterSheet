@@ -5,3 +5,10 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# SPA fallback: React Router gerencia /dashboard, /sheet/:id etc em runtime —
+# sem este redirect, refresh direto na URL devolve 404 do Netlify.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
