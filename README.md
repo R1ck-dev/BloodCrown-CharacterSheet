@@ -36,11 +36,11 @@ Além do uso prático, a aplicação foi construída com foco em arquitetura, bo
 ## Preview
 
 <p align="center">
-  <img src="frontend/assets/img/Página Dashboard.png" alt="Dashboard do sistema" width="100%">
+  <img src="frontend/public/assets/img/Página Dashboard.png" alt="Dashboard do sistema" width="100%">
 </p>
 
 <p align="center">
-  <img src="frontend/assets/img/Página Ficha.png" alt="Ficha do personagem" width="100%">
+  <img src="frontend/public/assets/img/Página Ficha.png" alt="Ficha do personagem" width="100%">
 </p>
 
 ---
