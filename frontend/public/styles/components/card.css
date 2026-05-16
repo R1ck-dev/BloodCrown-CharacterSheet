@@ -1,0 +1,80 @@
+/* ============================================================================
+   BloodCrown — Card (utilities)
+   Variantes para criar superficies de conteudo coesas com o design system.
+   ============================================================================ */
+
+.bc-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  transition:
+    border-color var(--duration-base) var(--ease-out-quart),
+    box-shadow var(--duration-base) var(--ease-out-quart),
+    transform var(--duration-base) var(--ease-out-quart);
+}
+
+/* Variante glassmorphism — frosted glass sobre fundo escuro com gradient */
+.bc-card-glass {
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 100%),
+    rgba(18, 20, 22, 0.7) !important;
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-glass-md),
+    0 0 0 1px rgba(123, 44, 191, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Halo sutil na borda superior (luz simulada) */
+.bc-card-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(157, 78, 221, 0.6),
+    transparent);
+  pointer-events: none;
+}
+
+/* Hover: ganha glow roxo + leve elevacao */
+.bc-card-glass:hover {
+  border-color: rgba(157, 78, 221, 0.35) !important;
+  box-shadow:
+    var(--shadow-glass-md),
+    var(--shadow-glow-purple),
+    0 0 0 1px rgba(123, 44, 191, 0.1) inset;
+  transform: translateY(-2px);
+}
+
+/* Variantes auxiliares */
+.bc-card--solid {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.bc-card__header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bc-card__body {
+  padding: var(--space-6);
+}
+
+.bc-card__footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+}

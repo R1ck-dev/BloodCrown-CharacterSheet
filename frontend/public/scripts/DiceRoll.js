@@ -194,9 +194,20 @@ function finishAnimation(realRolls, realBest, realTotal, isDamage, bestEl, extra
 
     // Efeito de "Pop" no resultado final
     resEl.style.transition = "all 0.2s ease";
-    resEl.style.color = "#d4af37"; 
+    resEl.style.color = "#d4af37";
     resEl.style.transform = "scale(1.3)";
     setTimeout(() => { resEl.style.transform = "scale(1)"; }, 200);
+
+    // Gamificacao Fase 5: nat 20 em teste -> confetti dourado + shake/glow do toast.
+    // Dano alto (>= 20) -> shake + flash sangue. Helpers em /animations/bc-crit.js.
+    const toastEl = document.getElementById('diceToast');
+    if (window.bcCrit && toastEl) {
+        if (!isDamage && realBest === 20) {
+            window.bcCrit.trigger(toastEl);
+        } else if (isDamage && realTotal >= 20) {
+            window.bcCrit.damageHit(toastEl);
+        }
+    }
 
     // Fecha o Toast automaticamente após 8 segundos
     toastTimer = setTimeout(() => {

@@ -48,11 +48,9 @@ services:
     container_name: bloodcrown-web
     ports:
       - "80:80"
-    # Monta o diretorio do front como volume read-only - edicoes no host refletem
-    # imediatamente sem precisar rebuildar a imagem. O nginx.conf ja vem da imagem
-    # (COPY no Dockerfile), entao so o conteudo estatico e sobrescrito.
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+    # O Dockerfile agora e multi-stage: stage Node roda "npm run build" e gera dist/,
+    # stage nginx serve apenas o build estatico. Para hot-reload em dev, use
+    # "npm run dev" diretamente no host (porta 5500) - o CORS do backend ja libera.
     depends_on:
       - backend
 

@@ -220,6 +220,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await window.loadCharacterData(id, token);
 
+    // Snapshot inicial do nivel apos load para detectar level up posterior.
+    // Gamificacao Fase 5: ao subir nivel, dispara confetti via bcCrit.levelUp.
+    const charLevelEl = document.getElementById('charLevel');
+    if (charLevelEl) {
+        charLevelEl.dataset.previousLevel = String(parseInt(charLevelEl.value) || 0);
+        charLevelEl.addEventListener('change', () => {
+            const previous = parseInt(charLevelEl.dataset.previousLevel) || 0;
+            const current  = parseInt(charLevelEl.value) || 0;
+            if (current > previous && window.bcCrit) {
+                window.bcCrit.levelUp(charLevelEl);
+            }
+            charLevelEl.dataset.previousLevel = String(current);
+        });
+    }
+
     // Evento para atualizar o valor base ao digitar manualmente
     document.addEventListener('input', (e) => {
         if (e.target.matches('input') && e.target.type !== 'checkbox' && e.target.type !== 'radio') {
@@ -249,39 +264,79 @@ document.addEventListener('DOMContentLoaded', async () => {
         const max = document.getElementById(maxId);
         const bar = document.getElementById(barId);
         if (!current || !max || !bar) return;
-        const update = () => updateBar(current, max, bar);
+
+        // Anexa pulso vermelho de HP critico apenas a barra de vida.
+        // Box-shadow precisa ir no .progress (container), nao no .progress-bar (interno):
+        // o container Bootstrap tem overflow:hidden e cortaria a sombra do filho.
+        // window.bcAnim vem de /animations/bc-anim.js (PoC Fase 3).
+        let lowHpPulse = null;
+        if (barId === 'barHealth' && window.bcAnim) {
+            const progressContainer = bar.parentElement;
+            lowHpPulse = window.bcAnim.attachLowHpPulse(progressContainer, () => {
+                const m = parseInt(max.value) || 0;
+                const c = parseInt(current.value) || 0;
+                return m > 0 ? c / m : 0;
+            });
+        }
+
+        const update = () => {
+            updateBar(current, max, bar);
+            if (lowHpPulse) lowHpPulse.update();
+        };
         current.addEventListener('input', update);
         max.addEventListener('input', update);
+        // Avalia uma vez ja com o valor carregado por loadCharacterData
+        update();
     });
 
-    // Configuração do botão de Salvar Manual
+    // Save indicator: badge inline ao lado do botao SALVAR.
+    // Resolve a friccao critica de "auto-save silencioso" (estado visivel para o usuario).
+    const saveIndicator = document.getElementById('saveIndicator');
+    const setSaveIndicator = (state) => {
+        if (!saveIndicator) return;
+        const STATES = {
+            idle:    { cls: 'bc-save-indicator--idle',    label: 'Salvo' },
+            saving:  { cls: 'bc-save-indicator--saving',  label: 'Salvando...' },
+            saved:   { cls: 'bc-save-indicator--saved',   label: 'Salvo' },
+            error:   { cls: 'bc-save-indicator--error',   label: 'Erro ao salvar' }
+        };
+        const cfg = STATES[state] || STATES.idle;
+        saveIndicator.className = 'bc-save-indicator ' + cfg.cls;
+        const lbl = saveIndicator.querySelector('.bc-save-indicator__label');
+        if (lbl) lbl.textContent = cfg.label;
+    };
+
+    // Configuração do botão de Salvar Manual (e auto-save)
     const performSave = async () => {
         const btnSave = document.getElementById('btnSave');
         const originalText = btnSave.innerText;
-        const isManual = (btnSave.innerText === "SALVAR"); 
-        
-        if(isManual) { 
-            btnSave.innerText = "Salvando..."; 
-            btnSave.disabled = true; 
-        } else {
-            console.log("Auto-salvando...");
-        }
+        const isManual = (btnSave.innerText === "SALVAR");
 
-        try { 
-            await saveCharacterData(id, token, btnSave); 
-            if(isManual) {
-                Toast.fire({ icon: 'success', title: 'Ficha salva com sucesso!' });
+        if(isManual) {
+            btnSave.innerText = "Salvando...";
+            btnSave.disabled = true;
+        }
+        setSaveIndicator('saving');
+
+        try {
+            await saveCharacterData(id, token, btnSave);
+            setSaveIndicator('saved');
+            if (isManual && window.bcToast) {
+                window.bcToast.success('Ficha salva com sucesso!');
             }
-        } catch (e) { 
+            // Volta para idle apos 2s (deixa o "Salvo" verde por um momento)
+            setTimeout(() => setSaveIndicator('idle'), 2000);
+        } catch (e) {
             console.error(e);
-            if(isManual) {
-                Toast.fire({ icon: 'error', title: 'Erro ao salvar!' });
+            setSaveIndicator('error');
+            if (isManual && window.bcToast) {
+                window.bcToast.error('Erro ao salvar!');
             }
-        } finally { 
-            if(isManual) { 
-                btnSave.innerText = originalText; 
-                btnSave.disabled = false; 
-            } 
+        } finally {
+            if(isManual) {
+                btnSave.innerText = originalText;
+                btnSave.disabled = false;
+            }
         }
     };
 
@@ -541,6 +596,9 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         if(input && input.dataset.baseValue !== undefined) {
             input.value = input.dataset.baseValue;
             input.style.color = '';
+            // Remove aura dourada de buff anterior (componente AttributeStone)
+            const stone = input.closest('.attr-circle');
+            if (stone) stone.classList.remove('bc-attr-buffed');
         }
     });
 
@@ -615,13 +673,20 @@ function updateAllBonuses(charData, isMinimized, panelEl, btnOpenEl) {
         if(btnOpen) btnOpen.style.display = 'none';
     }
 
-    // Aplica os buffs calculados aos inputs e muda a cor para verde
+    // Aplica os buffs calculados aos inputs. Para atributos (attrX), o estilo
+    // visual vem da classe .bc-attr-buffed no .attr-circle (aura dourada pulsante).
+    // Para skills/outros, mantem cor inline como fallback ate Fase 5 expandir.
     for (const [targetId, val] of Object.entries(totalBuffs)) {
         const input = document.getElementById(targetId);
         if (input) {
             const base = parseInt(input.dataset.baseValue) || 0;
             input.value = base + val;
-            input.style.color = '#00ff00';
+            const stone = input.closest('.attr-circle');
+            if (stone) {
+                stone.classList.add('bc-attr-buffed');
+            } else {
+                input.style.color = '#d4af37'; // dourado (foi #00ff00) — fallback
+            }
         }
     }
 

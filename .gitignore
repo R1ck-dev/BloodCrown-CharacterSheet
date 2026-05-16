@@ -42,5 +42,8 @@ build/
 npm-debug.log
 yarn-error.log
 
+frontend/dist/
+**/__pycache__/
+
 postgres_data/
 mysql_data/
