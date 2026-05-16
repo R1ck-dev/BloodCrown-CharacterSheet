@@ -1,0 +1,85 @@
+/* ============================================================================
+   BloodCrown — Modal (overrides do Bootstrap modal)
+   Enriquece a entrada/saida dos modais nativos do Bootstrap (.modal.fade)
+   com scale, glass e borda dourada decorativa.
+   Mantem o JS do Bootstrap intocado — apenas adiciona CSS.
+   ============================================================================ */
+
+/* Backdrop mais escuro e com leve blur do conteudo de fundo */
+.modal-backdrop {
+  background-color: #000;
+}
+.modal-backdrop.show {
+  opacity: 0.7;
+}
+
+/* Estado inicial: modal aparece levemente menor e desfocado, sobe ao mostrar */
+.modal.fade .modal-dialog {
+  transform: scale(0.92) translateY(12px);
+  opacity: 0;
+  transition:
+    transform 320ms var(--ease-out-back),
+    opacity   240ms var(--ease-out-quart);
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Modal-content: glass + glow roxo + borda dourada decorativa no topo */
+.modal-content {
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.01) 100%),
+    rgba(18, 20, 22, 0.92);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-glass-md),
+    0 0 32px rgba(123, 44, 191, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Filete dourado no topo (decoracao tema realeza) */
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--gold-500),
+    transparent);
+  pointer-events: none;
+}
+
+/* Header com letterspacing Cinzel e linha sutil */
+.modal-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-6);
+}
+
+.modal-body {
+  padding: var(--space-6);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-6);
+}
+
+/* Botao de fechar com hover dourado */
+.btn-close {
+  filter: brightness(0.9);
+  transition: filter var(--duration-fast) var(--ease-out-quart);
+}
+.btn-close:hover {
+  filter: brightness(1.4) drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
+}

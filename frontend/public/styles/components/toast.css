@@ -1,0 +1,160 @@
+/* ============================================================================
+   BloodCrown — Toast
+   Sistema proprio de notificacao breve (top-right). Substitui Toast SweetAlert2.
+   Tema coeso com tokens BloodCrown (glass + glow + Cinzel no titulo).
+   ============================================================================ */
+
+.bc-toast-host {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.bc-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+  max-width: 360px;
+  padding: 12px 16px;
+  background: rgba(18, 20, 22, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass-md);
+  color: var(--color-text-strong);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  transform: translateX(120%);
+  opacity: 0;
+  transition:
+    transform var(--duration-base) var(--ease-out-back),
+    opacity var(--duration-base) var(--ease-out-quart);
+}
+
+.bc-toast--show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.bc-toast--hide {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+.bc-toast__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-circle);
+  font-size: 16px;
+}
+
+.bc-toast__body {
+  flex: 1;
+  line-height: var(--leading-tight);
+}
+
+/* Variantes por tipo */
+.bc-toast--success {
+  border-left-color: var(--success-500);
+}
+.bc-toast--success .bc-toast__icon {
+  background: rgba(25, 135, 84, 0.2);
+  color: var(--success-400);
+}
+
+.bc-toast--error {
+  border-left-color: var(--blood-500);
+  box-shadow: var(--shadow-glass-md), 0 0 16px rgba(185, 28, 28, 0.3);
+}
+.bc-toast--error .bc-toast__icon {
+  background: rgba(185, 28, 28, 0.2);
+  color: var(--blood-400);
+}
+
+.bc-toast--info {
+  border-left-color: var(--info-500);
+}
+.bc-toast--info .bc-toast__icon {
+  background: rgba(13, 110, 253, 0.2);
+  color: var(--info-400);
+}
+
+.bc-toast--warning {
+  border-left-color: var(--gold-500);
+}
+.bc-toast--warning .bc-toast__icon {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-400);
+}
+
+/* ============================================================================
+   Save indicator — badge inline ao lado do botao SALVAR.
+   Resolve a friccao critica de "auto-save silencioso" (Sheet.js#L292).
+   ============================================================================ */
+
+.bc-save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  transition: all var(--duration-base) var(--ease-out-quart);
+}
+
+.bc-save-indicator__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: currentColor;
+}
+
+.bc-save-indicator--idle {
+  /* estado padrao (cinza) */
+}
+
+.bc-save-indicator--saving {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-500);
+  color: var(--gold-400);
+}
+.bc-save-indicator--saving .bc-save-indicator__dot {
+  animation: bcSavingDotPulse 1s ease-in-out infinite;
+}
+
+@keyframes bcSavingDotPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+.bc-save-indicator--saved {
+  background: rgba(25, 135, 84, 0.15);
+  border-color: var(--success-500);
+  color: var(--success-400);
+}
+
+.bc-save-indicator--error {
+  background: rgba(185, 28, 28, 0.15);
+  border-color: var(--blood-500);
+  color: var(--blood-400);
+}

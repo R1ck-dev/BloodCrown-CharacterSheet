@@ -50,8 +50,21 @@ document.addEventListener('DOMContentLoaded', async function() {
  */
 async function loadCharacters(token) {
     const listElement = document.getElementById('charList');
-    // Exibe indicador de carregamento
-    listElement.innerHTML = '<div class="text-center text-secondary mt-5"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><p class="mt-2">Carregando fichas...</p></div>';
+    // Skeleton placeholders no lugar de spinner bloqueante — renderiza 4 cards "fantasma"
+    // com forma proxima do card real, oferecendo feedback visual durante o fetch.
+    const skeletonHtml = Array(4).fill(0).map(() =>
+        '<div class="col-12 col-md-6 col-lg-4 col-xl-3">' +
+        '  <div class="bc-skeleton-card">' +
+        '    <div class="bc-skeleton-circle"></div>' +
+        '    <div class="bc-skeleton-card__body">' +
+        '      <div class="bc-skeleton-text bc-skeleton-text--lg"></div>' +
+        '      <div class="bc-skeleton-text bc-skeleton-text--md"></div>' +
+        '      <div class="bc-skeleton-text bc-skeleton-text--sm"></div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+    ).join('');
+    listElement.innerHTML = skeletonHtml;
 
     try {
         // Lista personagens via camada centralizada

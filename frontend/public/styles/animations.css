@@ -1,0 +1,128 @@
+/* ============================================================================
+   BloodCrown — Animations (keyframes)
+   Sistema CSS-driven: helpers JS em public/animations/bc-anim.js apenas
+   adicionam/removem classes. Quando a Fase 5 precisar de timelines complexas
+   (rolagem de dado, level up com confetti), GSAP entra como CDN.
+   ============================================================================ */
+
+/* Pulso vermelho infinito para HP critico (< 25%).
+   Combina varias propriedades para garantir visibilidade independente
+   do CSS de pagina: opacity (afeta toda a barra), transform scale,
+   outline com !important (combate reset do Bootstrap) e box-shadow. */
+@keyframes bcPulseHpCritical {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    outline: 2px solid rgba(220, 53, 69, 0.5) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 8px 2px rgba(220, 53, 69, 0.4);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.03);
+    outline: 4px solid rgba(220, 53, 69, 1) !important;
+    outline-offset: 4px;
+    box-shadow: 0 0 28px 10px rgba(220, 53, 69, 0.85);
+  }
+}
+
+/* Flash vermelho-sangue rapido — barra ao receber dano */
+@keyframes bcFlashBlood {
+  0%   { background-color: var(--blood-700); }
+  100% { background-color: transparent; }
+}
+
+/* Flash verde rapido — quando defesa/bonus sobe */
+@keyframes bcFlashSuccess {
+  0%   { background-color: rgba(25, 135, 84, 0.4); }
+  100% { background-color: transparent; }
+}
+
+/* Halo roxo pulsante — atributo em hover, habilidade ativa */
+@keyframes bcGlowPurple {
+  0%, 100% { box-shadow: 0 0 8px rgba(123, 44, 191, 0.5); }
+  50%      { box-shadow: 0 0 24px rgba(157, 78, 221, 0.9); }
+}
+
+/* Halo dourado pulsante — buff ativo em AttributeStone */
+@keyframes bcGlowGold {
+  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+  50%      { box-shadow: 0 0 28px rgba(230, 195, 74, 0.8); }
+}
+
+/* Tremor curto — input invalido, ataque critico */
+@keyframes bcShake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Shimmer dourado — efeito "CROWN" no logo */
+@keyframes bcGoldShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Skeleton loader — placeholder durante fetch */
+@keyframes bcSkeletonLoading {
+  0%   { background-position: -200px 0; }
+  100% { background-position:  200px 0; }
+}
+
+/* ----------------------------------------------------------------------------
+   Classes utilitarias que aplicam os keyframes
+   ---------------------------------------------------------------------------- */
+
+.bc-pulse-hp-critical {
+  animation: bcPulseHpCritical 1.6s var(--ease-in-out-cubic) infinite;
+  border-radius: var(--radius-md);
+}
+
+.bc-flash-blood {
+  animation: bcFlashBlood 0.6s var(--ease-out-quart);
+}
+
+.bc-flash-success {
+  animation: bcFlashSuccess 1s var(--ease-out-quart);
+}
+
+.bc-glow-purple {
+  animation: bcGlowPurple 1.8s var(--ease-in-out-cubic) infinite;
+}
+
+.bc-glow-gold {
+  animation: bcGlowGold 1.8s var(--ease-in-out-cubic) infinite;
+}
+
+.bc-shake {
+  animation: bcShake 0.5s var(--ease-out-quart);
+}
+
+.bc-gold-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--gold-500) 0%,
+    var(--gold-300) 50%,
+    var(--gold-500) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: bcGoldShimmer 3s linear infinite;
+}
+
+.bc-skeleton {
+  background: linear-gradient(90deg, var(--ink-800) 25%, var(--ink-700) 50%, var(--ink-800) 75%);
+  background-size: 200px 100%;
+  animation: bcSkeletonLoading 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced motion: IGNORADO por decisao de projeto.
+   Animacoes sao parte da identidade gamificada do BloodCrown e devem aparecer
+   para todos os usuarios independente da preferencia do SO.
+   Ver memoria: feedback_ignore_reduced_motion.md
+   ---------------------------------------------------------------------------- */
