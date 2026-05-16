@@ -1,0 +1,82 @@
+/* ============================================================================
+   BloodCrown — Bar (status bars: HP/MP/SAN/STA)
+   Track escuro com inset shadow, fill com gradient metalico e glow lateral.
+   Estado .bc-bar--critical pulsa quando HP <25% (so faz sentido na red).
+   Variantes de cor via CSS vars locais (--bc-bar-*), atribuidas inline
+   pelo componente React conforme o tipo (red/blue/green/yellow).
+   ============================================================================ */
+
+.bc-bar {
+  position: relative;
+  height: 12px;
+  background: linear-gradient(180deg, #06030A 0%, #100A14 100%);
+  border-radius: var(--bc-radius-sm);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.12);
+}
+
+.bc-bar__fill {
+  height: 100%;
+  background: linear-gradient(180deg,
+    var(--bc-bar-bright, #fff) 0%,
+    var(--bc-bar-base, #888) 50%,
+    var(--bc-bar-dark, #444) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 0 8px var(--bc-bar-glow, rgba(255, 255, 255, 0.3));
+  transition: width var(--bc-duration-slow) var(--bc-ease-out-quart);
+}
+
+/* HP critico — pulsa vermelho intenso quando < 25%.
+   Duracao curta (0.75s) gera sensacao de alerta/perigo iminente.
+   Track e fill pulsam em sincronia pra a barra inteira "respirar". */
+.bc-bar--critical {
+  animation: bc-hp-pulse-track 0.75s ease-in-out infinite;
+}
+
+.bc-bar--critical .bc-bar__fill {
+  animation: bc-hp-pulse 0.75s ease-in-out infinite;
+}
+
+/* --- Tamanhos --- */
+
+.bc-bar--sm  { height: 6px; }
+.bc-bar--xs  { height: 4px; }
+.bc-bar--lg  { height: 16px; }
+
+/* --- Header com label + valor (usado pelo StatusBar component) --- */
+
+.bc-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bc-space-1);
+}
+
+.bc-bar-row__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bc-bar-row__label {
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bc-bar-text, var(--bc-ink));
+}
+
+.bc-bar-row__value {
+  font-family: var(--bc-font-display);
+  font-size: 13px;
+  color: var(--bc-bar-text, var(--bc-ink));
+  letter-spacing: 0.05em;
+}
+
+.bc-bar-row__value-divider {
+  opacity: 0.5;
+}

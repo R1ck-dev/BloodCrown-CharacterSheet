@@ -1,5 +1,6 @@
 package br.com.henrique.bloodcrown_cs.Models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -83,9 +84,11 @@ public class AbilityModel {
     /**
      * Lista de efeitos mecânicos vinculados a esta habilidade.
      * Relacionamento OneToMany: Uma habilidade pode ter múltiplos efeitos.
+     * Inicializada como ArrayList vazio pra evitar NPE em updateAbility quando
+     * a habilidade foi criada sem efeitos (Hibernate pode deixar como null).
      */
     @OneToMany(mappedBy = "ability", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AbilityEffectModel> effects;
+    private List<AbilityEffectModel> effects = new ArrayList<>();
 
     /**
      * Duração do efeito da habilidade expressa em dados ou turnos.

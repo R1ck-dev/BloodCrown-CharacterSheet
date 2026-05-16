@@ -85,9 +85,11 @@ public class WebSecurityConfig {
         
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost",           // nginx do Docker Compose (porta 80 default)
-            "http://localhost:5500",      // VS Code Live Server
+            "http://localhost:5173",      // Vite dev server (React) — default port
+            "http://localhost:5500",      // VS Code Live Server (legado / preview)
             "http://localhost:8080",      // backend acessando a si mesmo (raro)
             "http://127.0.0.1",           // equivalente IPv4 do nginx
+            "http://127.0.0.1:5173",      // equivalente IPv4 do Vite dev
             "http://127.0.0.1:5500",      // equivalente IPv4 do Live Server
             "https://bloodcrown.netlify.app"
         ));

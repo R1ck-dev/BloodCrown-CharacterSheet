@@ -20,6 +20,7 @@ import java.util.List;
  * @param money Representação monetária (ex: "100 PO").
  * @param heroPoint Pontos de herói ou inspiração disponíveis.
  * @param biography Texto descritivo da história do personagem.
+ * @param actionPool Pool de ações por turno (Padrão/Bônus/Movimento/Reação).
  */
 public record CharacterSheetDTO(
     String id,
@@ -34,7 +35,8 @@ public record CharacterSheetDTO(
     List<ItemDTO> inventory,
     String money,
     Integer heroPoint,
-    String biography
+    String biography,
+    ActionPoolDTO actionPool
 ) {
-    
+
 }

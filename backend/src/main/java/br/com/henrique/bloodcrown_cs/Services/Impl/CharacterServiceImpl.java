@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.ActionPoolDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttributesDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
@@ -19,6 +20,7 @@ import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterAttributes;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterExpertise;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
@@ -38,6 +40,29 @@ public class CharacterServiceImpl implements CharacterService{
         this.characterRepository = characterRepository;
     }
 
+    /**
+     * Cria pool default (1 Padrão, 3 Bônus, 1 Movimento, 2 Reação).
+     * Usado em createCharacter e como retrocompat pra personagens antigos sem o campo.
+     */
+    private CharacterActionPool buildDefaultActionPool() {
+        CharacterActionPool pool = new CharacterActionPool();
+        pool.setMaxStandard(1);  pool.setCurrentStandard(1);
+        pool.setMaxBonus(3);     pool.setCurrentBonus(3);
+        pool.setMaxMovement(1);  pool.setCurrentMovement(1);
+        pool.setMaxReaction(2);  pool.setCurrentReaction(2);
+        return pool;
+    }
+
+    /**
+     * Garante que o character tenha actionPool. Setter idempotente —
+     * só cria se for null (retrocompat com personagens criados antes da feature).
+     */
+    private void ensureActionPool(CharacterModel character) {
+        if (character.getActionPool() == null) {
+            character.setActionPool(buildDefaultActionPool());
+        }
+    }
+
 //--------------------------------Recupera Personagens de um Usuário--------------------------------
 
     /**
@@ -54,17 +79,26 @@ public class CharacterServiceImpl implements CharacterService{
         //Busca as fichas relacionadas a esse ID de usuário
         List<CharacterModel> charactersList = characterRepository.findByFromUserId(currentUser.getId());
 
-        //Coverte Model -> DTO
+        //Coverte Model -> DTO. Status pode ser null em personagens muito antigos
+        //sem migracao — defendemos com null-check (createCharacter atual ja inicializa
+        //status com 10/10, mas dados legados podem nao ter).
         return charactersList.stream()
-                .map(characterModel -> new CharacterDTO(
-                    characterModel.getId(),
-                    characterModel.getName(),
-                    characterModel.getCharacterClass(),
-                    characterModel.getLevel(),
-                    characterModel.getAttacks().stream().map(atk -> new AttackDTO(
-                        atk.getId(), atk.getName(), atk.getDamageDice(), atk.getDescription()
-                    )).toList()
-                )).toList();
+                .map(characterModel -> {
+                    var status = characterModel.getStatus();
+                    Integer currentHealth = status != null ? status.getCurrentHealth() : null;
+                    Integer maxHealth     = status != null ? status.getMaxHealth()     : null;
+                    return new CharacterDTO(
+                        characterModel.getId(),
+                        characterModel.getName(),
+                        characterModel.getCharacterClass(),
+                        characterModel.getLevel(),
+                        characterModel.getAttacks().stream().map(atk -> new AttackDTO(
+                            atk.getId(), atk.getName(), atk.getDamageDice(), atk.getDescription()
+                        )).toList(),
+                        currentHealth,
+                        maxHealth
+                    );
+                }).toList();
     }
 
 //-----------------------------------------------------------------------------------
@@ -118,6 +152,9 @@ public class CharacterServiceImpl implements CharacterService{
         status.setOtherBonus(0);
         charModel.setStatus(status);
 
+        // Inicializa pool de ações com defaults D&D-like
+        charModel.setActionPool(buildDefaultActionPool());
+
         // Inicializa todas as perícias com 0
         CharacterExpertise expertise = new CharacterExpertise();
         expertise.setAtletismo(0);
@@ -152,7 +189,9 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getName(),
             charModel.getCharacterClass(),
             charModel.getLevel(),
-            new java.util.ArrayList<>()
+            new java.util.ArrayList<>(),
+            maxHealth, // currentHealth = maxHealth no nascimento
+            maxHealth
         );
     }
 //-----------------------------------------------------------------------------------
@@ -172,6 +211,9 @@ public class CharacterServiceImpl implements CharacterService{
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
+
+        // Retrocompat: personagens criados antes da feature não têm actionPool persistido.
+        ensureActionPool(charModel);
 
         return convertToSheetDTO(charModel);
     }
@@ -270,6 +312,16 @@ public class CharacterServiceImpl implements CharacterService{
             .map(i -> new ItemDTO(i.getId(), i.getName(), i.getDescription(), i.getIsEquipped(), i.getTargetAttribute(), i.getEffectValue()))
             .toList();
 
+        CharacterActionPool poolModel = charModel.getActionPool();
+        ActionPoolDTO actionPool = poolModel != null
+            ? new ActionPoolDTO(
+                poolModel.getMaxStandard(),  poolModel.getCurrentStandard(),
+                poolModel.getMaxBonus(),     poolModel.getCurrentBonus(),
+                poolModel.getMaxMovement(),  poolModel.getCurrentMovement(),
+                poolModel.getMaxReaction(),  poolModel.getCurrentReaction()
+            )
+            : null;
+
         return new CharacterSheetDTO(
             charModel.getId(),
             charModel.getName(),
@@ -283,7 +335,8 @@ public class CharacterServiceImpl implements CharacterService{
             inventory,
             charModel.getMoney(),
             charModel.getHeroPoint(),
-            charModel.getBiography()
+            charModel.getBiography(),
+            actionPool
         );
     }
 //-----------------------------------------------------------------------------------
@@ -382,6 +435,32 @@ public class CharacterServiceImpl implements CharacterService{
             }
         }
 
+        // Atualização do Pool de Ações — usuário pode editar maxX inline no ActionPoolBlock.
+        // currentX é capado pelo novo max (se diminuir) e nunca cai abaixo de 0.
+        if (dto.actionPool() != null) {
+            ensureActionPool(charModel);
+            CharacterActionPool pool = charModel.getActionPool();
+            ActionPoolDTO poolDto = dto.actionPool();
+
+            if (poolDto.maxStandard()  != null) pool.setMaxStandard(poolDto.maxStandard());
+            if (poolDto.maxBonus()     != null) pool.setMaxBonus(poolDto.maxBonus());
+            if (poolDto.maxMovement()  != null) pool.setMaxMovement(poolDto.maxMovement());
+            if (poolDto.maxReaction()  != null) pool.setMaxReaction(poolDto.maxReaction());
+
+            if (poolDto.currentStandard() != null && pool.getMaxStandard() != null) {
+                pool.setCurrentStandard(Math.max(0, Math.min(poolDto.currentStandard(), pool.getMaxStandard())));
+            }
+            if (poolDto.currentBonus() != null && pool.getMaxBonus() != null) {
+                pool.setCurrentBonus(Math.max(0, Math.min(poolDto.currentBonus(), pool.getMaxBonus())));
+            }
+            if (poolDto.currentMovement() != null && pool.getMaxMovement() != null) {
+                pool.setCurrentMovement(Math.max(0, Math.min(poolDto.currentMovement(), pool.getMaxMovement())));
+            }
+            if (poolDto.currentReaction() != null && pool.getMaxReaction() != null) {
+                pool.setCurrentReaction(Math.max(0, Math.min(poolDto.currentReaction(), pool.getMaxReaction())));
+            }
+        }
+
         // Atualização de Perícias
         if (dto.expertise() != null) {
             charModel.getExpertise().setAtletismo(dto.expertise().atletismo());
@@ -458,11 +537,19 @@ public class CharacterServiceImpl implements CharacterService{
                 if (ability.getMaxUses() != null) {
                     ability.setCurrentUses(ability.getMaxUses());
                 }
-                
+
                 ability.setIsActive(false);
                 ability.setTurnsRemaining(0);
             }
         }
+
+        // Descanso longo restaura o pool de ações pra os máximos também.
+        ensureActionPool(charModel);
+        CharacterActionPool pool = charModel.getActionPool();
+        pool.setCurrentStandard(pool.getMaxStandard());
+        pool.setCurrentBonus(pool.getMaxBonus());
+        pool.setCurrentMovement(pool.getMaxMovement());
+        pool.setCurrentReaction(pool.getMaxReaction());
 
         characterRepository.save(charModel);
     }

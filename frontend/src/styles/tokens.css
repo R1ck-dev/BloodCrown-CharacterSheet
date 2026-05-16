@@ -1,0 +1,187 @@
+/* ============================================================================
+   BloodCrown — Design Tokens
+   Fonte unica de verdade para cores, tipografia, espacamento, sombras,
+   transicoes e z-index. Documentado em PT-BR.
+
+   Convencoes:
+   - Tokens semanticos (--bc-*) consumidos diretamente pelos componentes
+   - Sem aliases bootstrap (front foi migrado pra React puro com CSS proprio)
+   ============================================================================ */
+
+:root {
+  /* --------------------------------------------------------------------------
+     1. PALETA — Gothic Ritual
+     -------------------------------------------------------------------------- */
+
+  /* Roxo — primario da marca */
+  --bc-purple:       #7B2CBF;
+  --bc-purple-hover: #9D4EDD;
+  --bc-purple-dark:  #5A189A;
+  --bc-purple-deep:  #3A0CA3;
+  --bc-purple-soft:  #C8A4FF;
+
+  /* Dourado — heroismo, critico, conquista */
+  --bc-gold:         #D4AF37;
+  --bc-gold-bright:  #F5D76E;
+  --bc-gold-dim:     #8C7320;
+  --bc-gold-pale:    #E6C75A;
+
+  /* Sangue — dano, perigo, HP baixo */
+  --bc-blood:        #8A0303;
+  --bc-blood-bright: #B91C1C;
+  --bc-blood-pulse:  #DC2626;
+  --bc-blood-deep:   #4A0303;
+
+  /* Superficies OLED-friendly */
+  --bc-oled:         #0A0507;
+  --bc-surface-1:    #121014;
+  --bc-surface-2:    #1A1820;
+  --bc-surface-3:    #221F2A;
+
+  /* Texto — escala de pergaminho */
+  --bc-ink:          #EDE6D6;
+  --bc-ink-dim:      #A89E8A;
+  --bc-ink-faint:    #5C5346;
+  --bc-ink-gold:     #E6C75A;
+
+  /* Bordas e edges */
+  --bc-edge:         rgba(212, 175, 55, 0.18);
+  --bc-edge-bright:  rgba(212, 175, 55, 0.5);
+  --bc-edge-purple:  rgba(123, 44, 191, 0.35);
+  --bc-edge-strong:  rgba(212, 175, 55, 0.6);
+
+  /* Status funcional */
+  --bc-success:      #22C55E;
+  --bc-success-dim:  #15803D;
+  --bc-info:         #3B82F6;
+  --bc-warning:      #EAB308;
+
+  /* --------------------------------------------------------------------------
+     2. GRADIENTES
+     -------------------------------------------------------------------------- */
+
+  --bc-gradient-primary: linear-gradient(180deg, var(--bc-purple-hover) 0%, var(--bc-purple) 40%, var(--bc-purple-dark) 100%);
+  --bc-gradient-gold:    linear-gradient(135deg, var(--bc-gold) 0%, var(--bc-gold-bright) 100%);
+  --bc-gradient-blood:   linear-gradient(135deg, var(--bc-blood) 0%, var(--bc-blood-bright) 100%);
+  --bc-gradient-surface: linear-gradient(180deg, var(--bc-surface-2) 0%, var(--bc-surface-1) 100%);
+  --bc-gradient-page:
+    radial-gradient(ellipse 60% 50% at 50% 0%, color-mix(in srgb, var(--bc-purple) 10%, transparent), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, color-mix(in srgb, var(--bc-purple-dark) 8%, transparent), transparent 60%),
+    var(--bc-oled);
+
+  /* --------------------------------------------------------------------------
+     3. TIPOGRAFIA
+     -------------------------------------------------------------------------- */
+
+  --bc-font-display: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+  --bc-font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bc-font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  --bc-text-xs:   0.6875rem; /* 11px */
+  --bc-text-sm:   0.8125rem; /* 13px */
+  --bc-text-base: 0.9375rem; /* 15px */
+  --bc-text-lg:   1.125rem;  /* 18px */
+  --bc-text-xl:   1.375rem;  /* 22px */
+  --bc-text-2xl:  1.75rem;   /* 28px */
+  --bc-text-3xl:  2.25rem;   /* 36px */
+  --bc-text-4xl:  3rem;      /* 48px */
+
+  --bc-leading-tight:  1.2;
+  --bc-leading-normal: 1.5;
+  --bc-leading-loose:  1.75;
+
+  --bc-tracking-tight:  -0.02em;
+  --bc-tracking-normal: 0;
+  --bc-tracking-wide:   0.06em;
+  --bc-tracking-wider:  0.12em;
+  --bc-tracking-widest: 0.22em;
+
+  /* --------------------------------------------------------------------------
+     4. SPACING (escala 4px)
+     -------------------------------------------------------------------------- */
+
+  --bc-space-0:  0;
+  --bc-space-1:  0.25rem;  /*  4px */
+  --bc-space-2:  0.5rem;   /*  8px */
+  --bc-space-3:  0.75rem;  /* 12px */
+  --bc-space-4:  1rem;     /* 16px */
+  --bc-space-5:  1.25rem;  /* 20px */
+  --bc-space-6:  1.5rem;   /* 24px */
+  --bc-space-8:  2rem;     /* 32px */
+  --bc-space-10: 2.5rem;   /* 40px */
+  --bc-space-12: 3rem;     /* 48px */
+  --bc-space-16: 4rem;     /* 64px */
+
+  /* --------------------------------------------------------------------------
+     5. RADIUS
+     -------------------------------------------------------------------------- */
+
+  --bc-radius-sm:     2px;
+  --bc-radius-md:     3px;
+  --bc-radius-lg:     6px;
+  --bc-radius-pill:   999px;
+  --bc-radius-circle: 50%;
+
+  /* --------------------------------------------------------------------------
+     6. SHADOWS
+     -------------------------------------------------------------------------- */
+
+  --bc-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --bc-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --bc-shadow-lg: 0 20px 60px -10px rgba(0, 0, 0, 0.7);
+  --bc-shadow-xl: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+
+  /* Frames com hairlines internos (sensacao de moldura esculpida) */
+  --bc-shadow-frame:
+    inset 0 1px 0 rgba(212, 175, 55, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 30px 80px -20px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(0, 0, 0, 0.5);
+
+  /* Glow por cor (hover de botoes, criticos) — usam var() pra trocar com tema */
+  --bc-glow-purple: 0 0 24px color-mix(in srgb, var(--bc-purple-hover) 60%, transparent);
+  --bc-glow-gold:   0 0 24px color-mix(in srgb, var(--bc-gold-bright) 70%, transparent);
+  --bc-glow-blood:  0 0 20px color-mix(in srgb, var(--bc-blood-pulse) 60%, transparent);
+
+  /* Pedra esculpida (medallions de atributos) */
+  --bc-shadow-stone:
+    inset 0 2px 4px rgba(255, 255, 255, 0.06),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+
+  /* --------------------------------------------------------------------------
+     7. EASINGS & DURATIONS
+     -------------------------------------------------------------------------- */
+
+  --bc-ease-out-quart:   cubic-bezier(0.25, 1, 0.5, 1);
+  --bc-ease-in-out:      cubic-bezier(0.65, 0, 0.35, 1);
+  --bc-ease-out-back:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --bc-duration-fast:    150ms;
+  --bc-duration-base:    240ms;
+  --bc-duration-slow:    400ms;
+  --bc-duration-ritual:  800ms;
+
+  /* --------------------------------------------------------------------------
+     8. BLUR
+     -------------------------------------------------------------------------- */
+
+  --bc-blur-sm: 6px;
+  --bc-blur-md: 12px;
+  --bc-blur-lg: 24px;
+
+  /* --------------------------------------------------------------------------
+     9. Z-INDEX (escala documentada)
+     -------------------------------------------------------------------------- */
+
+  --bc-z-base:     1;
+  --bc-z-dropdown: 100;
+  --bc-z-sticky:   500;
+  --bc-z-fixed:    1000;
+  --bc-z-modal:    1050;
+  --bc-z-popover:  1100;
+  --bc-z-tooltip:  1200;
+  --bc-z-toast:    9999;
+}

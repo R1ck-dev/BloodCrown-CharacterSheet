@@ -2,6 +2,7 @@ package br.com.henrique.bloodcrown_cs.Models;
 
 import java.util.List;
 
+import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterAttributes;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterExpertise;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
@@ -76,8 +77,15 @@ public class CharacterModel {
     /**
      * Objeto embutido contendo as perícias.
      */
-    @Embedded 
+    @Embedded
     private CharacterExpertise expertise;
+
+    /**
+     * Pool de ações por turno (Padrão, Bônus, Movimento, Reação).
+     * Resetado pelo "Passar Turno" (advanceTurn).
+     */
+    @Embedded
+    private CharacterActionPool actionPool;
 
     /**
      * Lista de ataques associados.

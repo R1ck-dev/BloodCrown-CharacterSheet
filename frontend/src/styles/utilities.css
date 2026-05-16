@@ -1,0 +1,100 @@
+/* ============================================================================
+   BloodCrown — Utilities
+   Helpers de uso cross-component: tipografia, fundos texturizados, page wrap,
+   scrollbar tematizada, focus visible padronizado.
+   ============================================================================ */
+
+/* --- Tipografia helpers --- */
+
+.bc-cinzel {
+  font-family: var(--bc-font-display);
+  letter-spacing: var(--bc-tracking-wide);
+}
+
+.bc-mono {
+  font-family: var(--bc-font-mono);
+}
+
+.bc-tracked {
+  letter-spacing: var(--bc-tracking-widest);
+  text-transform: uppercase;
+}
+
+.bc-tracked-soft {
+  letter-spacing: var(--bc-tracking-wider);
+  text-transform: uppercase;
+}
+
+/* --- Page wrap (background OLED com auras radiais) --- */
+
+.bc-page {
+  min-height: 100vh;
+  background: var(--bc-gradient-page);
+  color: var(--bc-ink);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* --- Film grain overlay (sutil — multiplica sobre o page) --- */
+
+.bc-grain {
+  position: relative;
+}
+
+.bc-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.55  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+}
+
+/* --- Veining sutil em superficies (gradientes radiais multiplicados) --- */
+
+.bc-vein {
+  background-image:
+    radial-gradient(ellipse 120% 80% at 20% 0%,  rgba(212, 175, 55, 0.04), transparent 50%),
+    radial-gradient(ellipse 90%  70% at 100% 100%, rgba(123, 44, 191, 0.06), transparent 50%);
+}
+
+/* --- Halo radial atras de cards (Login, Modal) --- */
+
+.bc-halo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(123, 44, 191, 0.22), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.10), transparent 50%);
+  filter: blur(20px);
+}
+
+/* --- Scrollbar tematizada --- */
+
+.bc-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.bc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.bc-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.3), rgba(123, 44, 191, 0.4));
+  border-radius: 3px;
+}
+.bc-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.5), rgba(157, 78, 221, 0.6));
+}
+
+/* --- Estados forcados para Sandbox (inspecionar sem mouse) --- */
+
+.is-hovered { /* pode ser combinada com :hover specs */ }
+.is-disabled,
+.is-disabled * {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}

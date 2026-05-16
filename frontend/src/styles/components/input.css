@@ -1,0 +1,172 @@
+/* ============================================================================
+   BloodCrown — Input + Field
+   Field = wrapper com label dourado uppercase + input com icone opcional
+   esquerda. Variantes: padrao, sm, bare (sem chrome, pra ficha).
+   ============================================================================ */
+
+.bc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bc-space-2);
+}
+
+.bc-field__label {
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--bc-gold-dim);
+}
+
+.bc-input-wrap {
+  position: relative;
+}
+
+.bc-input {
+  width: 100%;
+  background: rgba(10, 5, 7, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.45);
+  color: var(--bc-ink);
+  font-family: var(--bc-font-body);
+  font-size: var(--bc-text-base);
+  padding: 14px 16px;
+  border-radius: var(--bc-radius-sm);
+  outline: none;
+  transition:
+    border-color var(--bc-duration-base) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart),
+    background var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+.bc-input--with-icon-left {
+  padding-left: 44px;
+}
+
+.bc-input--with-icon-right {
+  padding-right: 44px;
+}
+
+.bc-input::placeholder {
+  color: var(--bc-ink-faint);
+  font-style: italic;
+  letter-spacing: 0.05em;
+}
+
+.bc-input:focus {
+  border-color: var(--bc-edge-strong);
+  background: rgba(20, 10, 16, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.3),
+    0 0 24px rgba(123, 44, 191, 0.15);
+}
+
+.bc-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Aria-invalid muda borda pra vermelho (a11y) */
+.bc-input[aria-invalid="true"] {
+  border-color: rgba(220, 38, 38, 0.6);
+  border-bottom-color: var(--bc-blood-pulse);
+}
+
+/* --- Adornments (icones esquerda/direita) --- */
+
+.bc-input-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--bc-gold-dim);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bc-input-icon--left {
+  left: 14px;
+}
+
+.bc-input-icon--right {
+  right: 14px;
+}
+
+/* Quando o adornment direito for interativo (eye toggle), permite click */
+.bc-input-icon--clickable {
+  pointer-events: auto;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--bc-ink-faint);
+  transition: color var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+.bc-input-icon--clickable:hover {
+  color: var(--bc-gold);
+}
+
+/* --- Erro inline abaixo do input --- */
+
+.bc-field__error {
+  font-size: var(--bc-text-xs);
+  color: #FCA5A5;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.bc-field__hint {
+  font-size: var(--bc-text-xs);
+  color: var(--bc-ink-faint);
+  font-style: italic;
+}
+
+/* --- Variante sm (formulario denso) --- */
+
+.bc-input--sm {
+  padding: 8px 12px;
+  font-size: var(--bc-text-sm);
+}
+
+.bc-input--sm.bc-input--with-icon-left {
+  padding-left: 36px;
+}
+
+/* --- Variante bare (ficha — sem moldura, so underline) --- */
+
+.bc-input--bare {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 0;
+  padding: 6px 0;
+}
+
+.bc-input--bare:focus {
+  background: transparent;
+  border-bottom-color: var(--bc-gold);
+  box-shadow: none;
+}
+
+/* --- Number input spinners — minimalista, integrado ao tema escuro --- */
+/* color-scheme: dark faz Chrome/Firefox/Safari renderizarem as setas nativas
+   em modo escuro (setas brancas/claras, fundo escuro nativo). E a abordagem
+   mais limpa e cross-browser — sem filter hacks, sem JSX custom. */
+input[type="number"] {
+  color-scheme: dark;
+}
+
+/* WebKit: setas discretas em repouso, douradas no hover/focus. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+input[type="number"]:hover::-webkit-inner-spin-button,
+input[type="number"]:focus::-webkit-inner-spin-button {
+  opacity: 1;
+}

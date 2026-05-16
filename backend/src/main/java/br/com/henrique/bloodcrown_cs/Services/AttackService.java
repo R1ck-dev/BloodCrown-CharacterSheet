@@ -19,6 +19,11 @@ public interface AttackService {
     AttackDTO addAttack(String characterId, AttackDTO dto, Authentication authentication);
 
     /**
+     * Atualiza um ataque existente (nome, fórmula de dano, descrição). Valida ownership.
+     */
+    AttackDTO updateAttack(String attackId, AttackDTO dto, Authentication authentication);
+
+    /**
      * Remove um ataque da ficha do personagem. Valida que o ataque pertence ao usuário autenticado.
      */
     void deleteAttack(String attackId, Authentication authentication);

@@ -1,0 +1,118 @@
+/* ============================================================================
+   BloodCrown — Globals
+   Reset + body + focus visible padronizado + selecao.
+   Importa o design system na ordem correta:
+   tokens > animations > utilities > componentes.
+   ============================================================================ */
+
+@import './tokens.css';
+@import './themes.css';
+@import './animations.css';
+@import './utilities.css';
+@import './components/button.css';
+@import './components/input.css';
+@import './components/frame.css';
+@import './components/divider.css';
+@import './components/seal.css';
+@import './components/medallion.css';
+@import './components/bar.css';
+@import './components/switch.css';
+@import './components/tabs.css';
+
+/* --- Reset --- */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  min-height: 100vh;
+}
+
+body {
+  font-family: var(--bc-font-body);
+  font-size: var(--bc-text-base);
+  line-height: var(--bc-leading-normal);
+  color: var(--bc-ink);
+  background-color: var(--bc-oled);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Headings default em Cinzel --- */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--bc-font-display);
+  font-weight: 600;
+  line-height: var(--bc-leading-tight);
+  letter-spacing: var(--bc-tracking-wide);
+}
+
+/* --- Focus visible padronizado (dourado, accessible) --- */
+
+:focus-visible {
+  outline: 2px solid var(--bc-gold);
+  outline-offset: 2px;
+  border-radius: var(--bc-radius-sm);
+}
+
+/* --- Links --- */
+
+a {
+  color: var(--bc-purple-hover);
+  text-decoration: none;
+  transition: color var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+a:hover {
+  color: var(--bc-gold);
+}
+
+/* --- Selection --- */
+
+::selection {
+  background-color: rgba(123, 44, 191, 0.4);
+  color: var(--bc-ink);
+}
+
+/* --- Scrollbar global (mais discreta no body que .bc-scroll dos cards) --- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bc-oled);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.18);
+  border-radius: var(--bc-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(157, 78, 221, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.18) var(--bc-oled);
+}
+
+/* --- Botoes nativos: remove default --- */
+
+button {
+  font: inherit;
+  cursor: pointer;
+}

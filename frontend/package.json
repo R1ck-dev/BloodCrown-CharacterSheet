@@ -1,24 +1,46 @@
 {
   "name": "bloodcrown-frontend",
-  "version": "1.0.0",
-  "description": "Frontend do BloodCrown — gerenciador de ficha de personagem (Vite multi-page + GSAP + Motion One)",
+  "version": "2.0.0",
+  "description": "Frontend do BloodCrown — gerenciador de ficha de RPG (React 19 + Vite + TypeScript)",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview --port 5500"
-  },
-  "devDependencies": {
-    "vite": "^8.0.13"
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 5173",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.2.0",
-    "bootstrap": "^5.3.8",
+    "@hookform/resolvers": "^3.10.0",
+    "@tanstack/react-query": "^5.62.10",
     "canvas-confetti": "^1.9.4",
-    "gsap": "^3.15.0",
-    "howler": "^2.2.4",
-    "motion": "^12.38.0",
-    "sweetalert2": "^11.26.24"
+    "lucide-react": "^0.469.0",
+    "motion": "^12.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.1.1",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^1.7.1",
+    "sweetalert2": "^11.14.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.62.10",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.19.1",
+    "@typescript-eslint/parser": "^8.19.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
   }
 }

@@ -15,6 +15,12 @@ public interface ItemService {
     ItemDTO addItem(String characterId, ItemDTO dto, Authentication authentication);
 
     /**
+     * Atualiza um item existente (nome, descrição, efeito mágico). Preserva o estado
+     * runtime (isEquipped) — editar definição do item não desequipa. Valida ownership.
+     */
+    ItemDTO updateItem(String itemId, ItemDTO dto, Authentication authentication);
+
+    /**
      * Remove um item do banco de dados. Valida que o item pertence ao usuário autenticado.
      */
     void deleteItem(String itemId, Authentication authentication);

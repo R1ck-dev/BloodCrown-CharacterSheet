@@ -1,0 +1,114 @@
+/* ============================================================================
+   BloodCrown — Medallion
+   Pedra esculpida com aro dourado gravado pros 6 atributos da ficha.
+   Usado em Fase 5 (Sheet — Coluna Esquerda). Estado .bc-medallion--buffed
+   pulsa em dourado quando habilidade/item aplicou bonus.
+   ============================================================================ */
+
+.bc-medallion-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 18px;
+}
+
+.bc-medallion {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 25%, #2A2335 0%, #1A1620 35%, #0E0A12 70%, #06030A 100%);
+  box-shadow: var(--bc-shadow-stone);
+  cursor: pointer;
+  transition:
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart),
+    transform var(--bc-duration-fast) var(--bc-ease-out-quart);
+  border: none;
+}
+
+/* Aro dourado gravado (interior do medallion) */
+.bc-medallion::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.bc-medallion:hover {
+  transform: scale(1.04);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.08),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.45),
+    0 6px 18px rgba(123, 44, 191, 0.4),
+    0 0 24px rgba(157, 78, 221, 0.35);
+}
+
+.bc-medallion__num {
+  font-family: var(--bc-font-display);
+  font-weight: 600;
+  font-size: 34px;
+  color: var(--bc-ink);
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 1px rgba(212, 175, 55, 0.3);
+  line-height: 1;
+}
+
+.bc-medallion__label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--bc-gold-dim);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* --- Estado buffed (habilidade ou item aplicou bonus) --- */
+
+.bc-medallion--buffed {
+  animation: bc-buff-pulse 2s ease-in-out infinite;
+}
+
+.bc-medallion--buffed::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  box-shadow:
+    0 0 18px rgba(212, 175, 55, 0.55),
+    inset 0 0 12px rgba(212, 175, 55, 0.2);
+  animation: bc-buff-ring 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bc-medallion--buffed .bc-medallion__num {
+  color: var(--bc-gold-bright);
+  text-shadow:
+    0 0 12px rgba(245, 215, 110, 0.7),
+    0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* --- Tamanhos --- */
+
+.bc-medallion--sm {
+  width: 64px;
+  height: 64px;
+}
+
+.bc-medallion--sm .bc-medallion__num {
+  font-size: 24px;
+}
