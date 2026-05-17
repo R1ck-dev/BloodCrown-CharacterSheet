@@ -8,7 +8,7 @@
  *  3. Resolve nos numeros reais com um pop visual (scale 1.3 -> 1)
  *  4. Se isCriticalSuccess: border dourada + shake + confetti CSS no
  *     overlay + canvas-confetti burst central dourado
- *  5. Se isHeavyHit (dano >= 20): shake + flash sangue
+ *  5. Se isHeavyHit (dano > metade da soma maxima possivel): shake + flash sangue
  *  6. Auto-fecha em 8s. Hover pausa o timer.
  *
  * Subscribe externa via rollBus — desacopla useDiceRoll da renderizacao.

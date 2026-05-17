@@ -23,16 +23,37 @@ export interface DamageRoll {
   rolls: number[];
   modifier: number;
   total: number;
-  isHeavyHit: boolean; // total >= 20 — pra trigger de shake/flash
+  maxTotal: number; // soma maxima possivel da formula (pra calcular heavy hit)
+  isHeavyHit: boolean; // total > maxTotal / 2 — pra trigger de shake/flash
   maxFace: number;
 }
 
 export type RollResult = AttributeRoll | DamageRoll;
 
+/**
+ * Inteiro uniforme em [0, maxExclusive) via Web Crypto com rejection sampling.
+ * Evita o viés modulo de Math.floor(Math.random() * n) e usa entropia
+ * criptografica do browser. Fallback pra Math.random so se crypto sumir
+ * (n/a em browser moderno, mas mantem teste/node feliz).
+ */
+function secureRandomInt(maxExclusive: number): number {
+  const cryptoObj = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+  if (!cryptoObj || typeof cryptoObj.getRandomValues !== 'function') {
+    return Math.floor(Math.random() * maxExclusive);
+  }
+  const maxUint32 = 0x1_0000_0000;
+  const limit = maxUint32 - (maxUint32 % maxExclusive);
+  const buf = new Uint32Array(1);
+  let n: number;
+  do {
+    cryptoObj.getRandomValues(buf);
+    n = buf[0];
+  } while (n >= limit);
+  return n % maxExclusive;
+}
+
 function rollDie(faces: number): number {
-  // Math.ceil(random * faces) gera 1..faces. random nunca retorna 1.0 entao
-  // o ceil sempre cai entre 1 e faces inclusive.
-  return Math.ceil(Math.random() * faces);
+  return secureRandomInt(faces) + 1;
 }
 
 /**
@@ -74,6 +95,7 @@ export function rollDamage(formula: string, source: string): DamageRoll | null {
   const allRolls: number[] = [];
   let total = 0;
   let modifier = 0;
+  let maxTotal = 0;
   let maxFace = 0;
 
   let match: RegExpExecArray | null;
@@ -84,6 +106,9 @@ export function rollDamage(formula: string, source: string): DamageRoll | null {
       const count = parseInt(match[2]);
       const faces = parseInt(match[3]);
       if (faces > maxFace) maxFace = faces;
+      // Maximo possivel: face cheia se positivo; se negativo, -1 por dado
+      // (cada -dN minimo absoluto eh -1, que eh o "melhor" caso pro total).
+      maxTotal += sign === 1 ? count * faces : -count;
       for (let i = 0; i < count; i++) {
         const r = rollDie(faces);
         allRolls.push(sign === -1 ? -r : r);
@@ -95,6 +120,7 @@ export function rollDamage(formula: string, source: string): DamageRoll | null {
       const val = parseInt(match[5]) * sign;
       modifier += val;
       total += val;
+      maxTotal += val;
     }
   }
 
@@ -106,7 +132,8 @@ export function rollDamage(formula: string, source: string): DamageRoll | null {
     rolls: allRolls,
     modifier,
     total,
-    isHeavyHit: total >= 20,
+    maxTotal,
+    isHeavyHit: maxTotal > 0 && total > maxTotal / 2,
     maxFace: maxFace || 20,
   };
 }
