@@ -1,0 +1,152 @@
+/* ============================================================================
+   BloodCrown — Character Card (Dashboard)
+   Card de personagem com hover-states via CSS (substitui onMouseEnter/Leave
+   inline-JS — funciona em touch tambem). Dimensoes fluidas via clamp().
+   ============================================================================ */
+
+.bc-character-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(14px, 3vw, 20px);
+  border-radius: var(--bc-radius-md);
+  cursor: pointer;
+  transition:
+    transform var(--bc-duration-base) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-base) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+@media (hover: hover) {
+  .bc-character-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(157, 78, 221, 0.45) !important;
+    box-shadow:
+      0 0 0 1px rgba(157, 78, 221, 0.25),
+      0 16px 40px -10px rgba(123, 44, 191, 0.55),
+      inset 0 1px 0 rgba(212, 175, 55, 0.15) !important;
+  }
+}
+
+/* --- Avatar circular: escala com viewport mas nunca menor que 60 nem maior que 76 --- */
+
+.bc-character-card__avatar {
+  width: clamp(60px, 16vw, 76px);
+  height: clamp(60px, 16vw, 76px);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.bc-character-card__name {
+  font-family: var(--bc-font-display);
+  font-weight: 600;
+  font-size: clamp(15px, 3.5vw, 17px);
+  color: var(--bc-ink);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Action buttons (Mover / Trash) no canto superior direito --- */
+
+.bc-character-card__action {
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: var(--bc-gold-dim);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--bc-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+@media (hover: hover) {
+  .bc-character-card__action:hover {
+    border-color: var(--bc-gold);
+    color: var(--bc-gold-bright);
+    background: rgba(212, 175, 55, 0.06);
+  }
+}
+
+.bc-character-card__action--danger {
+  border-color: rgba(185, 28, 28, 0.25);
+  color: rgba(229, 99, 94, 0.7);
+}
+
+@media (hover: hover) {
+  .bc-character-card__action--danger:hover {
+    background: rgba(185, 28, 28, 0.15);
+    border-color: rgba(220, 38, 38, 0.6);
+    color: #FCA5A5;
+  }
+}
+
+/* --- Botao "Abrir Ficha" full-width --- */
+
+.bc-character-card__open {
+  background: linear-gradient(180deg, rgba(123, 44, 191, 0.25), rgba(123, 44, 191, 0.10));
+  color: var(--bc-gold-bright);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 10px 14px;
+  font-size: 11px;
+  margin-top: 4px;
+  border-radius: var(--bc-radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+@media (hover: hover) {
+  .bc-character-card__open:hover {
+    background: linear-gradient(180deg, rgba(157, 78, 221, 0.4), rgba(123, 44, 191, 0.2));
+    border-color: rgba(212, 175, 55, 0.5);
+  }
+}
+
+/* --- Move dropdown menu --- */
+
+.bc-character-card__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  color: var(--bc-ink);
+  cursor: pointer;
+  font-family: var(--bc-font-body);
+  font-size: 12px;
+  text-align: left;
+  border-radius: var(--bc-radius-sm);
+  transition: background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-character-card__menu-item--active {
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--bc-gold-bright);
+}
+
+@media (hover: hover) {
+  .bc-character-card__menu-item:hover {
+    background: rgba(123, 44, 191, 0.15);
+  }
+}

@@ -3,6 +3,7 @@
  * Lista as fichas do usuario, permite criar/abrir/deletar.
  * SweetAlert2 nas confirmacoes pesadas (logout, delete), Sonner pros toasts.
  */
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Castle, ScrollText } from 'lucide-react';
@@ -10,9 +11,19 @@ import { Navbar } from '@/components/dashboard/Navbar';
 import { CharacterCard } from '@/components/dashboard/CharacterCard';
 import { NewCharacterCard } from '@/components/dashboard/NewCharacterCard';
 import { CharacterSkeleton } from '@/components/dashboard/CharacterSkeleton';
+import { FolderDrawer } from '@/components/dashboard/FolderDrawer';
+import type { FolderSelection } from '@/components/dashboard/FolderSidebar';
 import { Divider } from '@/components/ornaments/Divider';
 import { useCharacters, useCreateCharacter, useDeleteCharacter } from '@/api/characters';
+import {
+  useFolders,
+  useCreateFolder,
+  useRenameFolder,
+  useDeleteFolder,
+  useMoveCharacter,
+} from '@/api/folders';
 import { tokenStorage } from '@/api/client';
+import type { Folder } from '@/types/character';
 
 const SWAL_THEME = {
   background: '#14121A',
@@ -29,9 +40,27 @@ async function getSwal() {
 export function DashboardPage() {
   const navigate = useNavigate();
   const { data, isLoading, isError, error, refetch } = useCharacters();
+  const { data: folders } = useFolders();
   const createMutation = useCreateCharacter();
   const deleteMutation = useDeleteCharacter();
+  const createFolderMutation = useCreateFolder();
+  const renameFolderMutation = useRenameFolder();
+  const deleteFolderMutation = useDeleteFolder();
+  const moveCharacterMutation = useMoveCharacter();
   const username = tokenStorage.getUsername();
+
+  // undefined = "Todas" (default), null = "Sem pasta", string = ID
+  const [selectedFolder, setSelectedFolder] = useState<FolderSelection>(undefined);
+
+  const folderList: Folder[] = folders ?? [];
+  const visibleChars = useMemo(() => {
+    if (!data) return [];
+    if (selectedFolder === undefined) return data;
+    if (selectedFolder === null) return data.filter((c) => !c.folderId);
+    return data.filter((c) => c.folderId === selectedFolder);
+  }, [data, selectedFolder]);
+
+  const folderNameById = (id: string) => folderList.find((f) => f.id === id)?.name ?? null;
 
   const handleLogout = async () => {
     const Swal = await getSwal();
@@ -60,6 +89,55 @@ export function DashboardPage() {
     }
   };
 
+  const handleCreateFolder = async (name: string) => {
+    try {
+      await createFolderMutation.mutateAsync({ name });
+      toast.success(`Pasta "${name}" criada.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao criar pasta.');
+    }
+  };
+
+  const handleRenameFolder = async (folderId: string, name: string) => {
+    try {
+      await renameFolderMutation.mutateAsync({ folderId, payload: { name } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao renomear pasta.');
+    }
+  };
+
+  const handleDeleteFolder = async (folder: Folder) => {
+    const Swal = await getSwal();
+    const result = await Swal.fire({
+      ...SWAL_THEME,
+      title: `Deletar pasta "${folder.name}"?`,
+      text: 'As fichas dentro voltam pra raiz (nada e perdido).',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, deletar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#B91C1C',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await deleteFolderMutation.mutateAsync(folder.id);
+      if (selectedFolder === folder.id) setSelectedFolder(undefined);
+      toast.success(`Pasta "${folder.name}" deletada.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao deletar pasta.');
+    }
+  };
+
+  const handleMoveCharacter = async (characterId: string, folderId: string | null) => {
+    try {
+      await moveCharacterMutation.mutateAsync({ characterId, folderId });
+      const label = folderId ? (folderNameById(folderId) ?? 'pasta') : 'Sem pasta';
+      toast.success(`Movido pra "${label}".`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao mover ficha.');
+    }
+  };
+
   const handleDelete = async (id: string, name: string) => {
     const Swal = await getSwal();
     const result = await Swal.fire({
@@ -85,13 +163,11 @@ export function DashboardPage() {
 
   return (
     <div className="bc-page bc-grain" style={{ minHeight: '100vh' }}>
-      <Navbar onLogout={handleLogout} />
+      <Navbar onLogout={handleLogout} username={username} />
 
-      <main style={{ padding: '36px 48px 24px', position: 'relative', zIndex: 2 }}>
+      <main className="bc-dashboard-main">
         {/* Section header */}
-        <header
-          style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 8, flexWrap: 'wrap' }}
-        >
+        <header className="bc-dashboard-header">
           <div
             aria-hidden="true"
             style={{
@@ -125,15 +201,6 @@ export function DashboardPage() {
                 marginTop: 4,
               }}
             >
-              {username && (
-                <>
-                  Bem-vindo,{' '}
-                  <strong style={{ color: 'var(--bc-gold-bright)', fontStyle: 'normal' }}>
-                    {username}
-                  </strong>
-                  .{' '}
-                </>
-              )}
               Selecione uma ficha para jogar ou editar.
             </p>
           </div>
@@ -158,7 +225,12 @@ export function DashboardPage() {
                 className="bc-cinzel bc-tracked-soft"
                 style={{ fontSize: 11, color: 'var(--bc-gold-bright)' }}
               >
-                {data.length} {data.length === 1 ? 'ficha' : 'fichas'}
+                {visibleChars.length} {visibleChars.length === 1 ? 'ficha' : 'fichas'}
+                {selectedFolder !== undefined && data.length !== visibleChars.length && (
+                  <span style={{ color: 'var(--bc-ink-faint)', marginLeft: 6 }}>
+                    de {data.length}
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -168,7 +240,7 @@ export function DashboardPage() {
           <Divider glyph="✦ ✦ ✦" />
         </div>
 
-        {/* Grid de cards */}
+        {/* Layout 2 colunas: sidebar de pastas + grid de fichas */}
         {isError ? (
           <div
             role="alert"
@@ -192,26 +264,35 @@ export function DashboardPage() {
             </button>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: 20,
-            }}
-          >
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, i) => <CharacterSkeleton key={i} />)
-              : data?.map((c) => (
-                  <CharacterCard
-                    key={c.id}
-                    character={c}
-                    onOpen={() => navigate(`/sheet/${c.id}`)}
-                    onDelete={() => handleDelete(c.id, c.name)}
-                  />
-                ))}
-            {!isLoading && (
-              <NewCharacterCard onClick={handleCreate} loading={createMutation.isPending} />
-            )}
+          <div className="bc-dashboard-layout">
+            <FolderDrawer
+              folders={folderList}
+              characters={data ?? []}
+              selected={selectedFolder}
+              onSelect={setSelectedFolder}
+              onCreate={handleCreateFolder}
+              onRename={handleRenameFolder}
+              onDelete={handleDeleteFolder}
+              busy={createFolderMutation.isPending || deleteFolderMutation.isPending || renameFolderMutation.isPending}
+            />
+
+            <div className="bc-dashboard-grid">
+              {isLoading
+                ? Array.from({ length: 4 }).map((_, i) => <CharacterSkeleton key={i} />)
+                : visibleChars.map((c) => (
+                    <CharacterCard
+                      key={c.id}
+                      character={c}
+                      folders={folderList}
+                      onOpen={() => navigate(`/sheet/${c.id}`)}
+                      onDelete={() => handleDelete(c.id, c.name)}
+                      onMove={(folderId) => handleMoveCharacter(c.id, folderId)}
+                    />
+                  ))}
+              {!isLoading && (
+                <NewCharacterCard onClick={handleCreate} loading={createMutation.isPending} />
+              )}
+            </div>
           </div>
         )}
 

@@ -16,8 +16,8 @@
 }
 
 .bc-tracked {
-  letter-spacing: var(--bc-tracking-widest);
-  text-transform: uppercase;
+  letter-spacing: var(--bc-display-tracking);
+  text-transform: var(--bc-display-transform);
 }
 
 .bc-tracked-soft {
@@ -55,9 +55,7 @@
 /* --- Veining sutil em superficies (gradientes radiais multiplicados) --- */
 
 .bc-vein {
-  background-image:
-    radial-gradient(ellipse 120% 80% at 20% 0%,  rgba(212, 175, 55, 0.04), transparent 50%),
-    radial-gradient(ellipse 90%  70% at 100% 100%, rgba(123, 44, 191, 0.06), transparent 50%);
+  background-image: var(--bc-vein-gradient);
 }
 
 /* --- Halo radial atras de cards (Login, Modal) --- */
@@ -66,9 +64,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(123, 44, 191, 0.22), transparent 60%),
-    radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.10), transparent 50%);
+  background: var(--bc-halo-gradient);
   filter: blur(20px);
 }
 
@@ -82,11 +78,11 @@
   background: transparent;
 }
 .bc-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.3), rgba(123, 44, 191, 0.4));
+  background: var(--bc-scrollbar-gradient);
   border-radius: 3px;
 }
 .bc-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.5), rgba(157, 78, 221, 0.6));
+  background: var(--bc-scrollbar-gradient-hover);
 }
 
 /* --- Estados forcados para Sandbox (inspecionar sem mouse) --- */
@@ -97,4 +93,28 @@
   pointer-events: none;
   opacity: 0.5;
   cursor: not-allowed !important;
+}
+
+/* --- Visibilidade por breakpoint ---
+   Breakpoints sincronizados com tokens.css (bloco 11):
+     - mobile  : < 640px
+     - tablet  : 640px - 1023px
+     - desktop : >= 1024px
+   !important porque sao decisoes de layout final, nao devem ser sobrescritas
+   por specificity acidental em components. */
+
+@media (max-width: 639px) {
+  .bc-hide-mobile { display: none !important; }
+}
+@media (min-width: 640px) {
+  .bc-only-mobile { display: none !important; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bc-hide-tablet { display: none !important; }
+}
+@media (max-width: 1023px) {
+  .bc-only-desktop { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .bc-hide-desktop { display: none !important; }
 }

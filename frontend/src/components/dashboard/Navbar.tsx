@@ -1,6 +1,9 @@
 /**
  * Navbar do Dashboard — Logo + saudacao + theme picker + botao Sair.
- * Sticky no topo, hairline dourada inferior.
+ * Sticky no topo, hairline dourada inferior. Estilos em styles/components/nav.css.
+ *
+ * Em mobile <480px: esconde "Bem-vindo," e oculta texto "Sair" (mantem icone +
+ * aria-label). Padding/gap escalam via clamp().
  */
 import { LogOut } from 'lucide-react';
 import { Logo } from '@/components/ornaments/Logo';
@@ -9,67 +12,29 @@ import { ThemePicker } from '@/components/ui/ThemePicker';
 
 interface Props {
   onLogout: () => void;
+  /** Nome do usuario logado pra saudacao. Se vazio, omite a saudacao. */
+  username?: string | null;
 }
 
-export function Navbar({ onLogout }: Props) {
+export function Navbar({ onLogout, username }: Props) {
   return (
-    <nav
-      style={{
-        position: 'sticky',
-        top: 0,
-        height: 64,
-        padding: '0 32px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 24,
-        background:
-          'linear-gradient(180deg, color-mix(in srgb, var(--bc-oled) 95%, transparent) 0%, color-mix(in srgb, var(--bc-oled) 85%, transparent) 100%)',
-        borderBottom: '1px solid var(--bc-edge)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 'var(--bc-z-sticky)',
-      }}
-    >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          bottom: -2,
-          left: 0,
-          right: 0,
-          height: 2,
-          background:
-            'linear-gradient(90deg, transparent, color-mix(in srgb, var(--bc-gold) 40%, transparent), transparent)',
-        }}
-      />
-
+    <nav className="bc-nav">
       <Logo size="sm" />
 
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          paddingLeft: 24,
-          borderLeft: '1px solid color-mix(in srgb, var(--bc-gold) 12%, transparent)',
-        }}
-      >
-        <span style={{ fontSize: 12, color: 'var(--bc-ink-dim)', fontStyle: 'italic' }}>
-          Bem-vindo,
-        </span>
-        <span
-          className="bc-cinzel bc-tracked-soft"
-          style={{ fontSize: 12, color: 'var(--bc-gold-bright)', fontWeight: 600 }}
-        >
-          Aventureiro
-        </span>
+      <div className="bc-nav__rail">
+        {username && (
+          <>
+            <span className="bc-nav__greeting">Bem-vindo,</span>
+            <span className="bc-nav__username bc-cinzel bc-tracked-soft">{username}</span>
+          </>
+        )}
       </div>
 
       <ThemePicker />
 
-      <Button variant="danger" size="sm" onClick={onLogout}>
+      <Button variant="danger" size="sm" onClick={onLogout} aria-label="Sair">
         <LogOut size={12} />
-        Sair
+        <span className="bc-nav__logout-text">Sair</span>
       </Button>
     </nav>
   );

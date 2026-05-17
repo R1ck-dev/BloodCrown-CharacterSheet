@@ -10,16 +10,87 @@ export interface ThemeDef {
   key: ThemeKey;
   label: string;
   subtitle: string;
+  /** Cor unica resumida (compat com botao do picker — bola na navbar) */
   swatch: string;
+  /** 4 cores principais da paleta — preview de paleta no dropdown */
+  swatches: [string, string, string, string];
+  /** Cor central do gradient do selo desse tema — preview de ornamento */
+  sealColor: string;
+  /** Peso de fonte display que esse tema aplica em .bc-btn / .bc-tracked */
+  displayWeight: number;
+  /** Letter-spacing display tematico — usado no preview de tipografia */
+  displayTracking: string;
+  /** Text-transform display do tema (todos uppercase hoje, tematizavel) */
+  displayTransform: 'uppercase' | 'none';
 }
 
 export const THEMES: ThemeDef[] = [
-  { key: 'default',   label: 'Realeza Sangrenta', subtitle: 'tema padrao',         swatch: '#D4AF37' },
-  { key: 'sylvie',    label: 'Sylvie',            subtitle: 'dragao lendario',     swatch: '#B71C3C' },
-  { key: 'shitonama', label: 'Shitonama',         subtitle: 'donzela perola',      swatch: '#26C6DA' },
-  { key: 'sozoku',    label: 'Sozoku',            subtitle: 'imperador vermelho',  swatch: '#8B0000' },
-  { key: 'ryusei',    label: 'Ryusei',            subtitle: 'rei monstro',   swatch: '#00E676' },
-  { key: 'nozomu',    label: 'Nozomu',            subtitle: 'arcano elfico',       swatch: '#5E35B1' },
+  {
+    key: 'default',
+    label: 'Realeza Sangrenta',
+    subtitle: 'tema padrao',
+    swatch: '#D4AF37',
+    swatches: ['#7B2CBF', '#D4AF37', '#8A0303', '#EDE6D6'],
+    sealColor: '#B91C1C',
+    displayWeight: 600,
+    displayTracking: '0.22em',
+    displayTransform: 'uppercase',
+  },
+  {
+    key: 'sylvie',
+    label: 'Sylvie',
+    subtitle: 'dragao lendario',
+    swatch: '#E63960',
+    swatches: ['#7B1FA2', '#E5B355', '#E63960', '#FFD97A'],
+    sealColor: '#FF4565',
+    displayWeight: 700,
+    displayTracking: '0.12em',
+    displayTransform: 'uppercase',
+  },
+  {
+    key: 'shitonama',
+    label: 'Shitonama',
+    subtitle: 'donzela perola',
+    swatch: '#00BCD4',
+    swatches: ['#00BCD4', '#B0BEC5', '#FF80AB', '#ECEFF1'],
+    sealColor: '#FF80AB',
+    displayWeight: 500,
+    displayTracking: '0.06em',
+    displayTransform: 'uppercase',
+  },
+  {
+    key: 'sozoku',
+    label: 'Sozoku',
+    subtitle: 'imperador vermelho',
+    swatch: '#C50000',
+    swatches: ['#7B1F2C', '#D88572', '#C50000', '#F0A595'],
+    sealColor: '#FF1744',
+    displayWeight: 700,
+    displayTracking: '0.22em',
+    displayTransform: 'uppercase',
+  },
+  {
+    key: 'ryusei',
+    label: 'Ryusei',
+    subtitle: 'rei monstro',
+    swatch: '#00E676',
+    swatches: ['#00E676', '#EEFF41', '#FF1744', '#69F0AE'],
+    sealColor: '#69F0AE',
+    displayWeight: 600,
+    displayTracking: '0.12em',
+    displayTransform: 'uppercase',
+  },
+  {
+    key: 'nozomu',
+    label: 'Nozomu',
+    subtitle: 'arcano elfico',
+    swatch: '#7E57C2',
+    swatches: ['#7E57C2', '#C9A55A', '#B53030', '#E8C97A'],
+    sealColor: '#B39DDB',
+    displayWeight: 500,
+    displayTracking: '0.30em',
+    displayTransform: 'uppercase',
+  },
 ];
 
 const STORAGE_KEY = 'bc_theme';

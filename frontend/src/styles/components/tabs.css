@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — Tabs (strip horizontal)
    Usado na Sheet pra navegar entre Combate/Habilidades/Magia/etc.
    Ativa: fundo roxo translucido + borda inferior dourada.
@@ -6,12 +6,18 @@
 
 .bc-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-gold) 15%, transparent);
   overflow-x: auto;
   gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+  /* Scrollbar invisivel — manter a strip discreta. Scroll horizontal via swipe ou wheel. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.bc-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .bc-tab {
@@ -40,8 +46,9 @@
 .bc-tab--active,
 .bc-tab[aria-selected="true"] {
   color: var(--bc-gold-bright);
-  background: linear-gradient(180deg, rgba(123, 44, 191, 0.18) 0%, rgba(123, 44, 191, 0.04) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bc-purple) 18%, transparent) 0%, color-mix(in srgb, var(--bc-purple) 4%, transparent) 100%);
   border-bottom-color: var(--bc-gold);
+  scroll-margin-inline: 1rem;
 }
 
 .bc-tab:disabled {

@@ -1,0 +1,165 @@
+/* ============================================================================
+   BloodCrown — Sheet Header
+   Cabecalho sticky da SheetPage. Em mobile reorganiza em 2 linhas via
+   grid-template-areas; em desktop preserva a grid 5-colunas original.
+   Touch targets >= 44px em mobile (WCAG).
+   ============================================================================ */
+
+.bc-sheet-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--bc-z-sticky);
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(0.5rem, 2vw, 1.5rem);
+  background: linear-gradient(180deg, var(--bc-surface-1) 0%, var(--bc-oled) 100%);
+  border-bottom: 1px solid var(--bc-edge);
+  backdrop-filter: blur(12px);
+
+  /* Mobile: 2 linhas, 2 colunas
+     linha 1: nome (esticando) + actions
+     linha 2: classe + nivel + heroico — cabe em 3 mini-colunas */
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "name actions"
+    "meta meta";
+}
+
+.bc-sheet-header__name    { grid-area: name; min-width: 0; }
+.bc-sheet-header__actions { grid-area: actions; }
+
+.bc-sheet-header__meta {
+  grid-area: meta;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: end;
+  min-width: 0;
+}
+
+/* Mobile: filhos do __meta vivem no grid interno do wrapper (sem grid-area
+   meta — isso fazia sobrepor todos no mesmo slot do grid pai). */
+.bc-sheet-header__class,
+.bc-sheet-header__level,
+.bc-sheet-header__hero { min-width: 0; }
+
+/* Hairline dourada inferior */
+.bc-sheet-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--bc-gold) 50%, transparent) 20%,
+    color-mix(in srgb, var(--bc-gold) 50%, transparent) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .bc-sheet-header {
+    height: 68px;
+    padding: 0 24px;
+    gap: 16px;
+    grid-template-columns: minmax(160px, 2fr) minmax(140px, 1.4fr) 80px auto auto;
+    grid-template-areas: none;
+  }
+  .bc-sheet-header__name,
+  .bc-sheet-header__class,
+  .bc-sheet-header__level,
+  .bc-sheet-header__hero,
+  .bc-sheet-header__actions { grid-area: auto; }
+  .bc-sheet-header__meta {
+    display: contents;
+  }
+}
+
+/* --- Labels e inputs do cabecalho --- */
+
+.bc-sheet-header__field-label {
+  font-family: var(--bc-font-display);
+  letter-spacing: var(--bc-tracking-wide);
+  font-size: 9px;
+  color: var(--bc-gold-dim);
+  display: block;
+}
+
+.bc-sheet-header__input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bc-edge);
+  font-family: var(--bc-font-display);
+  color: var(--bc-ink);
+  padding: 6px 0;
+  border-radius: 0;
+  outline: none;
+  width: 100%;
+}
+
+.bc-sheet-header__input--name  { font-size: clamp(16px, 4vw, 19px); font-weight: 600; }
+.bc-sheet-header__input--class { font-size: clamp(13px, 3vw, 15px); }
+.bc-sheet-header__input--level {
+  font-size: clamp(16px, 4vw, 19px);
+  font-weight: 600;
+  color: var(--bc-gold-bright);
+  text-align: left;
+}
+
+.bc-sheet-header__hero {
+  padding-left: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--bc-gold) 10%, transparent);
+}
+
+.bc-sheet-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+}
+
+/* --- Icon button (notepad, voltar, descansar) — 44px mobile, 40px desktop --- */
+
+.bc-sheet-header__icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--bc-radius-sm);
+  background: color-mix(in srgb, var(--bc-surface-2) 85%, transparent);
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+@media (hover: hover) {
+  .bc-sheet-header__icon-btn:hover {
+    border-color: var(--bc-edge-strong);
+    color: var(--bc-gold-bright);
+  }
+}
+
+.bc-sheet-header__icon-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (min-width: 1024px) {
+  .bc-sheet-header__icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* SaveIndicator some em telas estreitas (toast cobre o feedback) */
+@media (max-width: 479px) {
+  .bc-sheet-header__save-indicator { display: none; }
+}

@@ -44,6 +44,14 @@ public class CharacterModel {
     private UserModel fromUser;
 
     /**
+     * Pasta (opcional) onde a ficha esta agrupada. Null = raiz.
+     * onDelete da pasta nao cascateia (FolderServiceImpl move pra raiz manualmente).
+     */
+    @ManyToOne
+    @JoinColumn(name = "folder_id", nullable = true)
+    private FolderModel folder;
+
+    /**
      * Nome do personagem.
      */
     @Column(name = "name")

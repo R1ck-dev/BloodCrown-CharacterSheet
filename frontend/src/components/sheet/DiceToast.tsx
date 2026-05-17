@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Dice5, X, Sword } from 'lucide-react';
 import { subscribeRoll } from '@/lib/rollBus';
+import { getConfettiPalette } from '@/lib/themePalette';
 import type { AttributeRoll, DamageRoll, RollResult } from '@/lib/dice';
 
 const AUTO_CLOSE_MS = 8000;
@@ -377,8 +378,9 @@ function CountdownBar({ duration, accentColor }: { duration: number; accentColor
 }
 
 function CritConfettiOverlay() {
-  // 16 particulas douradas/brancas caindo do topo do toast
-  const colors = ['#F5D76E', '#D4AF37', '#FBF6E4', '#E6C75A'];
+  // 16 particulas tematicas caindo do topo do toast
+  const palette = getConfettiPalette();
+  const colors = [palette.secondary, palette.primary, palette.accent, palette.primary];
   return (
     <div
       aria-hidden="true"
@@ -411,13 +413,14 @@ function CritConfettiOverlay() {
 }
 
 function fireGoldConfetti() {
-  // Burst dourado central + dois laterais
-  const goldColors = ['#D4AF37', '#F1D77A', '#FFFFFF', '#E6C34A'];
+  // Burst tematico (primary/secondary/accent) central + dois laterais
+  const palette = getConfettiPalette();
+  const colors = [palette.primary, palette.secondary, palette.accent, palette.secondary];
   confetti({
     particleCount: 80,
     spread: 90,
     startVelocity: 40,
-    colors: goldColors,
+    colors,
     origin: { x: 0.85, y: 0.85 },
     scalar: 1.2,
     zIndex: 10000,
@@ -427,7 +430,7 @@ function fireGoldConfetti() {
       particleCount: 40,
       spread: 60,
       angle: 120,
-      colors: goldColors,
+      colors,
       origin: { x: 0.95, y: 0.75 },
       zIndex: 10000,
     });

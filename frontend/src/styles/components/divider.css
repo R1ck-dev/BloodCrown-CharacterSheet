@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — Divider
    Linha horizontal com glyph central opcional (✦, ◆, ✶, "Iniciação", etc.)
    ============================================================================ */
@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   gap: var(--bc-space-3);
-  color: rgba(212, 175, 55, 0.35);
+  color: color-mix(in srgb, var(--bc-gold) 35%, transparent);
 }
 
 .bc-divider::before,
@@ -15,14 +15,14 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bc-gold) 40%, transparent), transparent);
 }
 
 .bc-divider__glyph {
   font-family: var(--bc-font-display);
   font-size: 10px;
   letter-spacing: 0.4em;
-  color: rgba(212, 175, 55, 0.6);
+  color: color-mix(in srgb, var(--bc-gold) 60%, transparent);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -31,16 +31,16 @@
 
 .bc-divider--solid::before,
 .bc-divider--solid::after {
-  background: rgba(212, 175, 55, 0.4);
+  background: color-mix(in srgb, var(--bc-gold) 40%, transparent);
 }
 
 .bc-divider--blood::before,
 .bc-divider--blood::after {
-  background: linear-gradient(90deg, transparent, rgba(185, 28, 28, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bc-blood-bright) 40%, transparent), transparent);
 }
 
 .bc-divider--blood .bc-divider__glyph {
-  color: rgba(252, 165, 165, 0.6);
+  color: color-mix(in srgb, var(--bc-error-bright) 60%, transparent);
 }
 
 .bc-divider--vertical {
@@ -53,5 +53,5 @@
 .bc-divider--vertical::after {
   width: 1px;
   height: auto;
-  background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bc-gold) 40%, transparent), transparent);
 }

@@ -99,7 +99,7 @@ export function ThemePicker() {
             position: 'absolute',
             top: 'calc(100% + 6px)',
             right: 0,
-            minWidth: 260,
+            minWidth: 320,
             padding: 6,
             background: 'linear-gradient(180deg, var(--bc-surface-2), var(--bc-surface-1))',
             border: '1px solid var(--bc-edge)',
@@ -123,10 +123,10 @@ export function ThemePicker() {
                 onClick={() => handleSelect(t.key)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '18px 1fr 14px',
+                  gridTemplateColumns: '32px 1fr 14px',
                   alignItems: 'center',
-                  gap: 10,
-                  padding: '8px 10px',
+                  gap: 12,
+                  padding: '10px 12px',
                   background: isActive ? 'color-mix(in srgb, var(--bc-gold) 12%, transparent)' : 'transparent',
                   border: isActive ? '1px solid var(--bc-edge-bright)' : '1px solid transparent',
                   borderRadius: 'var(--bc-radius-sm)',
@@ -146,21 +146,28 @@ export function ThemePicker() {
                   }
                 }}
               >
+                {/* Mini-seal: preview do ornamento principal do tema */}
                 <span
                   aria-hidden="true"
                   style={{
-                    width: 14,
-                    height: 14,
+                    width: 24,
+                    height: 24,
                     borderRadius: '50%',
-                    background: t.swatch,
-                    boxShadow: `0 0 8px ${t.swatch}`,
-                    border: '1px solid rgba(0,0,0,0.4)',
+                    background: `radial-gradient(circle at 35% 30%, ${t.sealColor} 0%, color-mix(in srgb, ${t.sealColor} 55%, black) 60%, #0a0507 100%)`,
+                    boxShadow:
+                      'inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.5)',
                   }}
                 />
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                {/* Nome com tipografia do tema + subtitle + paleta de 4 swatches */}
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                   <span
-                    className="bc-cinzel bc-tracked-soft"
-                    style={{ fontSize: 12, fontWeight: 600 }}
+                    className="bc-cinzel"
+                    style={{
+                      fontSize: 13,
+                      fontWeight: t.displayWeight,
+                      letterSpacing: t.displayTracking,
+                      textTransform: t.displayTransform,
+                    }}
                   >
                     {t.label}
                   </span>
@@ -169,9 +176,26 @@ export function ThemePicker() {
                       fontSize: 10,
                       color: 'var(--bc-ink-faint)',
                       fontStyle: 'italic',
+                      marginTop: -2,
                     }}
                   >
                     {t.subtitle}
+                  </span>
+                  <span style={{ display: 'inline-flex', gap: 4, marginTop: 2 }}>
+                    {t.swatches.map((c, i) => (
+                      <span
+                        key={i}
+                        aria-hidden="true"
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          background: c,
+                          border: '1px solid rgba(0,0,0,0.45)',
+                          boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                        }}
+                      />
+                    ))}
                   </span>
                 </span>
                 {isActive && <Check size={12} aria-hidden="true" />}

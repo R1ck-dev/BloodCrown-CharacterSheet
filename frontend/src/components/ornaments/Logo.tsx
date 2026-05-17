@@ -39,7 +39,7 @@ export function Logo({ size = 'lg', as: Tag = 'div' }: Props) {
       }}
       aria-label="BloodCrown"
     >
-      <span style={{ color: '#FBF6E4', textShadow: '0 0 14px rgba(255,255,255,0.15)' }}>BLOOD</span>
+      <span style={{ color: 'var(--bc-text-on-primary)', textShadow: '0 0 14px rgba(255,255,255,0.15)' }}>BLOOD</span>
       <span className="bc-shimmer">CROWN</span>
     </Tag>
   );

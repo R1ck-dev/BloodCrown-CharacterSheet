@@ -60,4 +60,10 @@ public interface CharacterService {
      * @param authentication Objeto contendo as credenciais do usuário atual.
      */
     void restCharacter(String id, Authentication authentication);
+
+    /**
+     * Move um personagem pra uma pasta (ou raiz quando folderId = null).
+     * Valida ownership do personagem e da pasta de destino.
+     */
+    void moveCharacter(String characterId, String folderId, Authentication authentication);
 }

@@ -25,7 +25,7 @@
   height: 22px;
   border-radius: 11px;
   background: rgba(10, 5, 7, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 20%, transparent);
   position: relative;
   flex: 0 0 auto;
   transition:
@@ -42,7 +42,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #58514a, #2a2520);
+  background: var(--bc-switch-off-gradient);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -53,17 +53,17 @@
 }
 
 .bc-switch-wrap__input:checked + .bc-switch {
-  background: rgba(212, 175, 55, 0.18);
+  background: color-mix(in srgb, var(--bc-gold) 18%, transparent);
   border-color: var(--bc-edge-strong);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--bc-gold) 35%, transparent);
 }
 
 .bc-switch-wrap__input:checked + .bc-switch::after {
   left: 26px;
-  background: radial-gradient(circle at 30% 30%, #F5D76E, #B8941F);
+  background: var(--bc-switch-on-gradient);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.6),
-    0 0 8px rgba(245, 215, 110, 0.6);
+    0 0 8px color-mix(in srgb, var(--bc-gold-bright) 60%, transparent);
 }
 
 /* Focus visible no input invisivel reflete no switch */
@@ -75,7 +75,7 @@
 .bc-switch-wrap__label {
   font-family: var(--bc-font-display);
   font-size: 10px;
-  letter-spacing: var(--bc-tracking-widest);
+  letter-spacing: var(--bc-display-tracking);
   text-transform: uppercase;
   color: var(--bc-ink-dim);
   font-weight: 600;

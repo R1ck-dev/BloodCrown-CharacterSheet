@@ -71,14 +71,14 @@ export function AttributeMedallion({ field, label, rollName, buff, onRoll }: Pro
                     }
                   }}
                   style={{
-                    width: 56,
+                    width: '70%',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
                     textAlign: 'center',
                     fontFamily: 'var(--bc-font-display)',
                     fontWeight: 600,
-                    fontSize: 30,
+                    fontSize: 'clamp(22px, 2.8vw, 30px)',
                     color: 'var(--bc-ink)',
                   }}
                 />

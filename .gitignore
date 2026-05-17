@@ -47,3 +47,9 @@ frontend/dist/
 
 postgres_data/
 mysql_data/
+
+# Database dumps (podem conter dados sensiveis)
+*.sql
+
+# TypeScript incremental build cache
+*.tsbuildinfo

@@ -19,12 +19,14 @@ import br.com.henrique.bloodcrown_cs.DTOs.StatusDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
+import br.com.henrique.bloodcrown_cs.Models.FolderModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterAttributes;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterExpertise;
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
+import br.com.henrique.bloodcrown_cs.Repositories.FolderRepository;
 import br.com.henrique.bloodcrown_cs.Services.CharacterService;
 
 /**
@@ -35,9 +37,11 @@ import br.com.henrique.bloodcrown_cs.Services.CharacterService;
 public class CharacterServiceImpl implements CharacterService{
 
     private final CharacterRepository characterRepository;
+    private final FolderRepository folderRepository;
 
-    public CharacterServiceImpl(CharacterRepository characterRepository) {
+    public CharacterServiceImpl(CharacterRepository characterRepository, FolderRepository folderRepository) {
         this.characterRepository = characterRepository;
+        this.folderRepository = folderRepository;
     }
 
     /**
@@ -99,7 +103,8 @@ public class CharacterServiceImpl implements CharacterService{
                             atk.getId(), atk.getName(), atk.getDamageDice(), atk.getDescription()
                         )).toList(),
                         currentHealth,
-                        maxHealth
+                        maxHealth,
+                        characterModel.getFolder() != null ? characterModel.getFolder().getId() : null
                     );
                 }).toList();
     }
@@ -194,7 +199,8 @@ public class CharacterServiceImpl implements CharacterService{
             charModel.getLevel(),
             new java.util.ArrayList<>(),
             maxHealth, // currentHealth = maxHealth no nascimento
-            maxHealth
+            maxHealth,
+            null // nasce na raiz
         );
     }
 //-----------------------------------------------------------------------------------
@@ -315,7 +321,16 @@ public class CharacterServiceImpl implements CharacterService{
             }).toList();
 
         List<ItemDTO> inventory = charModel.getInventory().stream()
-            .map(i -> new ItemDTO(i.getId(), i.getName(), i.getDescription(), i.getIsEquipped(), i.getTargetAttribute(), i.getEffectValue()))
+            .map(i -> new ItemDTO(
+                i.getId(),
+                i.getName(),
+                i.getDescription(),
+                i.getIsEquipped(),
+                i.getTargetAttribute(),
+                i.getEffectValue(),
+                i.getQuantity() != null ? i.getQuantity() : 1,
+                i.getUseDice()
+            ))
             .toList();
 
         CharacterActionPool poolModel = charModel.getActionPool();
@@ -558,6 +573,26 @@ public class CharacterServiceImpl implements CharacterService{
         pool.setCurrentReaction(pool.getMaxReaction());
 
         characterRepository.save(charModel);
+    }
+
+    /**
+     * Move ficha entre pastas. folderId null/vazio = raiz. Valida que ambos
+     * personagem e pasta pertencem ao usuario autenticado.
+     */
+    @Override
+    public void moveCharacter(String characterId, String folderId, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        CharacterModel ch = characterRepository.findByIdAndFromUserId(characterId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Personagem nao encontrado."));
+
+        if (folderId == null || folderId.isBlank()) {
+            ch.setFolder(null);
+        } else {
+            FolderModel folder = folderRepository.findByIdAndFromUserId(folderId, user.getId())
+                    .orElseThrow(() -> new NotFoundException("Pasta nao encontrada."));
+            ch.setFolder(folder);
+        }
+        characterRepository.save(ch);
     }
 
 }

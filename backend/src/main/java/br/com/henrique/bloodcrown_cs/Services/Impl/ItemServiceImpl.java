@@ -43,6 +43,8 @@ public class ItemServiceImpl implements ItemService {
         item.setDescription(dto.description());
         item.setTargetAttribute(dto.targetAttribute());
         item.setEffectValue(dto.effectValue());
+        item.setQuantity(dto.quantity() != null ? Math.max(0, dto.quantity()) : 1);
+        item.setUseDice(dto.useDice());
         item.setIsEquipped(false);
         item.setCharacter(character);
 
@@ -65,6 +67,8 @@ public class ItemServiceImpl implements ItemService {
         item.setDescription(dto.description());
         item.setTargetAttribute(dto.targetAttribute());
         item.setEffectValue(dto.effectValue());
+        if (dto.quantity() != null) item.setQuantity(Math.max(0, dto.quantity()));
+        item.setUseDice(dto.useDice());
         // isEquipped intocado — toggle continua sendo via endpoint dedicado
 
         ItemModel saved = itemRepository.save(item);
@@ -105,6 +109,16 @@ public class ItemServiceImpl implements ItemService {
      * @return O objeto de transferência de dados correspondente.
      */
     private ItemDTO convertToDTO(ItemModel item) {
-        return new ItemDTO(item.getId(), item.getName(), item.getDescription(), item.getIsEquipped(), item.getTargetAttribute(), item.getEffectValue());
+        Integer qty = item.getQuantity() != null ? item.getQuantity() : 1;
+        return new ItemDTO(
+            item.getId(),
+            item.getName(),
+            item.getDescription(),
+            item.getIsEquipped(),
+            item.getTargetAttribute(),
+            item.getEffectValue(),
+            qty,
+            item.getUseDice()
+        );
     }
 }

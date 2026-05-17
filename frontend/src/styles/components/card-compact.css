@@ -1,0 +1,236 @@
+﻿/* ============================================================================
+   BloodCrown — Card Compacto (linha unica)
+   Versao enxuta dos cards de ataque/habilidade/item. Apresenta nome + chips +
+   acao primaria + chevron. Hover destaca a borda esquerda; click abre modal.
+   ============================================================================ */
+
+.bc-card-compact {
+  display: block;
+  margin-bottom: 6px;
+  background: rgba(20, 18, 26, 0.55);
+  border: 1px solid var(--bc-edge);
+  border-left: 3px solid var(--bc-edge);
+  border-radius: var(--bc-radius-sm);
+  overflow: hidden;
+  transition:
+    background var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-card-compact__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  text-align: left;
+  font-family: var(--bc-font-body);
+  color: var(--bc-ink);
+  background: transparent;
+  border: none;
+  width: 100%;
+}
+
+.bc-card-compact:hover {
+  background: rgba(30, 25, 40, 0.7);
+  border-color: color-mix(in srgb, var(--bc-gold) 40%, transparent);
+}
+
+.bc-card-compact__header:focus-visible {
+  outline: 2px solid var(--bc-gold);
+  outline-offset: -2px;
+}
+
+/* Variantes de stripe esquerda */
+.bc-card-compact--blood   { border-left-color: var(--bc-blood); }
+.bc-card-compact--gold    { border-left-color: var(--bc-gold); }
+.bc-card-compact--purple  { border-left-color: var(--bc-purple); }
+.bc-card-compact--muted   { border-left-color: var(--bc-edge); }
+
+/* Estado "ativo" (habilidade ativada, item equipado) — bg sutil dourado */
+.bc-card-compact--active {
+  background: color-mix(in srgb, var(--bc-gold) 7%, transparent);
+  border-color: color-mix(in srgb, var(--bc-gold) 35%, transparent);
+}
+
+.bc-card-compact--active:hover {
+  background: color-mix(in srgb, var(--bc-gold) 12%, transparent);
+}
+
+/* Estado "exausto" (sem usos) — vermelho discreto */
+.bc-card-compact--exhausted {
+  opacity: 0.65;
+}
+
+/* --- Slots internos --- */
+
+.bc-card-compact__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--bc-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--bc-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-card-compact__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+/* Chip minusculo de meta (action type, uses count, efeito) */
+.bc-card-compact__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--bc-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.bc-card-compact__chip--warn {
+  border-color: color-mix(in srgb, var(--bc-blood-pulse) 50%, transparent);
+  color: var(--bc-error-bright);
+}
+
+.bc-card-compact__chip--gold {
+  border-color: color-mix(in srgb, var(--bc-gold) 40%, transparent);
+  color: var(--bc-gold-bright);
+}
+
+/* Botao de acao primaria inline (ex: Ativar, Rolar, Equipar) */
+.bc-card-compact__action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: var(--bc-radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-card-compact__action:hover:not(:disabled) {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-gold);
+  background: color-mix(in srgb, var(--bc-gold) 8%, transparent);
+}
+
+.bc-card-compact__action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bc-card-compact__action--active {
+  background: color-mix(in srgb, var(--bc-gold) 20%, transparent);
+  border-color: var(--bc-edge-strong);
+  color: var(--bc-gold-bright);
+}
+
+.bc-card-compact__action--blood {
+  background: color-mix(in srgb, var(--bc-blood) 15%, transparent);
+  border-color: color-mix(in srgb, var(--bc-blood-bright) 40%, transparent);
+  color: var(--bc-error-bright);
+}
+
+.bc-card-compact__action--blood:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--bc-blood-bright) 25%, transparent);
+  border-color: color-mix(in srgb, var(--bc-blood-pulse) 60%, transparent);
+  color: var(--bc-error-bright);
+}
+
+/* --- Chevron de expand/collapse --- */
+
+.bc-card-compact__chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bc-ink-faint);
+  transition: transform var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+.bc-card-compact__chevron--open {
+  transform: rotate(180deg);
+  color: var(--bc-gold);
+}
+
+/* --- Body expandido (slide-down) --- */
+
+.bc-card-compact__body {
+  padding: 12px 14px 14px;
+  border-top: 1px dashed color-mix(in srgb, var(--bc-gold) 18%, transparent);
+  background: rgba(10, 5, 7, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Linha de botoes secundarios (Recuperar, Editar, Deletar) */
+.bc-card-compact__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.bc-card-compact__icon-btn {
+  background: transparent;
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--bc-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-card-compact__icon-btn:hover:not(:disabled) {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-gold);
+  background: color-mix(in srgb, var(--bc-gold) 6%, transparent);
+}
+
+.bc-card-compact__icon-btn--danger:hover:not(:disabled) {
+  color: var(--bc-error-bright);
+  border-color: color-mix(in srgb, var(--bc-blood-pulse) 50%, transparent);
+  background: color-mix(in srgb, var(--bc-blood) 10%, transparent);
+}
+
+.bc-card-compact__footer-spacer {
+  flex: 1 1 auto;
+}

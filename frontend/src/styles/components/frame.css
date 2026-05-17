@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — HeraldicFrame
    Moldura ornamentada com cantos filigrana (SVG via componente React),
    borda hairline dourada interna e shadow esculpido.
@@ -15,7 +15,7 @@
 .bc-frame__inner {
   position: absolute;
   inset: 8px;
-  border: 1px solid rgba(212, 175, 55, 0.14);
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 14%, transparent);
   pointer-events: none;
   border-radius: inherit;
 }

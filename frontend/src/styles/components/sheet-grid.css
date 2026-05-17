@@ -1,0 +1,47 @@
+/* ============================================================================
+   BloodCrown — Sheet Grid
+   Layout principal da SheetPage. Mobile-first:
+     - default (<640px): 1 coluna empilhada (Atributos+Status+Defesa -> Pericias -> Tabs)
+     - tablet (>=640px): ainda 1 coluna, so com paddings/gaps maiores
+     - desktop (>=1024px): 3 colunas (3fr | 5fr | 4fr) — layout grimorio original
+   Padding-bottom mobile reserva espaco pro BottomDock fixo (56px + safe-area).
+   ============================================================================ */
+
+.bc-sheet-grid {
+  padding: var(--bc-space-3);
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--bc-space-3));
+  display: grid;
+  gap: var(--bc-space-3);
+  grid-template-columns: 1fr;
+  min-height: calc(100vh - 68px);
+  position: relative;
+  z-index: 2;
+}
+
+/* Wrappers das colunas — garantem shrink correto (min-width:0 evita overflow
+   de filhos com white-space:nowrap; min-height:0 idem para scroll vertical) */
+.bc-sheet-grid__left,
+.bc-sheet-grid__center,
+.bc-sheet-grid__right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .bc-sheet-grid {
+    padding: var(--bc-space-4);
+    padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--bc-space-4));
+    gap: var(--bc-space-4);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bc-sheet-grid {
+    padding: var(--bc-space-5);
+    padding-bottom: var(--bc-space-5);
+    gap: var(--bc-space-5);
+    grid-template-columns: minmax(280px, 3fr) minmax(0, 5fr) minmax(0, 4fr);
+  }
+}

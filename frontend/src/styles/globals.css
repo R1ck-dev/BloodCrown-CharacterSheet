@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — Globals
    Reset + body + focus visible padronizado + selecao.
    Importa o design system na ordem correta:
@@ -18,6 +18,14 @@
 @import './components/bar.css';
 @import './components/switch.css';
 @import './components/tabs.css';
+@import './components/listfilters.css';
+@import './components/card-compact.css';
+@import './components/folder-sidebar.css';
+@import './components/sheet-grid.css';
+@import './components/sheet-header.css';
+@import './components/nav.css';
+@import './components/character-card.css';
+@import './components/dashboard.css';
 
 /* --- Reset --- */
 
@@ -46,6 +54,8 @@ body {
   background-color: var(--bc-oled);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Defesa contra overflow horizontal — qualquer filho que vaze nao gera scrollbar global */
+  overflow-x: hidden;
 }
 
 /* --- Headings default em Cinzel --- */
@@ -80,7 +90,7 @@ a:hover {
 /* --- Selection --- */
 
 ::selection {
-  background-color: rgba(123, 44, 191, 0.4);
+  background-color: color-mix(in srgb, var(--bc-purple) 40%, transparent);
   color: var(--bc-ink);
 }
 
@@ -96,18 +106,18 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.18);
+  background: color-mix(in srgb, var(--bc-gold) 18%, transparent);
   border-radius: var(--bc-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(157, 78, 221, 0.5);
+  background: color-mix(in srgb, var(--bc-purple-hover) 50%, transparent);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.18) var(--bc-oled);
+  scrollbar-color: color-mix(in srgb, var(--bc-gold) 18%, transparent) var(--bc-oled);
 }
 
 /* --- Botoes nativos: remove default --- */

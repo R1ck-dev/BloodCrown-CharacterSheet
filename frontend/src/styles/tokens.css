@@ -64,9 +64,12 @@
   --bc-gradient-gold:    linear-gradient(135deg, var(--bc-gold) 0%, var(--bc-gold-bright) 100%);
   --bc-gradient-blood:   linear-gradient(135deg, var(--bc-blood) 0%, var(--bc-blood-bright) 100%);
   --bc-gradient-surface: linear-gradient(180deg, var(--bc-surface-2) 0%, var(--bc-surface-1) 100%);
+  /* Page gradient — baseline gotico SEMPRE (nao varia por tema). Mantem a
+     sensacao "grimorio sagrado" em todos os temas; cor do personagem vive
+     nos accents (selo, hover, glow), nao no pano de fundo. */
   --bc-gradient-page:
-    radial-gradient(ellipse 60% 50% at 50% 0%, color-mix(in srgb, var(--bc-purple) 10%, transparent), transparent 60%),
-    radial-gradient(ellipse 80% 60% at 50% 110%, color-mix(in srgb, var(--bc-purple-dark) 8%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(123, 44, 191, 0.10), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(58, 12, 163, 0.08), transparent 60%),
     var(--bc-oled);
 
   /* --------------------------------------------------------------------------
@@ -77,14 +80,18 @@
   --bc-font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --bc-font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
 
-  --bc-text-xs:   0.6875rem; /* 11px */
-  --bc-text-sm:   0.8125rem; /* 13px */
-  --bc-text-base: 0.9375rem; /* 15px */
-  --bc-text-lg:   1.125rem;  /* 18px */
-  --bc-text-xl:   1.375rem;  /* 22px */
-  --bc-text-2xl:  1.75rem;   /* 28px */
-  --bc-text-3xl:  2.25rem;   /* 36px */
-  --bc-text-4xl:  3rem;      /* 48px */
+  /* xs e sm fixos: abaixo de 11/13px viram ilegiveis em qualquer viewport.
+     Medios/grandes escalam fluidamente entre mobile (360px) e wide (1440px)
+     via clamp(min, fluido, max). Formula: o termo central usa vw pra crescer
+     com a viewport, ancorado pra bater nos extremos. */
+  --bc-text-xs:   0.6875rem; /* 11px — fixo */
+  --bc-text-sm:   0.8125rem; /* 13px — fixo */
+  --bc-text-base: clamp(0.875rem,  0.83rem + 0.2vw,  0.9375rem); /* 14 -> 15 */
+  --bc-text-lg:   clamp(1rem,      0.94rem + 0.3vw,  1.125rem);  /* 16 -> 18 */
+  --bc-text-xl:   clamp(1.125rem,  1.02rem + 0.5vw,  1.375rem);  /* 18 -> 22 */
+  --bc-text-2xl:  clamp(1.375rem,  1.22rem + 0.75vw, 1.75rem);   /* 22 -> 28 */
+  --bc-text-3xl:  clamp(1.625rem,  1.39rem + 1.1vw,  2.25rem);   /* 26 -> 36 */
+  --bc-text-4xl:  clamp(2rem,      1.59rem + 2vw,    3rem);      /* 32 -> 48 */
 
   --bc-leading-tight:  1.2;
   --bc-leading-normal: 1.5;
@@ -184,4 +191,104 @@
   --bc-z-popover:  1100;
   --bc-z-tooltip:  1200;
   --bc-z-toast:    9999;
+
+  /* --------------------------------------------------------------------------
+     10. THEME-AWARE EXTENSIONS
+     Tokens semanticos para ornamentos, tipografia display, glows, erros e
+     confetti. Defaults espelham o visual atual; cada [data-theme="..."] em
+     themes.css sobrescreve para ganhar personalidade propria.
+     -------------------------------------------------------------------------- */
+
+  /* 10.1 Gradientes de ornamento */
+  --bc-seal-blood-gradient:
+    radial-gradient(circle at 35% 30%, var(--bc-blood-bright) 0%, var(--bc-blood) 50%, var(--bc-blood-deep) 100%);
+  --bc-seal-gold-gradient:
+    radial-gradient(circle at 35% 30%, var(--bc-gold-bright) 0%, var(--bc-gold) 50%, var(--bc-gold-dim) 100%);
+  --bc-seal-purple-gradient:
+    radial-gradient(circle at 35% 30%, var(--bc-purple-hover) 0%, var(--bc-purple) 50%, var(--bc-purple-deep) 100%);
+
+  /* Stone do medallion — hex literais ligeiramente mais frios/violeta que os
+     surface-* tokens (vibe pedra esculpida). Themes substituem via vars. */
+  --bc-stone-gradient:
+    radial-gradient(circle at 30% 25%, #2A2335 0%, #1A1620 35%, #0E0A12 70%, #06030A 100%);
+
+  /* Switch toggle (esfera off/on) */
+  --bc-switch-off-gradient: radial-gradient(circle at 30% 30%, #58514a, #2a2520);
+  --bc-switch-on-gradient:  radial-gradient(circle at 30% 30%, var(--bc-gold-bright), #B8941F);
+
+  /* Bar track (HP/MP/SAN/STA) */
+  --bc-track-gradient: linear-gradient(180deg, #06030A 0%, #100A14 100%);
+
+  /* Scrollbar tematizada (gold + purple) */
+  --bc-scrollbar-gradient:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bc-gold) 30%, transparent),
+      color-mix(in srgb, var(--bc-purple) 40%, transparent));
+  --bc-scrollbar-gradient-hover:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bc-gold) 50%, transparent),
+      color-mix(in srgb, var(--bc-purple-hover) 60%, transparent));
+
+  /* Veining sutil — baseline gotico (nao varia por tema, mantem identidade
+     "grimorio gold+purple" como pano de fundo universal) */
+  --bc-vein-gradient:
+    radial-gradient(ellipse 120% 80% at 20% 0%,   rgba(212, 175, 55, 0.04), transparent 50%),
+    radial-gradient(ellipse 90%  70% at 100% 100%, rgba(123, 44, 191, 0.06), transparent 50%);
+
+  /* Halo radial atras de cards (Login, Modal) — baseline gotico tambem;
+     accents do personagem brilham em selo/hover/glow, nao no halo de fundo */
+  --bc-halo-gradient:
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(123, 44, 191, 0.22), transparent 60%),
+    radial-gradient(circle at 50% 50%,         rgba(157, 78, 221, 0.10), transparent 50%);
+
+  /* 10.2 Tipografia tematica display (varia por tema: peso/tracking/transform) */
+  --bc-display-weight:    600;
+  --bc-display-tracking:  var(--bc-tracking-widest);
+  --bc-display-transform: uppercase;
+
+  --bc-tracking-ancient:  0.30em; /* extra-aberto, usado por nozomu */
+
+  /* Texto sobre fundos especificos (substitui hex hardcoded em componentes) */
+  --bc-text-on-primary:   #FBF6E4; /* texto em botao primary + Logo BLOOD */
+  --bc-text-on-gold:      #14121A; /* texto em badges dourados */
+
+  /* 10.3 Erros tematicos (derivam de blood; trocam com tema automaticamente) */
+  --bc-error:              var(--bc-blood-bright);
+  --bc-error-bright:       color-mix(in srgb, var(--bc-blood-pulse) 50%, white 50%);
+  --bc-error-soft:         color-mix(in srgb, var(--bc-blood-pulse) 70%, white 30%);
+  --bc-error-border:       color-mix(in srgb, var(--bc-blood-bright) 45%, transparent);
+  --bc-error-border-hover: color-mix(in srgb, var(--bc-blood-pulse) 70%, transparent);
+  --bc-error-bg-hover:     color-mix(in srgb, var(--bc-blood-bright) 12%, transparent);
+
+  /* 10.4 Confetti (lido via getComputedStyle por canvas-confetti) */
+  --bc-confetti-primary:   var(--bc-gold);
+  --bc-confetti-secondary: var(--bc-gold-bright);
+  --bc-confetti-tertiary:  var(--bc-purple-hover);
+  --bc-confetti-accent:    var(--bc-ink);
+
+  /* 10.5 Glows expandidos (full box-shadow ready, para keyframes/hover states) */
+  --bc-glow-purple-soft:   0 0 8px  color-mix(in srgb, var(--bc-purple) 50%, transparent);
+  --bc-glow-purple-strong: 0 0 24px color-mix(in srgb, var(--bc-purple-hover) 90%, transparent);
+  --bc-glow-gold-soft:     0 0 10px color-mix(in srgb, var(--bc-gold) 50%, transparent);
+  --bc-glow-gold-strong:   0 0 28px color-mix(in srgb, var(--bc-gold-bright) 80%, transparent);
+
+  /* HP pulse colors (color-only tokens; box-shadow montado inline em animations.css) */
+  --bc-glow-blood-pulse-1: color-mix(in srgb, var(--bc-blood-pulse) 70%, transparent);
+  --bc-glow-blood-pulse-2: color-mix(in srgb, var(--bc-blood-pulse) 100%, transparent);
+  --bc-glow-blood-pulse-3: color-mix(in srgb, var(--bc-blood-bright) 40%, transparent);
+
+  /* --------------------------------------------------------------------------
+     11. BREAKPOINTS
+     Valores semanticos pra documentacao e leitura via getComputedStyle.
+     IMPORTANTE: CSS nao aceita var() dentro de @media queries — os literais
+     numericos sao usados diretamente nas media queries dos componentes. Manter
+     SEMPRE em sincronia com:
+       - hooks/useBreakpoint.ts (constantes TABLET_MIN/DESKTOP_MIN)
+       - utilities.css (.bc-hide-mobile/.bc-only-mobile/etc.)
+     -------------------------------------------------------------------------- */
+
+  --bc-bp-mobile:  360px;  /* piso suportado */
+  --bc-bp-tablet:  640px;  /* >= tablet portrait */
+  --bc-bp-desktop: 1024px; /* >= layout 3-colunas da Sheet */
+  --bc-bp-wide:    1440px; /* opcional, padding maximo */
 }

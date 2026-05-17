@@ -28,12 +28,12 @@ import type {
   NewAttackInput,
   NewItemInput,
 } from '@/types/character';
-import { AttackCard } from './AttackCard';
-import { AbilityCard } from './AbilityCard';
-import { ItemCard } from './ItemCard';
 import { AttackModal } from './modals/AttackModal';
 import { AbilityModal } from './modals/AbilityModal';
 import { ItemModal } from './modals/ItemModal';
+import { CombatPanel } from './panels/CombatPanel';
+import { AbilityPanel } from './panels/AbilityPanel';
+import { InventoryPanel } from './panels/InventoryPanel';
 import { useCreateAttack, useDeleteAttack, useUpdateAttack } from '@/api/attacks';
 import {
   useCreateAbility,
@@ -43,6 +43,9 @@ import {
   useUpdateAbility,
 } from '@/api/abilities';
 import { useCreateItem, useDeleteItem, useToggleItem, useUpdateItem } from '@/api/items';
+import { rollDamage } from '@/lib/dice';
+import { publishRoll } from '@/lib/rollBus';
+import { POTION_TO_STATUS, type PotionTarget } from '@/lib/buffTargets';
 
 type TabId =
   | 'COMBAT'
@@ -184,6 +187,81 @@ export function RightColumn({
     setEditingItem(null);
   };
 
+  /** Constroi NewItemInput a partir do item atual + overrides (qty, etc). */
+  const itemToPayload = (it: InventoryItem, overrides: Partial<NewItemInput> = {}): NewItemInput => ({
+    name: it.name,
+    description: it.description,
+    targetAttribute: it.targetAttribute,
+    effectValue: it.effectValue,
+    quantity: it.quantity ?? 1,
+    useDice: it.useDice ?? '',
+    ...overrides,
+  });
+
+  /** Ajusta quantidade do item (+1 / -1). Persiste via PUT. */
+  const handleAdjustItemQty = async (itemId: string, delta: number) => {
+    const it = inventory.find((i) => i.id === itemId);
+    if (!it) return;
+    const next = Math.max(0, (it.quantity ?? 1) + delta);
+    try {
+      await updateItem.mutateAsync({ itemId, payload: itemToPayload(it, { quantity: next }) });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao ajustar quantidade.');
+    }
+  };
+
+  /**
+   * Usa pocao: rola useDice, aplica resultado a barra (cap no max), decrementa qty.
+   * Aplica via setValue do form (auto-save persiste a barra). qty vai por mutation
+   * dedicada — assim a UI ja reflete a queda imediatamente.
+   */
+  const handleUseItem = async (itemId: string) => {
+    const it = inventory.find((i) => i.id === itemId);
+    if (!it) return;
+    const target = it.targetAttribute as PotionTarget;
+    const slot = POTION_TO_STATUS[target];
+    if (!slot) {
+      toast.error('Item nao e uma pocao.');
+      return;
+    }
+    if (!it.useDice) {
+      toast.error('Item sem formula. Edite o item e defina ex: "2d6+1".');
+      return;
+    }
+    const qty = it.quantity ?? 1;
+    if (qty <= 0) {
+      toast.error('Esgotado.');
+      return;
+    }
+
+    const result = rollDamage(it.useDice, it.name || 'Pocao');
+    if (!result) {
+      toast.error(`Formula invalida: ${it.useDice}`);
+      return;
+    }
+    publishRoll(result); // dispara DiceToast com animacao
+
+    // Cap na barra correspondente
+    const currentField = slot.current as 'status.currentHealth' | 'status.currentMana' | 'status.currentStamina';
+    const maxField = slot.max as 'status.maxHealth' | 'status.maxMana' | 'status.maxStamina';
+    const cur = Number(getValues(currentField)) || 0;
+    const mx = Number(getValues(maxField)) || 0;
+    const applied = Math.min(mx, cur + result.total);
+    const gained = applied - cur;
+    setValue(currentField, applied, { shouldDirty: true });
+
+    try {
+      await updateItem.mutateAsync({ itemId, payload: itemToPayload(it, { quantity: qty - 1 }) });
+      toast.success(
+        gained > 0
+          ? `+${gained} ${slot.unit} (rolou ${result.total}${gained < result.total ? ', cap no max' : ''}).`
+          : `Ja no maximo de ${slot.unit}.`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao usar item.');
+    }
+  };
+
   const handleToggleAbility = async (abilityId: string, spendAs?: ActionType) => {
     const ab = abilities.find((a) => a.id === abilityId);
     if (!ab) return;
@@ -254,19 +332,6 @@ export function RightColumn({
     }
   };
 
-  const filteredAbilities = (cat: AbilityCategory) =>
-    abilities
-      .filter((a) => a.category === cat)
-      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-
-  const sortedAttacks = attacks
-    .slice()
-    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-
-  const sortedInventory = inventory
-    .slice()
-    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-
   // Modal context — abertura via Habilidades tabs pre-seleciona a categoria
   const abilityDefaultCategory: AbilityCategory =
     ABILITY_TAB_TO_CATEGORY[activeTab] || 'CLASS';
@@ -318,16 +383,13 @@ export function RightColumn({
               onAction={() => setAttackModalOpen(true)}
               variant="blood"
             />
-            {sortedAttacks.length === 0 && <EmptyState text="Nenhum ataque ainda." />}
-            {sortedAttacks.map((atk) => (
-              <AttackCard
-                key={atk.id}
-                attack={atk}
-                onRoll={onRollDamage}
-                onDelete={() => deleteAttack.mutateAsync(atk.id)}
-                onEdit={() => setEditingAttack(atk)}
-              />
-            ))}
+            <CombatPanel
+              characterId={characterId}
+              attacks={attacks}
+              onRoll={onRollDamage}
+              onDelete={(id) => deleteAttack.mutateAsync(id)}
+              onEdit={setEditingAttack}
+            />
           </>
         )}
 
@@ -341,21 +403,17 @@ export function RightColumn({
                 actionLabel="Adicionar"
                 onAction={() => setAbilityModalOpen(true)}
               />
-              {filteredAbilities(cat).length === 0 && <EmptyState text="Nenhuma habilidade nesta categoria." />}
-              {filteredAbilities(cat).map((ab) => (
-                <AbilityCard
-                  key={ab.id}
-                  ability={ab}
-                  onToggle={(spendAs) => handleToggleAbility(ab.id, spendAs)}
-                  onRecover={(res) => handleRecoverAbility(ab.id, res)}
-                  onDelete={() => deleteAbility.mutateAsync(ab.id)}
-                  onEdit={() => setEditingAbility(ab)}
-                  onRoll={onRollDamage}
-                  busy={
-                    toggleAbility.isPending || recoverAbility.isPending || deleteAbility.isPending
-                  }
-                />
-              ))}
+              <AbilityPanel
+                characterId={characterId}
+                category={cat}
+                abilities={abilities}
+                onToggle={handleToggleAbility}
+                onRecover={handleRecoverAbility}
+                onDelete={(id) => deleteAbility.mutateAsync(id)}
+                onEdit={setEditingAbility}
+                onRoll={onRollDamage}
+                busy={toggleAbility.isPending || recoverAbility.isPending || deleteAbility.isPending}
+              />
             </div>
           ) : null,
         )}
@@ -387,17 +445,16 @@ export function RightColumn({
               onAction={() => setItemModalOpen(true)}
               variant="purple"
             />
-            {sortedInventory.length === 0 && <EmptyState text="Mochila vazia." />}
-            {sortedInventory.map((it) => (
-              <ItemCard
-                key={it.id}
-                item={it}
-                onToggle={() => toggleItem.mutateAsync(it.id)}
-                onDelete={() => deleteItem.mutateAsync(it.id)}
-                onEdit={() => setEditingItem(it)}
-                busy={toggleItem.isPending || deleteItem.isPending}
-              />
-            ))}
+            <InventoryPanel
+              characterId={characterId}
+              inventory={inventory}
+              onToggleEquip={(id) => toggleItem.mutateAsync(id)}
+              onUse={handleUseItem}
+              onAdjustQty={handleAdjustItemQty}
+              onDelete={(id) => deleteItem.mutateAsync(id)}
+              onEdit={setEditingItem}
+              busy={toggleItem.isPending || deleteItem.isPending || updateItem.isPending}
+            />
           </>
         )}
 
@@ -525,18 +582,3 @@ function SectionHead({
   );
 }
 
-function EmptyState({ text }: { text: string }) {
-  return (
-    <p
-      style={{
-        fontSize: 12,
-        color: 'var(--bc-ink-faint)',
-        fontStyle: 'italic',
-        textAlign: 'center',
-        padding: '24px 12px',
-      }}
-    >
-      {text}
-    </p>
-  );
-}
