@@ -1,10 +1,15 @@
+import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { LoginPage } from '@/pages/LoginPage';
-import { RegisterPage } from '@/pages/RegisterPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { SheetPage } from '@/pages/SheetPage';
-import { SandboxPage } from '@/pages/SandboxPage';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
+// Code-splitting por rota: cada page vira um chunk separado, baixado sob demanda.
+// As pages exportam named (export function X), entao adaptamos o modulo pro
+// shape { default } que React.lazy espera.
+const LoginPage     = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const RegisterPage  = lazy(() => import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const SheetPage     = lazy(() => import('@/pages/SheetPage').then((m) => ({ default: m.SheetPage })));
+const SandboxPage   = lazy(() => import('@/pages/SandboxPage').then((m) => ({ default: m.SandboxPage })));
 
 const baseRoutes = [
   { path: '/', element: <LoginPage /> },

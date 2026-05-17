@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -7,6 +7,24 @@ import { queryClient } from '@/lib/queryClient';
 import { router } from '@/router';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { onUnauthorized } from '@/api/client';
+
+/**
+ * Fallback minimalista exibido enquanto o chunk da rota e baixado.
+ * Mantemos o pano de fundo grimorio (bc-page / bc-grain) pra evitar
+ * flash branco — o fallback se confunde com a tela final.
+ */
+function RouteLoadingFallback() {
+  return (
+    <main
+      className="bc-page bc-grain"
+      style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}
+    >
+      <p style={{ color: 'var(--bc-ink-dim)', fontFamily: 'var(--bc-font-display)', letterSpacing: '0.12em' }}>
+        Carregando...
+      </p>
+    </main>
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -22,7 +40,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <RouterProvider router={router} />
+        </Suspense>
         <Toaster
           position="top-right"
           theme="dark"
