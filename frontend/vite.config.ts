@@ -26,5 +26,19 @@ export default defineConfig({
     target: 'es2022',
     cssMinify: true,
     sourcemap: true,
+    // Chunks manuais: separa libs grandes do bundle das pages pra que mudancas em
+    // codigo de aplicacao nao invalidem o cache dos vendors. Cada chunk fica
+    // cacheavel separadamente no browser. Combinado com lazy routes (router.tsx),
+    // o initial load baixa so o chunk da rota '/' (login) + vendor compartilhado.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'tanstack': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
+          'forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
+          'animation': ['framer-motion', 'motion', 'canvas-confetti'],
+        },
+      },
+    },
   },
 });
