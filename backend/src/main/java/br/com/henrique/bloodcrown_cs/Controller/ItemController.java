@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 import br.com.henrique.bloodcrown_cs.Services.ItemService;
 
@@ -55,9 +56,10 @@ public class ItemController {
 
     /**
      * Alterna o estado de um item entre "Equipado" e "Desequipado". Valida ownership.
+     * Retorna a ficha completa pra refletir bonus/maluses derivados sem GET extra no front.
      */
     @PostMapping("/{itemId}/toggle")
-    public ResponseEntity<ItemDTO> toggleEquip(@PathVariable String itemId, Authentication authentication) {
+    public ResponseEntity<CharacterSheetDTO> toggleEquip(@PathVariable String itemId, Authentication authentication) {
         return ResponseEntity.ok(itemService.toggleEquip(itemId, authentication));
     }
 }

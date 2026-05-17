@@ -2,6 +2,7 @@ package br.com.henrique.bloodcrown_cs.Services;
 
 import org.springframework.security.core.Authentication;
 
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 
 /**
@@ -27,6 +28,8 @@ public interface ItemService {
 
     /**
      * Alterna o estado de "Equipado" de um item. Valida ownership.
+     * Retorna a ficha completa pra o front sincronizar o cache sem GET extra
+     * (equipar/desequipar pode afetar bonus de status derivados).
      */
-    ItemDTO toggleEquip(String itemId, Authentication authentication);
+    CharacterSheetDTO toggleEquip(String itemId, Authentication authentication);
 }

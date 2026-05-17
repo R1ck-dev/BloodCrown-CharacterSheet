@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
 
@@ -75,9 +76,11 @@ public class AbilityController {
      * Alterna o estado de ativação de uma habilidade.
      * Query param opcional {@code spendAs} permite substituir o tipo de ação consumido
      * (D&D-like: gastar STANDARD pra cobrir uma BONUS, por exemplo).
+     * Retorna a ficha completa pós-toggle pra evitar GET de sincronização no front
+     * (toggle muda actionPool e usos).
      */
     @PostMapping("/{abilityId}/toggle")
-    public ResponseEntity<AbilityDTO> toggleAbility(
+    public ResponseEntity<CharacterSheetDTO> toggleAbility(
         @PathVariable String abilityId,
         @RequestParam(required = false) ActionTypeEnum spendAs,
         Authentication authentication
@@ -87,19 +90,19 @@ public class AbilityController {
 
     /**
      * Avança o turno para o personagem, reduzindo os tempos de recarga (cooldowns)
-     * das habilidades ativas.
+     * das habilidades ativas. Retorna a ficha completa pós-avanço.
      */
     @PostMapping("/next-turn/{characterId}")
-    public ResponseEntity<Void> advanceTurn(@PathVariable String characterId, Authentication authentication) {
-        abilityService.advanceTurn(characterId, authentication);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<CharacterSheetDTO> advanceTurn(@PathVariable String characterId, Authentication authentication) {
+        return ResponseEntity.ok(abilityService.advanceTurn(characterId, authentication));
     }
 
     /**
-     * Recupera o uso de uma habilidade ou consome recursos para ativá-la.
+     * Recupera o uso de uma habilidade gastando mana/estamina. Retorna a ficha completa
+     * pra refletir o gasto de recurso e o incremento de usos sem GET extra.
      */
     @PostMapping("/{abilityId}/recover")
-    public ResponseEntity<AbilityDTO> recoverUse(@PathVariable String abilityId, @RequestParam(defaultValue = "MANA") String resource, Authentication authentication) {
+    public ResponseEntity<CharacterSheetDTO> recoverUse(@PathVariable String abilityId, @RequestParam(defaultValue = "MANA") String resource, Authentication authentication) {
         return ResponseEntity.ok(abilityService.recoverUse(abilityId, resource, authentication));
     }
 

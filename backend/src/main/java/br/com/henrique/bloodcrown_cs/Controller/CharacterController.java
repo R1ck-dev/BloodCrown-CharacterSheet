@@ -104,15 +104,12 @@ public class CharacterController {
 
     /**
      * Executa a ação de "Descanso" para o personagem, recuperando recursos como Vida e Mana
-     * de acordo com as regras de negócio definidas no serviço.
-     * * @param id Identificador do personagem.
-     * @param authentication Objeto contendo os dados do usuário logado.
-     * @return ResponseEntity com status 200 (OK).
+     * de acordo com as regras de negócio definidas no serviço. Retorna a ficha completa
+     * pós-descanso pra evitar GET extra de sincronização no front.
      */
     @PostMapping("/{id}/rest")
-    public ResponseEntity<Void> restCharacter(@PathVariable String id, Authentication authentication) {
-        characterService.restCharacter(id, authentication);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<CharacterSheetDTO> restCharacter(@PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(characterService.restCharacter(id, authentication));
     }
 
     /**

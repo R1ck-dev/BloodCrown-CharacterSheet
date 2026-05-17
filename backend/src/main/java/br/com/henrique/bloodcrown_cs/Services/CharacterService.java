@@ -55,11 +55,13 @@ public interface CharacterService {
 
     /**
      * Aplica a lógica de "Descanso Longo" ou "Descanso Curto".
-     * Restaura Vida, Mana e Estamina para seus valores máximos.
+     * Restaura Vida, Mana e Estamina para seus valores máximos. Retorna a ficha
+     * completa pós-descanso pro front sincronizar o cache sem GET extra.
      * * @param id Identificador do personagem.
      * @param authentication Objeto contendo as credenciais do usuário atual.
+     * @return O DTO da ficha completa pós-descanso.
      */
-    void restCharacter(String id, Authentication authentication);
+    CharacterSheetDTO restCharacter(String id, Authentication authentication);
 
     /**
      * Move um personagem pra uma pasta (ou raiz quando folderId = null).

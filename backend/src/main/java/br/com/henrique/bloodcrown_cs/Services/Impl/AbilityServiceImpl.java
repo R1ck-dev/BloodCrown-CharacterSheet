@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
 import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 import br.com.henrique.bloodcrown_cs.Exceptions.BadRequestException;
@@ -21,6 +22,7 @@ import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
 import br.com.henrique.bloodcrown_cs.Repositories.AbilityRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Services.AbilityService;
+import br.com.henrique.bloodcrown_cs.Services.CharacterSheetMapper;
 
 /**
  * Implementação das regras de negócio para habilidades, magias e técnicas.
@@ -31,10 +33,16 @@ public class AbilityServiceImpl implements AbilityService {
 
     private final AbilityRepository abilityRepository;
     private final CharacterRepository characterRepository;
+    private final CharacterSheetMapper sheetMapper;
 
-    public AbilityServiceImpl(AbilityRepository abilityRepository, CharacterRepository characterRepository) {
+    public AbilityServiceImpl(
+        AbilityRepository abilityRepository,
+        CharacterRepository characterRepository,
+        CharacterSheetMapper sheetMapper
+    ) {
         this.abilityRepository = abilityRepository;
         this.characterRepository = characterRepository;
+        this.sheetMapper = sheetMapper;
     }
 
     /**
@@ -192,7 +200,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      */
     @Override
     @Transactional
-    public AbilityDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication) {
+    public CharacterSheetDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
@@ -231,9 +239,15 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
             ability.setTurnsRemaining(0);
         }
 
-        AbilityModel saved = abilityRepository.save(ability);
-
-        return convertToDTO(saved);
+        abilityRepository.save(ability);
+        // Persiste o character porque o pool de ações pode ter sido alterado em consumeFromPool.
+        characterRepository.save(ability.getCharacter());
+        // Refetch via repo pra garantir coleções (abilities/attacks/inventory são LAZY)
+        // carregadas dentro da @Transactional — ability.getCharacter() pode ser proxy raso.
+        CharacterModel fresh = characterRepository.findByIdAndFromUserId(
+            ability.getCharacter().getId(), user.getId()
+        ).orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
+        return sheetMapper.toDto(fresh);
     }
 
     /**
@@ -349,7 +363,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      */
     @Override
     @Transactional
-    public void advanceTurn(String characterId, Authentication authentication) {
+    public CharacterSheetDTO advanceTurn(String characterId, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(characterId, user.getId())
@@ -387,7 +401,8 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         pool.setCurrentBonus(pool.getMaxBonus());
         pool.setCurrentMovement(pool.getMaxMovement());
         pool.setCurrentReaction(pool.getMaxReaction());
-        characterRepository.save(charModel);
+        CharacterModel saved = characterRepository.save(charModel);
+        return sheetMapper.toDto(saved);
     }
 //----------------------------------------------------------------------------------
 
@@ -401,7 +416,7 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
      */
     @Override
     @Transactional
-    public AbilityDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication) {
+    public CharacterSheetDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
@@ -459,8 +474,12 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         ability.setCurrentUses(ability.getCurrentUses() + 1);
 
         characterRepository.save(character);
-        AbilityModel saved = abilityRepository.save(ability);
+        abilityRepository.save(ability);
 
-        return convertToDTO(saved);
+        // Refetch via repo pra garantir coleções LAZY populadas dentro da @Transactional.
+        CharacterModel fresh = characterRepository.findByIdAndFromUserId(
+            character.getId(), user.getId()
+        ).orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
+        return sheetMapper.toDto(fresh);
     }
 }
