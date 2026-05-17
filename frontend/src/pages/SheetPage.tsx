@@ -18,6 +18,7 @@ import type { CharacterSheet } from '@/types/character';
 import { useCharacter, useUpdateCharacter, useRestCharacter } from '@/api/characters';
 import { useAdvanceTurn } from '@/api/abilities';
 import { useActiveEffects } from '@/hooks/useActiveEffects';
+import { getConfettiPalette } from '@/lib/themePalette';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useDiceRoll } from '@/hooks/useDiceRoll';
 import { SheetHeader } from '@/components/sheet/SheetHeader';
@@ -31,7 +32,6 @@ import { Button } from '@/components/ui/Button';
 import { SkillsBlock } from '@/components/sheet/SkillsBlock';
 import { RightColumn } from '@/components/sheet/RightColumn';
 import { DiceToast } from '@/components/sheet/DiceToast';
-import { EffectsPanel } from '@/components/sheet/EffectsPanel';
 
 const SWAL_THEME = {
   background: '#14121A',
@@ -45,15 +45,17 @@ async function getSwal() {
   return (await import('sweetalert2')).default;
 }
 
-/** Burst dourado central — disparado em level up */
+/** Burst tematico central — disparado em level up. Cada tema mapeia
+ *  primary/secondary/tertiary nas suas cores de identidade. */
 function fireLevelUpConfetti() {
-  const goldColors = ['#D4AF37', '#F1D77A', '#FFFFFF', '#E6C34A'];
-  const purpleColors = ['#7B2CBF', '#9D4EDD', '#C8A4FF', '#FFFFFF'];
+  const palette = getConfettiPalette();
+  const centerColors  = [palette.primary, palette.secondary, palette.accent, palette.secondary];
+  const sideColors    = [palette.tertiary, palette.tertiary, palette.accent, palette.accent];
   confetti({
     particleCount: 120,
     spread: 90,
     startVelocity: 45,
-    colors: goldColors,
+    colors: centerColors,
     origin: { x: 0.5, y: 0.4 },
     scalar: 1.4,
     zIndex: 10000,
@@ -63,7 +65,7 @@ function fireLevelUpConfetti() {
       particleCount: 50,
       spread: 60,
       angle: 60,
-      colors: purpleColors,
+      colors: sideColors,
       origin: { x: 0, y: 0.5 },
       zIndex: 10000,
     });
@@ -71,7 +73,7 @@ function fireLevelUpConfetti() {
       particleCount: 50,
       spread: 60,
       angle: 120,
-      colors: purpleColors,
+      colors: sideColors,
       origin: { x: 1, y: 0.5 },
       zIndex: 10000,
     });
@@ -106,6 +108,16 @@ export function SheetPage() {
       previousLevelRef.current = data.level ?? 0;
     }
   }, [data, reset]);
+
+  // Titulo da aba — sempre prefixa com nome do personagem pra distinguir multiplas fichas abertas.
+  useEffect(() => {
+    if (!data?.name) return;
+    const previous = document.title;
+    document.title = `${data.name} — BloodCrown`;
+    return () => {
+      document.title = previous;
+    };
+  }, [data?.name]);
 
   // Level up detector — watcha o campo level, dispara confetti dourado central
   // sempre que sobe (manualmente ou via heroico). Snapshot inicial vem do reset().
@@ -245,45 +257,37 @@ export function SheetPage() {
           isResting={restMutation.isPending}
         />
 
-        <div
-          style={{
-            padding: 20,
-            display: 'grid',
-            gridTemplateColumns: 'minmax(280px, 3fr) minmax(0, 5fr) minmax(0, 4fr)',
-            gap: 20,
-            minHeight: 'calc(100vh - 68px)',
-            position: 'relative',
-            zIndex: 2,
-          }}
-        >
+        <div className="bc-sheet-grid">
           {/* ESQUERDA — ActionPool e DamageCalc moveram pro LeftDock flutuante */}
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div className="bc-sheet-grid__left">
             <AttributesBlock buffs={buffs} onRoll={rollAttr} />
             <StatusBlock />
             <DefenseBlock buffs={buffs} />
           </div>
 
           {/* CENTRAL — pericias */}
-          <SkillsBlock buffs={buffs} onRoll={rollAttr} />
+          <div className="bc-sheet-grid__center">
+            <SkillsBlock buffs={buffs} onRoll={rollAttr} />
+          </div>
 
           {/* DIREITA — tabs + cards + modais */}
-          <RightColumn
-            characterId={id}
-            attacks={data.attacks ?? []}
-            abilities={data.abilities ?? []}
-            inventory={data.inventory ?? []}
-            onRollDamage={rollDmg}
-          />
+          <div className="bc-sheet-grid__right">
+            <RightColumn
+              characterId={id}
+              attacks={data.attacks ?? []}
+              abilities={data.abilities ?? []}
+              inventory={data.inventory ?? []}
+              onRollDamage={rollDmg}
+            />
+          </div>
         </div>
 
         {/* Toast de dado (anima crit + confetti) */}
         <DiceToast />
 
-        {/* Dock flutuante esquerda — botões pra Ações do Turno e Calculadora de Dano */}
-        <LeftDock characterId={id} />
-
-        {/* Painel flutuante de efeitos ativos (some quando vazio) */}
-        <EffectsPanel
+        {/* Dock flutuante esquerda — botões pra Ações, Calc Dano e Efeitos Ativos (todos arrastáveis) */}
+        <LeftDock
+          characterId={id}
           activeAbilities={activeAbilities}
           onAdvanceTurn={handleAdvanceTurn}
           isAdvancing={advanceTurnMutation.isPending}

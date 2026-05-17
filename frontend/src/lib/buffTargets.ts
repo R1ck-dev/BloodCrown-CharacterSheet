@@ -56,6 +56,17 @@ export const STATUS_TARGETS = [
 /** Targets de economia — reduzem custo de habilidade, nao somam em campo do form */
 export const ECONOMY_TARGETS = ['REDUCE_MANA', 'REDUCE_STAMINA'] as const;
 
+/** Targets de pocao — ao "Usar" o item, rolam useDice e aplicam a barra (cap no max) */
+export const POTION_TARGETS = ['RESTORE_HP', 'RESTORE_MANA', 'RESTORE_STAMINA'] as const;
+export type PotionTarget = (typeof POTION_TARGETS)[number];
+
+/** Mapa pocao -> par de campos do form (current/max) usado pelo handler de Usar */
+export const POTION_TO_STATUS: Record<PotionTarget, { current: string; max: string; unit: string }> = {
+  RESTORE_HP:      { current: 'status.currentHealth',  max: 'status.maxHealth',  unit: 'HP' },
+  RESTORE_MANA:    { current: 'status.currentMana',    max: 'status.maxMana',    unit: 'MP' },
+  RESTORE_STAMINA: { current: 'status.currentStamina', max: 'status.maxStamina', unit: 'SP' },
+};
+
 export type AttrTarget = (typeof ATTR_TARGETS)[number];
 export type SkillTarget = (typeof SKILL_TARGETS)[number];
 export type StatusTarget = (typeof STATUS_TARGETS)[number];
@@ -114,8 +125,11 @@ export const TARGET_LABELS: Record<string, string> = {
   defOther: 'Defesa (Outros)',
   resPhysical: 'Res. Fisica',
   resMagical: 'Res. Magica',
-  REDUCE_MANA: '-1 Custo Mana',
-  REDUCE_STAMINA: '-1 Custo Estamina',
+  REDUCE_MANA: 'Custo de Mana',
+  REDUCE_STAMINA: 'Custo de Estamina',
+  RESTORE_HP: 'Recupera Vida',
+  RESTORE_MANA: 'Recupera Mana',
+  RESTORE_STAMINA: 'Recupera Estamina',
   skillAtletismo: 'Atletismo',
   skillConhecimento: 'Conhecimento',
   skillConsertar: 'Consertar',

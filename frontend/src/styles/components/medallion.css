@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — Medallion
    Pedra esculpida com aro dourado gravado pros 6 atributos da ficha.
    Usado em Fase 5 (Sheet — Coluna Esquerda). Estado .bc-medallion--buffed
@@ -14,15 +14,16 @@
 }
 
 .bc-medallion {
-  width: 90px;
-  height: 90px;
+  /* Largura fluida: cabe na coluna esquerda da sheet em desktop (~83px por
+     celula em 1080p com 3-col grid 3fr|5fr|4fr) e escala ate 90px em wide. */
+  width: clamp(64px, 7.5vw, 90px);
+  height: clamp(64px, 7.5vw, 90px);
   border-radius: 50%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 30% 25%, #2A2335 0%, #1A1620 35%, #0E0A12 70%, #06030A 100%);
+  background: var(--bc-stone-gradient);
   box-shadow: var(--bc-shadow-stone);
   cursor: pointer;
   transition:
@@ -37,7 +38,7 @@
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, 0.22);
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 22%, transparent);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4);
   pointer-events: none;
 }
@@ -47,19 +48,20 @@
   box-shadow:
     inset 0 2px 4px rgba(255, 255, 255, 0.08),
     inset 0 -3px 6px rgba(0, 0, 0, 0.7),
-    inset 0 0 0 1px rgba(212, 175, 55, 0.45),
-    0 6px 18px rgba(123, 44, 191, 0.4),
-    0 0 24px rgba(157, 78, 221, 0.35);
+    inset 0 0 0 1px color-mix(in srgb, var(--bc-gold) 45%, transparent),
+    0 6px 18px color-mix(in srgb, var(--bc-purple) 40%, transparent),
+    0 0 24px color-mix(in srgb, var(--bc-purple-hover) 35%, transparent);
 }
 
 .bc-medallion__num {
   font-family: var(--bc-font-display);
   font-weight: 600;
-  font-size: 34px;
+  /* Escala junto com o medallion (que vai de 64 a 90px) */
+  font-size: clamp(24px, 3vw, 34px);
   color: var(--bc-ink);
   text-shadow:
     0 2px 4px rgba(0, 0, 0, 0.9),
-    0 0 1px rgba(212, 175, 55, 0.3);
+    0 0 1px color-mix(in srgb, var(--bc-gold) 30%, transparent);
   line-height: 1;
 }
 
@@ -87,10 +89,10 @@
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, 0.55);
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 55%, transparent);
   box-shadow:
-    0 0 18px rgba(212, 175, 55, 0.55),
-    inset 0 0 12px rgba(212, 175, 55, 0.2);
+    0 0 18px color-mix(in srgb, var(--bc-gold) 55%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--bc-gold) 20%, transparent);
   animation: bc-buff-ring 2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -98,7 +100,7 @@
 .bc-medallion--buffed .bc-medallion__num {
   color: var(--bc-gold-bright);
   text-shadow:
-    0 0 12px rgba(245, 215, 110, 0.7),
+    0 0 12px color-mix(in srgb, var(--bc-gold-bright) 70%, transparent),
     0 2px 4px rgba(0, 0, 0, 0.9);
 }
 

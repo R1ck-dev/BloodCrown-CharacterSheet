@@ -2,122 +2,177 @@
  * Card de um personagem no Dashboard.
  *
  * Composicao:
- *   - Cantos filigrana superiores (decoracao discreta)
- *   - Botao trash (canto superior direito) — onDelete
- *   - Avatar circular: gradient acentuado por classe + inicial gigante + badge
+ *   - Cantos filigrana superiores (decoracao discreta — via .bc-frame)
+ *   - Botoes Mover + Trash (canto superior direito)
+ *   - Avatar circular (clamp 60-76px): gradient acentuado por classe + inicial gigante + badge
  *     com glyph da classe (Skull, Sword, Flame, etc.)
  *   - Nome (Cinzel) + "Classe · Nv X" (Cinzel tracked)
  *   - HP mini bar (oculta se backend nao retornou HP)
  *   - Botao "Abrir Ficha" full-width
  *
- * onClick no card todo navega pra ficha (exceto se clicar no trash).
+ * onClick no card todo navega pra ficha (exceto se clicar em [data-stop-card]).
+ * Hover-state via CSS (.bc-character-card:hover) — funciona em touch tambem.
+ * Dimensoes fluidas via clamp() pra adaptar a viewport pequena.
  */
-import { Trash2, BookOpen } from 'lucide-react';
-import type { CharacterSummary } from '@/types/character';
+import { useState, useRef, useEffect } from 'react';
+import { Trash2, BookOpen, FolderInput, Inbox, Folder as FolderIcon, Check } from 'lucide-react';
+import type { CharacterSummary, Folder } from '@/types/character';
 import { glyphForClass } from '@/lib/classGlyph';
 
 interface Props {
   character: CharacterSummary;
+  folders: Folder[];
   onOpen: () => void;
   onDelete: () => void;
+  onMove: (folderId: string | null) => void;
 }
 
-export function CharacterCard({ character, onOpen, onDelete }: Props) {
+export function CharacterCard({ character, folders, onOpen, onDelete, onMove }: Props) {
+  const [moveOpen, setMoveOpen] = useState(false);
+  const moveRef = useRef<HTMLDivElement>(null);
+
+  // Click-outside fecha dropdown
+  useEffect(() => {
+    if (!moveOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (moveRef.current && !moveRef.current.contains(e.target as Node)) {
+        setMoveOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [moveOpen]);
+
   const initial = character.name?.[0]?.toUpperCase() || '?';
   const klass = character.characterClass || 'Sem classe';
   const { Icon, base, bright } = glyphForClass(character.characterClass);
 
   const hasHp =
-    typeof character.currentHealth === 'number' && typeof character.maxHealth === 'number' && character.maxHealth > 0;
+    typeof character.currentHealth === 'number' &&
+    typeof character.maxHealth === 'number' &&
+    character.maxHealth > 0;
   const hpPct = hasHp
-    ? Math.max(0, Math.min(100, ((character.currentHealth as number) / (character.maxHealth as number)) * 100))
+    ? Math.max(
+        0,
+        Math.min(100, ((character.currentHealth as number) / (character.maxHealth as number)) * 100),
+      )
     : 0;
 
   return (
     <article
-      className="bc-frame"
-      style={{
-        borderRadius: 'var(--bc-radius-md)',
-        padding: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 14,
-        cursor: 'pointer',
-        transition:
-          'transform var(--bc-duration-base) var(--bc-ease-out-quart), border-color var(--bc-duration-base) var(--bc-ease-out-quart), box-shadow var(--bc-duration-base) var(--bc-ease-out-quart)',
-      }}
+      className="bc-frame bc-character-card"
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('[data-stop-card]')) return;
         onOpen();
       }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget;
-        el.style.transform = 'translateY(-3px)';
-        el.style.borderColor = 'rgba(157, 78, 221, 0.45)';
-        el.style.boxShadow =
-          '0 0 0 1px rgba(157, 78, 221, 0.25), 0 16px 40px -10px rgba(123, 44, 191, 0.55), inset 0 1px 0 rgba(212, 175, 55, 0.15)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget;
-        el.style.transform = '';
-        el.style.borderColor = '';
-        el.style.boxShadow = '';
-      }}
     >
-      {/* Trash */}
-      <button
-        type="button"
+      {/* Cluster top-right: Mover + Trash */}
+      <div
         data-stop-card
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        aria-label={`Excluir ficha de ${character.name}`}
+        ref={moveRef}
         style={{
           position: 'absolute',
           top: 8,
           right: 8,
-          background: 'transparent',
-          border: '1px solid rgba(185, 28, 28, 0.25)',
-          color: 'rgba(229, 99, 94, 0.7)',
-          width: 26,
-          height: 26,
-          borderRadius: 'var(--bc-radius-sm)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
+          display: 'inline-flex',
+          gap: 4,
           zIndex: 2,
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(185, 28, 28, 0.15)';
-          e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.6)';
-          e.currentTarget.style.color = '#FCA5A5';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(185, 28, 28, 0.25)';
-          e.currentTarget.style.color = 'rgba(229, 99, 94, 0.7)';
-        }}
       >
-        <Trash2 size={13} />
-      </button>
+        <button
+          type="button"
+          data-stop-card
+          onClick={(e) => {
+            e.stopPropagation();
+            setMoveOpen((v) => !v);
+          }}
+          aria-label={`Mover ${character.name} pra outra pasta`}
+          aria-expanded={moveOpen}
+          title="Mover pra pasta"
+          className="bc-character-card__action"
+        >
+          <FolderInput size={14} />
+        </button>
+
+        <button
+          type="button"
+          data-stop-card
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          aria-label={`Excluir ficha de ${character.name}`}
+          className="bc-character-card__action bc-character-card__action--danger"
+        >
+          <Trash2 size={14} />
+        </button>
+
+        {moveOpen && (
+          <div
+            role="menu"
+            data-stop-card
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 4px)',
+              right: 0,
+              minWidth: 180,
+              maxHeight: 280,
+              overflowY: 'auto',
+              background: 'var(--bc-surface-2, #14121A)',
+              border: '1px solid var(--bc-edge)',
+              borderRadius: 'var(--bc-radius-sm)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              padding: 4,
+              zIndex: 10,
+            }}
+          >
+            <MoveMenuItem
+              icon={<Inbox size={12} />}
+              label="Sem pasta"
+              active={!character.folderId}
+              onClick={() => {
+                onMove(null);
+                setMoveOpen(false);
+              }}
+            />
+            {folders.length > 0 && (
+              <div style={{ height: 1, background: 'var(--bc-edge)', margin: '4px 2px' }} />
+            )}
+            {folders.map((f) => (
+              <MoveMenuItem
+                key={f.id}
+                icon={<FolderIcon size={12} />}
+                label={f.name}
+                active={character.folderId === f.id}
+                onClick={() => {
+                  onMove(f.id);
+                  setMoveOpen(false);
+                }}
+              />
+            ))}
+            {folders.length === 0 && (
+              <p
+                style={{
+                  fontSize: 10,
+                  color: 'var(--bc-ink-faint)',
+                  fontStyle: 'italic',
+                  padding: '6px 10px',
+                  margin: 0,
+                }}
+              >
+                Crie pastas na lateral.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Avatar circular com glyph badge */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
         <div
+          className="bc-character-card__avatar"
           style={{
-            width: 76,
-            height: 76,
-            borderRadius: '50%',
-            position: 'relative',
             background: `radial-gradient(circle at 30% 25%, ${bright}66, ${base}88 50%, #0E0A12 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow:
-              'inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(212,175,55,0.3), 0 4px 12px rgba(0,0,0,0.6)',
           }}
         >
           {/* Aro dourado gravado */}
@@ -134,7 +189,7 @@ export function CharacterCard({ character, onOpen, onDelete }: Props) {
             className="bc-cinzel"
             style={{
               fontWeight: 700,
-              fontSize: 30,
+              fontSize: 'clamp(24px, 6vw, 30px)',
               color: 'var(--bc-ink)',
               textShadow: '0 2px 4px rgba(0,0,0,0.8)',
             }}
@@ -166,22 +221,7 @@ export function CharacterCard({ character, onOpen, onDelete }: Props) {
 
       {/* Nome + classe */}
       <div style={{ textAlign: 'center' }}>
-        <div
-          className="bc-cinzel"
-          style={{
-            fontWeight: 600,
-            fontSize: 17,
-            color: 'var(--bc-ink)',
-            letterSpacing: '0.04em',
-            lineHeight: 1.2,
-            marginBottom: 4,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {character.name}
-        </div>
+        <div className="bc-character-card__name">{character.name}</div>
         <div
           className="bc-cinzel"
           style={{
@@ -236,36 +276,41 @@ export function CharacterCard({ character, onOpen, onDelete }: Props) {
           e.stopPropagation();
           onOpen();
         }}
-        className="bc-cinzel bc-tracked"
-        style={{
-          background: 'linear-gradient(180deg, rgba(123, 44, 191, 0.25), rgba(123, 44, 191, 0.10))',
-          color: 'var(--bc-gold-bright)',
-          border: '1px solid rgba(212, 175, 55, 0.25)',
-          padding: '10px 14px',
-          fontSize: 11,
-          marginTop: 4,
-          borderRadius: 'var(--bc-radius-sm)',
-          cursor: 'pointer',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background =
-            'linear-gradient(180deg, rgba(157, 78, 221, 0.4), rgba(123, 44, 191, 0.2))';
-          e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background =
-            'linear-gradient(180deg, rgba(123, 44, 191, 0.25), rgba(123, 44, 191, 0.10))';
-          e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.25)';
-        }}
+        className="bc-cinzel bc-tracked bc-character-card__open"
       >
         <BookOpen size={12} />
         Abrir Ficha
       </button>
     </article>
+  );
+}
+
+interface MoveMenuItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function MoveMenuItem({ icon, label, active, onClick }: MoveMenuItemProps) {
+  return (
+    <button
+      type="button"
+      data-stop-card
+      role="menuitem"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`bc-character-card__menu-item${active ? ' bc-character-card__menu-item--active' : ''}`}
+    >
+      <span style={{ color: active ? 'var(--bc-gold)' : 'var(--bc-gold-dim)', display: 'inline-flex' }}>
+        {icon}
+      </span>
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+      {active && <Check size={11} color="var(--bc-gold-bright)" />}
+    </button>
   );
 }

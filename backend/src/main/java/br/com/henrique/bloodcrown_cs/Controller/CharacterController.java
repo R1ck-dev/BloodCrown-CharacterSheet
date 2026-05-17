@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -113,4 +114,16 @@ public class CharacterController {
         characterService.restCharacter(id, authentication);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Move a ficha pra uma pasta. Body: { folderId: string | null }.
+     * null/vazio = move pra raiz.
+     */
+    @PatchMapping("/{id}/folder")
+    public ResponseEntity<Void> moveToFolder(@PathVariable String id, @RequestBody MoveToFolderRequest body, Authentication authentication) {
+        characterService.moveCharacter(id, body == null ? null : body.folderId(), authentication);
+        return ResponseEntity.noContent().build();
+    }
+
+    public record MoveToFolderRequest(String folderId) {}
 }

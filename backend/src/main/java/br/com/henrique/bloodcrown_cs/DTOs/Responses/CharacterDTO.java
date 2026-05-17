@@ -22,7 +22,9 @@ public record CharacterDTO(
     Integer level,
     List<AttackDTO> attacks,
     Integer currentHealth,
-    Integer maxHealth
+    Integer maxHealth,
+    /** ID da pasta onde a ficha esta. Null = raiz. */
+    String folderId
 ) {
 
 }

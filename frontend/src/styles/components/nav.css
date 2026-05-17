@@ -1,0 +1,72 @@
+/* ============================================================================
+   BloodCrown — Dashboard Navbar
+   Sticky no topo, hairline dourada inferior. Em mobile condensa padding,
+   esconde "Bem-vindo," e mostra so icone no botao Sair.
+   ============================================================================ */
+
+.bc-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--bc-z-sticky);
+  height: 64px;
+  padding: 0 clamp(12px, 3vw, 32px);
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bc-oled) 95%, transparent) 0%,
+    color-mix(in srgb, var(--bc-oled) 85%, transparent) 100%
+  );
+  border-bottom: 1px solid var(--bc-edge);
+  backdrop-filter: blur(12px);
+}
+
+.bc-nav__rail {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 14px);
+  padding-left: clamp(12px, 2vw, 24px);
+  border-left: 1px solid color-mix(in srgb, var(--bc-gold) 12%, transparent);
+  min-width: 0;
+}
+
+.bc-nav__greeting {
+  font-size: 12px;
+  color: var(--bc-ink-dim);
+  font-style: italic;
+}
+
+.bc-nav__username {
+  font-size: 12px;
+  color: var(--bc-gold-bright);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Hairline dourada inferior */
+.bc-nav::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--bc-gold) 40%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Em mobile: esconder "Bem-vindo," e o texto "Sair" (manter aria-label) */
+@media (max-width: 479px) {
+  .bc-nav__greeting { display: none; }
+  .bc-nav__logout-text { display: none; }
+}

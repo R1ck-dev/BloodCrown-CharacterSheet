@@ -55,7 +55,23 @@ public class ItemModel {
      * Valor numérico do bônus ou penalidade aplicado pelo item.
      */
     @Column(name = "effect_value")
-    private Integer effectValue;    
+    private Integer effectValue;
+
+    /**
+     * Quantidade do item na mochila (consumíveis empilhados). Default 1.
+     * Itens legados sem coluna ficam null; convertToDTO normaliza pra 1.
+     * columnDefinition garante DEFAULT 1 no ALTER TABLE gerado por ddl-auto.
+     */
+    @Column(name = "quantity", columnDefinition = "INT DEFAULT 1")
+    private Integer quantity = 1;
+
+    /**
+     * Fórmula de dado usada quando o item é "Usado" (poções: ex "2d6+1").
+     * Em conjunto com targetAttribute=RESTORE_HP/MANA/STAMINA, define
+     * quanto a barra recupera ao consumir o item. Vazio = não consumível.
+     */
+    @Column(name = "use_dice")
+    private String useDice;
 
     /**
      * Personagem proprietário do item.

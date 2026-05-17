@@ -116,6 +116,11 @@ export interface InventoryItem {
   isEquipped: boolean;
   targetAttribute: string;
   effectValue: number;
+  /** Quantidade na mochila (consumíveis empilhados). Default 1, 0 = esgotado. */
+  quantity: number;
+  /** Fórmula rolada ao "Usar" (poções: ex "2d6+3"). Combina com targetAttribute
+   *  RESTORE_HP/MANA/STAMINA pra recuperar a barra correspondente. */
+  useDice: string;
 }
 
 /** Resposta de GET /characters (listagem resumida) */
@@ -128,6 +133,18 @@ export interface CharacterSummary {
   /** Pode ser null em personagens legados sem status — defender no render */
   currentHealth: number | null;
   maxHealth: number | null;
+  /** ID da pasta onde a ficha está. Null = raiz. */
+  folderId: string | null;
+}
+
+/** Pasta de organização de fichas (estrutura flat). */
+export interface Folder {
+  id: string;
+  name: string;
+}
+
+export interface NewFolderInput {
+  name: string;
 }
 
 /** Resposta de GET /characters/{id} e payload de PUT /characters/{id} */
@@ -175,4 +192,6 @@ export interface NewItemInput {
   description: string;
   targetAttribute: string;
   effectValue: number;
+  quantity: number;
+  useDice: string;
 }

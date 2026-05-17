@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    BloodCrown — Input + Field
    Field = wrapper com label dourado uppercase + input com icone opcional
    esquerda. Variantes: padrao, sm, bare (sem chrome, pra ficha).
@@ -25,8 +25,8 @@
 .bc-input {
   width: 100%;
   background: rgba(10, 5, 7, 0.85);
-  border: 1px solid rgba(212, 175, 55, 0.15);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.45);
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 15%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-gold) 45%, transparent);
   color: var(--bc-ink);
   font-family: var(--bc-font-body);
   font-size: var(--bc-text-base);
@@ -57,8 +57,8 @@
   border-color: var(--bc-edge-strong);
   background: rgba(20, 10, 16, 0.95);
   box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.3),
-    0 0 24px rgba(123, 44, 191, 0.15);
+    0 0 0 1px color-mix(in srgb, var(--bc-gold) 30%, transparent),
+    0 0 24px color-mix(in srgb, var(--bc-purple) 15%, transparent);
 }
 
 .bc-input:disabled {
@@ -68,7 +68,7 @@
 
 /* Aria-invalid muda borda pra vermelho (a11y) */
 .bc-input[aria-invalid="true"] {
-  border-color: rgba(220, 38, 38, 0.6);
+  border-color: color-mix(in srgb, var(--bc-blood-pulse) 60%, transparent);
   border-bottom-color: var(--bc-blood-pulse);
 }
 
@@ -112,7 +112,7 @@
 
 .bc-field__error {
   font-size: var(--bc-text-xs);
-  color: #FCA5A5;
+  color: var(--bc-error-bright);
   font-style: italic;
   letter-spacing: 0.04em;
 }
@@ -139,7 +139,7 @@
 .bc-input--bare {
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  border-bottom: 1px solid color-mix(in srgb, var(--bc-gold) 18%, transparent);
   border-radius: 0;
   padding: 6px 0;
 }

@@ -1,0 +1,44 @@
+/* ============================================================================
+   BloodCrown — Dashboard layout
+   Wrapper main + grid de cards + layout 2-col (sidebar + grid) responsivo.
+   ============================================================================ */
+
+.bc-dashboard-main {
+  padding: clamp(16px, 4vw, 36px) clamp(12px, 4vw, 48px) 24px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Section header (icone + titulo + sigil) */
+.bc-dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 18px);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+/* Layout 2-colunas em desktop; em mobile o FolderDrawer vira trigger inline e
+   a grid ocupa 100% da largura. */
+.bc-dashboard-layout {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .bc-dashboard-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+}
+
+/* Grid de cards de personagem.
+   minmax(min(240px, 100%), 1fr) evita overflow quando a viewport e' menor que
+   240px (mantem >= 1 coluna sem scroll horizontal). */
+.bc-dashboard-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: clamp(12px, 2.5vw, 20px);
+  min-width: 0;
+}
