@@ -31,8 +31,8 @@ async function deleteCharacter(id: string): Promise<void> {
   return request<void>(`/characters/${id}`, { method: 'DELETE' });
 }
 
-async function restCharacter(id: string): Promise<void> {
-  return request<void>(`/characters/${id}/rest`, { method: 'POST' });
+async function restCharacter(id: string): Promise<CharacterSheet> {
+  return request<CharacterSheet>(`/characters/${id}/rest`, { method: 'POST' });
 }
 
 // ---------- Hooks ----------
@@ -87,8 +87,6 @@ export function useRestCharacter(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => restCharacter(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: characterKeys.detail(id) });
-    },
+    onSuccess: (sheet) => qc.setQueryData(characterKeys.detail(id), sheet),
   });
 }

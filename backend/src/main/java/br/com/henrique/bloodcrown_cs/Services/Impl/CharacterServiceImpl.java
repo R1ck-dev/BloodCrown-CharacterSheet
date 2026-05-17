@@ -1,21 +1,14 @@
 package br.com.henrique.bloodcrown_cs.Services.Impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ActionPoolDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
-import br.com.henrique.bloodcrown_cs.DTOs.AttributesDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
-import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
-import br.com.henrique.bloodcrown_cs.DTOs.ExpertiseDTO;
-import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
-import br.com.henrique.bloodcrown_cs.DTOs.StatusDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
@@ -28,6 +21,7 @@ import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterStatus;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.FolderRepository;
 import br.com.henrique.bloodcrown_cs.Services.CharacterService;
+import br.com.henrique.bloodcrown_cs.Services.CharacterSheetMapper;
 
 /**
  * Implementação das regras de negócio para a gestão de personagens.
@@ -38,10 +32,16 @@ public class CharacterServiceImpl implements CharacterService{
 
     private final CharacterRepository characterRepository;
     private final FolderRepository folderRepository;
+    private final CharacterSheetMapper sheetMapper;
 
-    public CharacterServiceImpl(CharacterRepository characterRepository, FolderRepository folderRepository) {
+    public CharacterServiceImpl(
+        CharacterRepository characterRepository,
+        FolderRepository folderRepository,
+        CharacterSheetMapper sheetMapper
+    ) {
         this.characterRepository = characterRepository;
         this.folderRepository = folderRepository;
+        this.sheetMapper = sheetMapper;
     }
 
     /**
@@ -79,6 +79,7 @@ public class CharacterServiceImpl implements CharacterService{
      * @return Lista de personagens simplificada.
      */
     @Override
+    @Transactional(readOnly = true)
     public List<CharacterDTO> getUserCharacters(Authentication authentication) {
         //Pega o usuário logado pelo token
         UserModel currentUser = (UserModel) authentication.getPrincipal();
@@ -215,6 +216,7 @@ public class CharacterServiceImpl implements CharacterService{
      * @return O DTO completo da ficha.
      */
     @Override
+    @Transactional
     public CharacterSheetDTO getCharacterById(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
@@ -227,138 +229,7 @@ public class CharacterServiceImpl implements CharacterService{
         ensureActionPool(charModel);
         characterRepository.save(charModel);
 
-        return convertToSheetDTO(charModel);
-    }
-
-    /**
-     * Converte uma entidade CharacterModel completa em CharacterSheetDTO,
-     * mapeando atributos, status, perícias e as listas de ataques/habilidades/itens.
-     */
-    private CharacterSheetDTO convertToSheetDTO(CharacterModel charModel) {
-        AttributesDTO attr = new AttributesDTO(
-            charModel.getAttributes().getForca(),
-            charModel.getAttributes().getDestreza(),
-            charModel.getAttributes().getSabedoria(),
-            charModel.getAttributes().getInteligencia(),
-            charModel.getAttributes().getCarisma(),
-            charModel.getAttributes().getConstituicao()
-        );
-
-        StatusDTO status = new StatusDTO(
-            charModel.getStatus().getMaxHealth(),
-            charModel.getStatus().getCurrentHealth(),
-            charModel.getStatus().getMaxSanity(),
-            charModel.getStatus().getCurrentSanity(),
-            charModel.getStatus().getMaxMana(),
-            charModel.getStatus().getCurrentMana(),
-            charModel.getStatus().getMaxStamina(),
-            charModel.getStatus().getCurrentStamina(),
-            charModel.getStatus().getDefense(),
-            charModel.getStatus().getDefenseBase(),
-            charModel.getStatus().getArmorBonus(),
-            charModel.getStatus().getOtherBonus(),
-            charModel.getStatus().getPhysicalRes(),
-            charModel.getStatus().getMagicalRes()
-        );
-
-        ExpertiseDTO expertise = new ExpertiseDTO(
-            charModel.getExpertise().getAtletismo(),
-            charModel.getExpertise().getConhecimento(),
-            charModel.getExpertise().getConsertar(),
-            charModel.getExpertise().getDiplomacia(),
-            charModel.getExpertise().getDomar(),
-            charModel.getExpertise().getEmpatia(),
-            charModel.getExpertise().getFortitude(),
-            charModel.getExpertise().getFurtividade(),
-            charModel.getExpertise().getMagia(),
-            charModel.getExpertise().getIniciativa(),
-            charModel.getExpertise().getIntimidar(),
-            charModel.getExpertise().getIntuicao(),
-            charModel.getExpertise().getInvestigacao(),
-            charModel.getExpertise().getLabia(),
-            charModel.getExpertise().getLadinagem(),
-            charModel.getExpertise().getLuta(),
-            charModel.getExpertise().getMedicina(),
-            charModel.getExpertise().getMente(),
-            charModel.getExpertise().getPercepcao(),
-            charModel.getExpertise().getPontaria(),
-            charModel.getExpertise().getReflexos(),
-            charModel.getExpertise().getSeduzir(),
-            charModel.getExpertise().getSobrevivencia()
-        );
-
-        List<AttackDTO> attacks = charModel.getAttacks().stream()
-            .map(atk -> new AttackDTO(
-                atk.getId(),
-                atk.getName(),
-                atk.getDamageDice(),
-                atk.getDescription()
-            )).toList();
-
-        List<AbilityDTO> abilities = charModel.getAbilities().stream()
-            .map(ab -> {
-                List<EffectDTO> effects = ab.getEffects() != null
-                    ? ab.getEffects().stream()
-                        .map(e -> new EffectDTO(e.getTargetAttribute(), e.getEffectValue()))
-                        .toList()
-                    : new ArrayList<>();
-
-                return new AbilityDTO(
-                    ab.getId(),
-                    ab.getName(),
-                    ab.getCategory(),
-                    ab.getResourceType(),
-                    ab.getActionType(),
-                    ab.getMaxUses(),
-                    ab.getCurrentUses(),
-                    ab.getDiceRoll(),
-                    effects,
-                    ab.getDurationDice(),
-                    ab.getIsActive(),
-                    ab.getTurnsRemaining(),
-                    ab.getDescription()
-                );
-            }).toList();
-
-        List<ItemDTO> inventory = charModel.getInventory().stream()
-            .map(i -> new ItemDTO(
-                i.getId(),
-                i.getName(),
-                i.getDescription(),
-                i.getIsEquipped(),
-                i.getTargetAttribute(),
-                i.getEffectValue(),
-                i.getQuantity() != null ? i.getQuantity() : 1,
-                i.getUseDice()
-            ))
-            .toList();
-
-        CharacterActionPool poolModel = charModel.getActionPool();
-        ActionPoolDTO actionPool = poolModel != null
-            ? new ActionPoolDTO(
-                poolModel.getMaxStandard(),  poolModel.getCurrentStandard(),
-                poolModel.getMaxBonus(),     poolModel.getCurrentBonus(),
-                poolModel.getMaxMovement(),  poolModel.getCurrentMovement(),
-                poolModel.getMaxReaction(),  poolModel.getCurrentReaction()
-            )
-            : null;
-
-        return new CharacterSheetDTO(
-            charModel.getId(),
-            charModel.getName(),
-            charModel.getCharacterClass(),
-            charModel.getLevel(),
-            attr,
-            status,
-            expertise,
-            attacks,
-            abilities,
-            inventory,
-            charModel.getMoney(),
-            charModel.getHeroPoint(),
-            charModel.getBiography(),
-            actionPool
-        );
+        return sheetMapper.toDto(charModel);
     }
 //-----------------------------------------------------------------------------------
 
@@ -513,7 +384,7 @@ public class CharacterServiceImpl implements CharacterService{
 
 
         CharacterModel saved = characterRepository.save(charModel);
-        return convertToSheetDTO(saved);
+        return sheetMapper.toDto(saved);
     }
 //-----------------------------------------------------------------------------------
 
@@ -540,7 +411,8 @@ public class CharacterServiceImpl implements CharacterService{
      * @param authentication Contexto de segurança.
      */
     @Override
-    public void restCharacter(String id, Authentication authentication) {
+    @Transactional
+    public CharacterSheetDTO restCharacter(String id, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Ficha não encontrada."));
@@ -572,7 +444,8 @@ public class CharacterServiceImpl implements CharacterService{
         pool.setCurrentMovement(pool.getMaxMovement());
         pool.setCurrentReaction(pool.getMaxReaction());
 
-        characterRepository.save(charModel);
+        CharacterModel saved = characterRepository.save(charModel);
+        return sheetMapper.toDto(saved);
     }
 
     /**

@@ -3,6 +3,7 @@ package br.com.henrique.bloodcrown_cs.Services;
 import org.springframework.security.core.Authentication;
 
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 
 /**
@@ -38,18 +39,22 @@ public interface AbilityService {
      * correspondente. {@code spendAs} permite substituir o tipo padrão por um maior
      * (D&D-like): ex. gastar STANDARD pra cobrir uma habilidade BONUS.
      * Valida que a habilidade pertence ao usuário autenticado.
+     * Retorna a ficha completa do personagem pra o front sincronizar o cache sem GET extra
+     * (toggle muda actionPool e currentUses, recover muda status/mana/estamina).
      *
      * @param spendAs tipo de ação a debitar do pool; null = usa o actionType da habilidade.
      */
-    AbilityDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication);
+    CharacterSheetDTO toggleAbility(String abilityId, ActionTypeEnum spendAs, Authentication authentication);
 
     /**
      * Processa o avanço de turno para um personagem. Valida que o personagem pertence ao usuário autenticado.
+     * Retorna a ficha completa pós-avanço (todas as abilities ativas + reset do pool).
      */
-    void advanceTurn(String characterId, Authentication authentication);
+    CharacterSheetDTO advanceTurn(String characterId, Authentication authentication);
 
     /**
      * Gerencia o uso e recuperação de cargas de uma habilidade. Valida ownership.
+     * Retorna a ficha completa pra refletir mudancas em currentMana/Stamina ao gastar recurso.
      */
-    AbilityDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication);
+    CharacterSheetDTO recoverUse(String abilityId, String resourceToSpend, Authentication authentication);
 }

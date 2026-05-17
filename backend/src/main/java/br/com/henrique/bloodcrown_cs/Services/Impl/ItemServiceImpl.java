@@ -2,7 +2,9 @@ package br.com.henrique.bloodcrown_cs.Services.Impl;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
@@ -10,6 +12,7 @@ import br.com.henrique.bloodcrown_cs.Models.ItemModel;
 import br.com.henrique.bloodcrown_cs.Models.UserModel;
 import br.com.henrique.bloodcrown_cs.Repositories.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.Repositories.ItemRepository;
+import br.com.henrique.bloodcrown_cs.Services.CharacterSheetMapper;
 import br.com.henrique.bloodcrown_cs.Services.ItemService;
 
 /**
@@ -21,10 +24,16 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final CharacterRepository characterRepository;
+    private final CharacterSheetMapper sheetMapper;
 
-    public ItemServiceImpl(ItemRepository itemRepository, CharacterRepository characterRepository) {
+    public ItemServiceImpl(
+        ItemRepository itemRepository,
+        CharacterRepository characterRepository,
+        CharacterSheetMapper sheetMapper
+    ) {
         this.itemRepository = itemRepository;
         this.characterRepository = characterRepository;
+        this.sheetMapper = sheetMapper;
     }
 
     /**
@@ -90,17 +99,23 @@ public class ItemServiceImpl implements ItemService {
 
     /**
      * Alterna o estado de equipamento de um item (Equipado <-> Desequipado). Valida ownership.
+     * Retorna a ficha completa pra refletir bonus/maluses derivados sem GET extra no front.
      */
     @Override
-    public ItemDTO toggleEquip(String itemId, Authentication authentication) {
+    @Transactional
+    public CharacterSheetDTO toggleEquip(String itemId, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
 
         ItemModel item = itemRepository.findByIdAndCharacter_FromUserId(itemId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Item não encontrado."));
 
         item.setIsEquipped(!Boolean.TRUE.equals(item.getIsEquipped()));
-        ItemModel saved = itemRepository.save(item);
-        return convertToDTO(saved);
+        itemRepository.save(item);
+        // Refetch via repo: item.getCharacter() pode ser proxy raso sem coleções LAZY populadas.
+        CharacterModel fresh = characterRepository.findByIdAndFromUserId(
+            item.getCharacter().getId(), user.getId()
+        ).orElseThrow(() -> new NotFoundException("Personagem não encontrado."));
+        return sheetMapper.toDto(fresh);
     }
 
     /**
