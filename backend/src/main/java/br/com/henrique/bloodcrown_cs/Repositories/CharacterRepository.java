@@ -8,6 +8,12 @@ import org.springframework.stereotype.Repository;
 
 import br.com.henrique.bloodcrown_cs.Models.CharacterModel;
 
+/**
+ * Otimizacao de N+1: nao usar @EntityGraph com multiplas colecoes List<>
+ * (gera MultipleBagFetchException). Em vez disso, as colecoes do CharacterModel
+ * e AbilityModel.effects sao anotadas com @BatchSize(20), de forma que o
+ * Hibernate carrega cada colecao via 1 query batch em vez de N+1 lazy loads.
+ */
 @Repository
 public interface CharacterRepository extends JpaRepository<CharacterModel, String>{
     List<CharacterModel> findByFromUserId(String userId);

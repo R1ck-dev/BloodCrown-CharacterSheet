@@ -20,6 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Entidade que mapeia a tabela "abilities" no banco de dados.
@@ -88,6 +89,7 @@ public class AbilityModel {
      * a habilidade foi criada sem efeitos (Hibernate pode deixar como null).
      */
     @OneToMany(mappedBy = "ability", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<AbilityEffectModel> effects = new ArrayList<>();
 
     /**

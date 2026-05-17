@@ -18,6 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Entidade central do sistema, representando a Ficha de Personagem completa.
@@ -98,20 +99,24 @@ public class CharacterModel {
     /**
      * Lista de ataques associados.
      * O CascadeType.ALL garante que operações no personagem (como deletar) se propaguem para seus ataques.
+     * @BatchSize evita N+1 ao carregar varias fichas em lista (1 query batched em vez de N).
      */
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<AttackModel> attacks;
 
     /**
-     * Lista de habilidades associadas.
+     * Lista de habilidades associadas. @BatchSize evita N+1 ao acessar lazy.
      */
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<AbilityModel> abilities;
 
     /**
-     * Lista de itens no inventário.
+     * Lista de itens no inventário. @BatchSize evita N+1 ao acessar lazy.
      */
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private List<ItemModel> inventory;
 
     /**

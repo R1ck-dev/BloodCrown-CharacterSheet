@@ -2,6 +2,8 @@ package br.com.henrique.bloodcrown_cs.Services.Impl;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +28,13 @@ public class FolderServiceImpl implements FolderService {
         this.characterRepository = characterRepository;
     }
 
+    /**
+     * Cache chaveado por userId (#authentication.principal.id) — folders muda
+     * pouco e e lida toda vez que o dashboard abre. Cache PRECISA ser por user
+     * pra evitar vazamento entre contas. Invalidado por create/rename/delete.
+     */
     @Override
+    @Cacheable(value = "folders", key = "#authentication.principal.id")
     public List<FolderDTO> listFolders(Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         return folderRepository.findByFromUserIdOrderByNameAsc(user.getId())
@@ -36,6 +44,7 @@ public class FolderServiceImpl implements FolderService {
     }
 
     @Override
+    @CacheEvict(value = "folders", key = "#authentication.principal.id")
     public FolderDTO createFolder(FolderDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         String name = dto.name() == null ? "" : dto.name().trim();
@@ -49,6 +58,7 @@ public class FolderServiceImpl implements FolderService {
     }
 
     @Override
+    @CacheEvict(value = "folders", key = "#authentication.principal.id")
     public FolderDTO renameFolder(String folderId, FolderDTO dto, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         FolderModel folder = folderRepository.findByIdAndFromUserId(folderId, user.getId())
@@ -67,6 +77,7 @@ public class FolderServiceImpl implements FolderService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "folders", key = "#authentication.principal.id")
     public void deleteFolder(String folderId, Authentication authentication) {
         UserModel user = (UserModel) authentication.getPrincipal();
         FolderModel folder = folderRepository.findByIdAndFromUserId(folderId, user.getId())
