@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.DTOs.ActionPoolDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterPatchDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
@@ -382,6 +383,121 @@ public class CharacterServiceImpl implements CharacterService{
         }
 
 
+
+        CharacterModel saved = characterRepository.save(charModel);
+        return sheetMapper.toDto(saved);
+    }
+//-----------------------------------------------------------------------------------
+
+    /**
+     * Patch parcial — replica a logica de updateCharacter mas com null-check
+     * em TODOS os niveis (incluindo top-level: name/class/level/etc).
+     * Cap em current* contra max* permanece quando os respectivos campos vem
+     * no payload; se max muda, current e capado contra o novo max.
+     */
+    @Override
+    @Transactional
+    public CharacterSheetDTO patchCharacter(String id, CharacterPatchDTO patch, Authentication authentication) {
+        UserModel user = (UserModel) authentication.getPrincipal();
+        CharacterModel charModel = characterRepository.findByIdAndFromUserId(id, user.getId())
+                .orElseThrow(() -> new NotFoundException("Ficha não encontrada ou permissão negada."));
+
+        if (patch.name() != null)           charModel.setName(patch.name());
+        if (patch.characterClass() != null) charModel.setCharacterClass(patch.characterClass());
+        if (patch.level() != null)          charModel.setLevel(patch.level());
+        if (patch.money() != null)          charModel.setMoney(patch.money());
+        if (patch.heroPoint() != null)      charModel.setHeroPoint(patch.heroPoint());
+        if (patch.biography() != null)      charModel.setBiography(patch.biography());
+
+        if (patch.attributes() != null) {
+            CharacterAttributes attr = charModel.getAttributes();
+            if (patch.attributes().forca()        != null) attr.setForca(patch.attributes().forca());
+            if (patch.attributes().destreza()     != null) attr.setDestreza(patch.attributes().destreza());
+            if (patch.attributes().constituicao() != null) attr.setConstituicao(patch.attributes().constituicao());
+            if (patch.attributes().inteligencia() != null) attr.setInteligencia(patch.attributes().inteligencia());
+            if (patch.attributes().sabedoria()    != null) attr.setSabedoria(patch.attributes().sabedoria());
+            if (patch.attributes().carisma()      != null) attr.setCarisma(patch.attributes().carisma());
+        }
+
+        if (patch.status() != null) {
+            CharacterStatus status = charModel.getStatus();
+            if (patch.status().maxHealth()   != null) status.setMaxHealth(patch.status().maxHealth());
+            if (patch.status().maxMana()     != null) status.setMaxMana(patch.status().maxMana());
+            if (patch.status().maxSanity()   != null) status.setMaxSanity(patch.status().maxSanity());
+            if (patch.status().maxStamina()  != null) status.setMaxStamina(patch.status().maxStamina());
+            if (patch.status().defense()     != null) status.setDefense(patch.status().defense());
+            if (patch.status().defenseBase() != null) status.setDefenseBase(patch.status().defenseBase());
+            if (patch.status().armorBonus()  != null) status.setArmorBonus(patch.status().armorBonus());
+            if (patch.status().otherBonus()  != null) status.setOtherBonus(patch.status().otherBonus());
+            if (patch.status().physicalRes() != null) status.setPhysicalRes(patch.status().physicalRes());
+            if (patch.status().magicalRes()  != null) status.setMagicalRes(patch.status().magicalRes());
+
+            // Caps: current* nunca passa do max* atual nem cai abaixo de zero.
+            if (patch.status().currentHealth() != null && status.getMaxHealth() != null) {
+                status.setCurrentHealth(Math.max(0, Math.min(patch.status().currentHealth(), status.getMaxHealth())));
+            }
+            if (patch.status().currentMana() != null && status.getMaxMana() != null) {
+                status.setCurrentMana(Math.max(0, Math.min(patch.status().currentMana(), status.getMaxMana())));
+            }
+            if (patch.status().currentSanity() != null && status.getMaxSanity() != null) {
+                status.setCurrentSanity(Math.max(0, Math.min(patch.status().currentSanity(), status.getMaxSanity())));
+            }
+            if (patch.status().currentStamina() != null && status.getMaxStamina() != null) {
+                status.setCurrentStamina(Math.max(0, Math.min(patch.status().currentStamina(), status.getMaxStamina())));
+            }
+        }
+
+        if (patch.actionPool() != null) {
+            ensureActionPool(charModel);
+            CharacterActionPool pool = charModel.getActionPool();
+            ActionPoolDTO poolDto = patch.actionPool();
+
+            if (poolDto.maxStandard() != null) pool.setMaxStandard(poolDto.maxStandard());
+            if (poolDto.maxBonus()    != null) pool.setMaxBonus(poolDto.maxBonus());
+            if (poolDto.maxMovement() != null) pool.setMaxMovement(poolDto.maxMovement());
+            if (poolDto.maxReaction() != null) pool.setMaxReaction(poolDto.maxReaction());
+
+            if (poolDto.currentStandard() != null && pool.getMaxStandard() != null) {
+                pool.setCurrentStandard(Math.max(0, Math.min(poolDto.currentStandard(), pool.getMaxStandard())));
+            }
+            if (poolDto.currentBonus() != null && pool.getMaxBonus() != null) {
+                pool.setCurrentBonus(Math.max(0, Math.min(poolDto.currentBonus(), pool.getMaxBonus())));
+            }
+            if (poolDto.currentMovement() != null && pool.getMaxMovement() != null) {
+                pool.setCurrentMovement(Math.max(0, Math.min(poolDto.currentMovement(), pool.getMaxMovement())));
+            }
+            if (poolDto.currentReaction() != null && pool.getMaxReaction() != null) {
+                pool.setCurrentReaction(Math.max(0, Math.min(poolDto.currentReaction(), pool.getMaxReaction())));
+            }
+        }
+
+        if (patch.expertise() != null) {
+            CharacterExpertise exp = charModel.getExpertise();
+            var p = patch.expertise();
+            if (p.atletismo()     != null) exp.setAtletismo(p.atletismo());
+            if (p.conhecimento()  != null) exp.setConhecimento(p.conhecimento());
+            if (p.consertar()     != null) exp.setConsertar(p.consertar());
+            if (p.diplomacia()    != null) exp.setDiplomacia(p.diplomacia());
+            if (p.domar()         != null) exp.setDomar(p.domar());
+            if (p.empatia()       != null) exp.setEmpatia(p.empatia());
+            if (p.fortitude()     != null) exp.setFortitude(p.fortitude());
+            if (p.furtividade()   != null) exp.setFurtividade(p.furtividade());
+            if (p.magia()         != null) exp.setMagia(p.magia());
+            if (p.iniciativa()    != null) exp.setIniciativa(p.iniciativa());
+            if (p.intimidar()     != null) exp.setIntimidar(p.intimidar());
+            if (p.intuicao()      != null) exp.setIntuicao(p.intuicao());
+            if (p.investigacao()  != null) exp.setInvestigacao(p.investigacao());
+            if (p.labia()         != null) exp.setLabia(p.labia());
+            if (p.ladinagem()     != null) exp.setLadinagem(p.ladinagem());
+            if (p.luta()          != null) exp.setLuta(p.luta());
+            if (p.medicina()      != null) exp.setMedicina(p.medicina());
+            if (p.mente()         != null) exp.setMente(p.mente());
+            if (p.percepcao()     != null) exp.setPercepcao(p.percepcao());
+            if (p.pontaria()      != null) exp.setPontaria(p.pontaria());
+            if (p.reflexos()      != null) exp.setReflexos(p.reflexos());
+            if (p.seduzir()       != null) exp.setSeduzir(p.seduzir());
+            if (p.sobrevivencia() != null) exp.setSobrevivencia(p.sobrevivencia());
+        }
 
         CharacterModel saved = characterRepository.save(charModel);
         return sheetMapper.toDto(saved);

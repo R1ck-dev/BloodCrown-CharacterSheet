@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterPatchDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 
@@ -45,6 +46,14 @@ public interface CharacterService {
      * @return O DTO atualizado da ficha completa.
      */
     CharacterSheetDTO updateCharacter(String id, CharacterSheetDTO dto, Authentication authentication);
+
+    /**
+     * Aplica patch parcial — so atualiza campos nao-null no DTO recebido.
+     * Usado pelo auto-save do front que rastreia dirtyFields do RHF e manda
+     * so o diff (payload de ~30B em vez de ~10KB do PUT completo).
+     * Nao mexe em attacks/abilities/inventory (endpoints dedicados).
+     */
+    CharacterSheetDTO patchCharacter(String id, CharacterPatchDTO patch, Authentication authentication);
 
     /**
      * Remove permanentemente um personagem do sistema.
