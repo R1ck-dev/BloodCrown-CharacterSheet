@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import br.com.henrique.bloodcrown_cs.DTOs.CharacterPatchDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.Responses.CharacterDTO;
 import br.com.henrique.bloodcrown_cs.Services.CharacterService;
@@ -88,6 +89,16 @@ public class CharacterController {
     public ResponseEntity<CharacterSheetDTO> updateCharacter(@PathVariable String id, @RequestBody CharacterSheetDTO characterSheetDTO, Authentication authentication) {
         CharacterSheetDTO updatedCharacter = characterService.updateCharacter(id, characterSheetDTO, authentication);
         return ResponseEntity.ok(updatedCharacter);
+    }
+
+    /**
+     * Patch parcial — aplica so os campos nao-null do payload. Usado pelo auto-save
+     * do front que rastreia dirtyFields e manda so o diff (payload ~30B em vez de ~10KB
+     * do PUT completo). Nao mexe em attacks/abilities/inventory (endpoints proprios).
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<CharacterSheetDTO> patchCharacter(@PathVariable String id, @RequestBody CharacterPatchDTO patch, Authentication authentication) {
+        return ResponseEntity.ok(characterService.patchCharacter(id, patch, authentication));
     }
 
     /**

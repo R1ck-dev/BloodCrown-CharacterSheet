@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CharacterSheet, CharacterSummary } from '@/types/character';
+import type { CharacterPatch, CharacterSheet, CharacterSummary } from '@/types/character';
 import { request } from './client';
 
 export const characterKeys = {
@@ -24,6 +24,13 @@ async function updateCharacter(payload: CharacterSheet): Promise<CharacterSheet>
   return request<CharacterSheet>(`/characters/${payload.id}`, {
     method: 'PUT',
     body: payload,
+  });
+}
+
+async function patchCharacter(id: string, patch: CharacterPatch): Promise<CharacterSheet> {
+  return request<CharacterSheet>(`/characters/${id}`, {
+    method: 'PATCH',
+    body: patch,
   });
 }
 
@@ -66,6 +73,23 @@ export function useUpdateCharacter() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: updateCharacter,
+    onSuccess: (data) => {
+      qc.setQueryData(characterKeys.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: characterKeys.list() });
+    },
+  });
+}
+
+/**
+ * Patch parcial — usado pelo useAutoSave pra mandar so dirtyFields em vez do
+ * agregado inteiro. Backend retorna o CharacterSheet pos-patch pra atualizar
+ * cache direto, sem GET extra. List e invalidada porque CharacterSummary
+ * inclui name/level/health.
+ */
+export function usePatchCharacter(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: CharacterPatch) => patchCharacter(id, patch),
     onSuccess: (data) => {
       qc.setQueryData(characterKeys.detail(data.id), data);
       qc.invalidateQueries({ queryKey: characterKeys.list() });

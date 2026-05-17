@@ -166,6 +166,24 @@ export interface CharacterSheet {
   actionPool: ActionPool;
 }
 
+/**
+ * Patch parcial da ficha — todos os campos opcionais. Usado pelo auto-save
+ * que rastreia dirtyFields do RHF e manda so o diff via PATCH /characters/{id}.
+ * Nao inclui attacks/abilities/inventory (mutations dedicadas em /api/{attacks,abilities,items}).
+ */
+export interface CharacterPatch {
+  name?: string;
+  characterClass?: string;
+  level?: number;
+  attributes?: Partial<Attributes>;
+  status?: Partial<Status>;
+  expertise?: Partial<Expertise>;
+  actionPool?: Partial<ActionPool>;
+  money?: string;
+  heroPoint?: number;
+  biography?: string;
+}
+
 /** Input do modal de novo ataque */
 export interface NewAttackInput {
   name: string;

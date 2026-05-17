@@ -14,8 +14,9 @@ import { useParams } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
-import type { CharacterSheet } from '@/types/character';
-import { useCharacter, useUpdateCharacter, useRestCharacter } from '@/api/characters';
+import type { CharacterPatch, CharacterSheet } from '@/types/character';
+import { useCharacter, usePatchCharacter, useRestCharacter } from '@/api/characters';
+import { buildPatch } from '@/lib/buildPatch';
 import { useAdvanceTurn } from '@/api/abilities';
 import { useActiveEffects } from '@/hooks/useActiveEffects';
 import { getConfettiPalette } from '@/lib/themePalette';
@@ -83,7 +84,7 @@ function fireLevelUpConfetti() {
 export function SheetPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, isError, error } = useCharacter(id);
-  const updateMutation = useUpdateCharacter();
+  const patchMutation = usePatchCharacter(id ?? '');
   const restMutation = useRestCharacter(id ?? '');
   const advanceTurnMutation = useAdvanceTurn(id ?? '');
   const { buffs, activeAbilities } = useActiveEffects(data);
@@ -149,21 +150,27 @@ export function SheetPage() {
     if (id) localStorage.setItem(`bc_notepad_${id}`, value);
   };
 
-  const handleSave = async (formData: CharacterSheet) => {
+  const handleSave = async () => {
     if (!data) return;
-    // Merge: lists vem do cache (mutations dedicadas controlam),
-    // defense computada antes de persistir.
-    const merged: CharacterSheet = {
-      ...formData,
-      attacks: data.attacks,
-      abilities: data.abilities,
-      inventory: data.inventory,
-      status: {
-        ...formData.status,
-        defense: computeDefense(formData.attributes, formData.status, buffs),
-      },
-    };
-    await updateMutation.mutateAsync(merged);
+    const values = getValues();
+    const dirty = formState.dirtyFields;
+    // Constroi o patch com base em dirtyFields do RHF (so o que mudou vai).
+    const patch = buildPatch<CharacterSheet>(values, dirty) as CharacterPatch;
+    if (Object.keys(patch).length === 0) return; // nada sujo, sem PATCH.
+
+    // Defense e derivada de attributes + status + buffs. Se algum desses mudou,
+    // recalcula e injeta no patch.status pra persistir o valor correto.
+    if (patch.attributes || patch.status) {
+      patch.status = {
+        ...(patch.status ?? {}),
+        defense: computeDefense(values.attributes, values.status, buffs),
+      };
+    }
+
+    await patchMutation.mutateAsync(patch);
+    // Zera dirtyFields preservando os valores ja digitados (incluindo os que
+    // entraram durante o save em flight).
+    reset(getValues(), { keepDirtyValues: true });
   };
 
   const { status: saveStatus, saveNow } = useAutoSave({
@@ -253,7 +260,7 @@ export function SheetPage() {
           onSaveNow={handleSaveClick}
           onOpenNotepad={handleOpenNotepad}
           onRest={handleRest}
-          isSaving={saveStatus === 'saving' || updateMutation.isPending}
+          isSaving={saveStatus === 'saving' || patchMutation.isPending}
           isResting={restMutation.isPending}
         />
 
