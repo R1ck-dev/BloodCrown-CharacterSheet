@@ -33,15 +33,17 @@ const CATEGORY_LABELS: Record<AbilityCategory, string> = {
   TRANSFORMATION: 'Transformacao',
   SPECIAL: 'Especial',
   INVENTORY: 'Inventario',
+  PASSIVE: 'Passiva',
 };
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Nome obrigatorio.'),
-  category: z.enum(['CLASS', 'MAGIC', 'AWAKEN', 'WEAPON', 'TRANSFORMATION', 'SPECIAL', 'INVENTORY']),
+  category: z.enum(['CLASS', 'MAGIC', 'AWAKEN', 'WEAPON', 'TRANSFORMATION', 'SPECIAL', 'INVENTORY', 'PASSIVE']),
   actionType: z.enum(['STANDARD', 'BONUS', 'MOVEMENT', 'REACTION', 'FREE', 'FULL']).default('STANDARD'),
   description: z.string().default(''),
   resourceType: z.enum(['MANA', 'STAMINA', 'HYBRID']).default('MANA'),
   maxUses: z.coerce.number().int().min(0).default(1),
+  unlimitedUses: z.boolean().default(false),
   diceRoll: z.string().default(''),
   durationDice: z.string().default(''),
   effects: z
@@ -82,6 +84,7 @@ export function AbilityModal({
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -94,11 +97,17 @@ export function AbilityModal({
       maxUses: ability?.maxUses ?? 1,
       diceRoll: ability?.diceRoll ?? '',
       durationDice: ability?.durationDice ?? '',
+      unlimitedUses: ability ? (ability.maxUses === 0 && ability.category !== 'PASSIVE') : false,
       effects: ability?.effects?.map((e) => ({ target: e.target, value: e.value })) ?? [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'effects' });
+
+  // Categoria PASSIVE = habilidade puramente textual (so nome + descricao).
+  const category = watch('category');
+  const unlimitedUses = watch('unlimitedUses');
+  const isPassive = category === 'PASSIVE';
 
   // Reseta o form quando o modal reabre. Em modo edit, deriva da `ability`;
   // em create, usa defaults vazios (categoria depende da tab ativa).
@@ -113,6 +122,7 @@ export function AbilityModal({
         maxUses: ability?.maxUses ?? 1,
         diceRoll: ability?.diceRoll ?? '',
         durationDice: ability?.durationDice ?? '',
+        unlimitedUses: ability ? (ability.maxUses === 0 && ability.category !== 'PASSIVE') : false,
         effects: ability?.effects?.map((e) => ({ target: e.target, value: e.value })) ?? [],
       });
       setTab('general');
@@ -120,10 +130,28 @@ export function AbilityModal({
   }, [isOpen, defaultCategory, ability, reset]);
 
   const submit = handleSubmit(async (data) => {
-    await onSave({
-      ...data,
+    const payload: NewAbilityInput = {
+      name: data.name,
+      category: data.category,
+      resourceType: data.resourceType,
+      actionType: data.actionType,
+      maxUses: data.maxUses,
+      diceRoll: data.diceRoll,
+      durationDice: data.durationDice,
+      description: data.description,
       effects: data.effects.filter((e) => e.target && e.target !== 'none'),
-    });
+    };
+    if (data.category === 'PASSIVE') {
+      // Passiva: puramente textual — zera toda a automacao.
+      payload.actionType = 'FREE';
+      payload.maxUses = 0;
+      payload.durationDice = '';
+      payload.diceRoll = '';
+      payload.effects = [];
+    } else if (data.unlimitedUses) {
+      payload.maxUses = 0;
+    }
+    await onSave(payload);
     onClose();
   });
 
@@ -144,25 +172,27 @@ export function AbilityModal({
         </>
       }
     >
-      {/* Tabs internas */}
-      <div className="bc-tabs" style={{ marginBottom: 16 }}>
-        <button
-          type="button"
-          className={`bc-tab ${tab === 'general' ? 'bc-tab--active' : ''}`}
-          onClick={() => setTab('general')}
-        >
-          Geral
-        </button>
-        <button
-          type="button"
-          className={`bc-tab ${tab === 'mechanic' ? 'bc-tab--active' : ''}`}
-          onClick={() => setTab('mechanic')}
-        >
-          Automacao
-        </button>
-      </div>
+      {/* Tabs internas — escondidas pra passiva (so tem campos do Geral) */}
+      {!isPassive && (
+        <div className="bc-tabs" style={{ marginBottom: 16 }}>
+          <button
+            type="button"
+            className={`bc-tab ${tab === 'general' ? 'bc-tab--active' : ''}`}
+            onClick={() => setTab('general')}
+          >
+            Geral
+          </button>
+          <button
+            type="button"
+            className={`bc-tab ${tab === 'mechanic' ? 'bc-tab--active' : ''}`}
+            onClick={() => setTab('mechanic')}
+          >
+            Automacao
+          </button>
+        </div>
+      )}
 
-      <form onSubmit={submit} style={{ display: tab === 'general' ? 'flex' : 'none', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={submit} style={{ display: tab === 'general' || isPassive ? 'flex' : 'none', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
           <Field
             label="Nome"
@@ -188,19 +218,21 @@ export function AbilityModal({
           </div>
         </div>
 
-        <div className="bc-field">
-          <label className="bc-field__label" htmlFor="abil-action">Ação consumida</label>
-          <select
-            id="abil-action"
-            {...register('actionType')}
-            className="bc-input"
-            style={{ height: 44 }}
-          >
-            {ACTION_TYPES.map((t) => (
-              <option key={t} value={t}>{ACTION_LABELS[t]}</option>
-            ))}
-          </select>
-        </div>
+        {!isPassive && (
+          <div className="bc-field">
+            <label className="bc-field__label" htmlFor="abil-action">Ação consumida</label>
+            <select
+              id="abil-action"
+              {...register('actionType')}
+              className="bc-input"
+              style={{ height: 44 }}
+            >
+              {ACTION_TYPES.map((t) => (
+                <option key={t} value={t}>{ACTION_LABELS[t]}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="bc-field">
           <label className="bc-field__label" htmlFor="abil-desc">Descricao (Markdown)</label>
@@ -220,15 +252,17 @@ export function AbilityModal({
           />
         </div>
 
-        <Field
-          label="Formula de dado (opcional)"
-          placeholder="Ex: 2d6+INT"
-          {...register('diceRoll')}
-          hint={!errors.diceRoll ? 'Aparece como botao no card pra rolar' : undefined}
-        />
+        {!isPassive && (
+          <Field
+            label="Formula de dado (opcional)"
+            placeholder="Ex: 2d6+INT"
+            {...register('diceRoll')}
+            hint={!errors.diceRoll ? 'Aparece como botao no card pra rolar' : undefined}
+          />
+        )}
       </form>
 
-      <div style={{ display: tab === 'mechanic' ? 'flex' : 'none', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: tab === 'mechanic' && !isPassive ? 'flex' : 'none', flexDirection: 'column', gap: 16 }}>
         {/* Sistema de usos */}
         <div
           style={{
@@ -244,22 +278,38 @@ export function AbilityModal({
           >
             <RefreshCw size={11} /> SISTEMA DE USOS
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-            <div className="bc-field">
-              <label className="bc-field__label" htmlFor="abil-res">Recurso pra recuperar</label>
-              <select id="abil-res" {...register('resourceType')} className="bc-input" style={{ height: 44 }}>
-                <option value="MANA">Mana</option>
-                <option value="STAMINA">Estamina</option>
-                <option value="HYBRID">Mana ou Estamina</option>
-              </select>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: unlimitedUses ? 0 : 12,
+              cursor: 'pointer',
+              fontSize: 12,
+              color: 'var(--bc-ink)',
+            }}
+          >
+            <input type="checkbox" {...register('unlimitedUses')} />
+            Usos ilimitados (ativa/desativa sem limite)
+          </label>
+          {!unlimitedUses && (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+              <div className="bc-field">
+                <label className="bc-field__label" htmlFor="abil-res">Recurso pra recuperar</label>
+                <select id="abil-res" {...register('resourceType')} className="bc-input" style={{ height: 44 }}>
+                  <option value="MANA">Mana</option>
+                  <option value="STAMINA">Estamina</option>
+                  <option value="HYBRID">Mana ou Estamina</option>
+                </select>
+              </div>
+              <Field
+                label="Max. usos"
+                type="number"
+                min={0}
+                {...register('maxUses', { valueAsNumber: true })}
+              />
             </div>
-            <Field
-              label="Max. usos"
-              type="number"
-              min={0}
-              {...register('maxUses', { valueAsNumber: true })}
-            />
-          </div>
+          )}
         </div>
 
         {/* Effects array */}

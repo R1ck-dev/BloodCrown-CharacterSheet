@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.henrique.bloodcrown_cs.DTOs.AbilityDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
+import br.com.henrique.bloodcrown_cs.Enums.AbilityCategoryEnum;
 import br.com.henrique.bloodcrown_cs.Enums.ActionTypeEnum;
 import br.com.henrique.bloodcrown_cs.Exceptions.BadRequestException;
 import br.com.henrique.bloodcrown_cs.Exceptions.NotFoundException;
@@ -106,8 +107,19 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         ability.setResourceType(dto.resourceType());
         ability.setCharacter(charModel);
 
+        // Habilidade passiva: puramente textual (nome + descrição). Sem usos,
+        // turnos, custo de ação ou efeitos — forçado server-side.
+        if (dto.category() == AbilityCategoryEnum.PASSIVE) {
+            ability.setIsActive(false);
+            ability.setMaxUses(0);
+            ability.setCurrentUses(0);
+            ability.setTurnsRemaining(null);
+            ability.setActionType("FREE");
+            ability.setDurationDice(null);
+        }
+
         // --- LÓGICA DE EFEITOS (LISTA) ---
-        if (dto.effects() != null && !dto.effects().isEmpty()) {
+        if (dto.category() != AbilityCategoryEnum.PASSIVE && dto.effects() != null && !dto.effects().isEmpty()) {
             List<AbilityEffectModel> effectsList = new ArrayList<>();
             for (EffectDTO effDto : dto.effects()) {
                 AbilityEffectModel effect = new AbilityEffectModel();
@@ -139,6 +151,8 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
 
+        boolean wasPassive = ability.getCategory() == AbilityCategoryEnum.PASSIVE;
+
         ability.setName(dto.name());
         ability.setCategory(dto.category());
         ability.setActionType(dto.actionType());
@@ -147,11 +161,27 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         ability.setDescription(dto.description());
         ability.setResourceType(dto.resourceType());
 
-        // maxUses muda; cap em currentUses se diminuiu
-        Integer newMax = dto.maxUses();
-        ability.setMaxUses(newMax);
-        if (newMax != null && ability.getCurrentUses() != null && ability.getCurrentUses() > newMax) {
-            ability.setCurrentUses(newMax);
+        if (dto.category() == AbilityCategoryEnum.PASSIVE) {
+            // Passiva: puramente textual, sem usos/turnos/custo de ação.
+            ability.setIsActive(false);
+            ability.setMaxUses(0);
+            ability.setCurrentUses(0);
+            ability.setTurnsRemaining(null);
+            ability.setActionType("FREE");
+            ability.setDurationDice(null);
+        } else {
+            // maxUses muda; cap em currentUses se diminuiu
+            Integer newMax = dto.maxUses();
+            ability.setMaxUses(newMax);
+            if (newMax != null && ability.getCurrentUses() != null && ability.getCurrentUses() > newMax) {
+                ability.setCurrentUses(newMax);
+            }
+            if (wasPassive) {
+                // Conversão passiva -> ativa: reabastece usos (senão a
+                // habilidade nasce exausta) e zera o runtime de turnos.
+                ability.setCurrentUses(dto.maxUses());
+                ability.setTurnsRemaining(0);
+            }
         }
 
         // Substitui lista de efeitos por inteiro (orphanRemoval cuida da remoção).
@@ -161,7 +191,8 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         } else {
             ability.getEffects().clear();
         }
-        if (dto.effects() != null) {
+        // Passiva nunca tem efeitos — não reconstrói a lista (fica vazia).
+        if (dto.category() != AbilityCategoryEnum.PASSIVE && dto.effects() != null) {
             for (EffectDTO effDto : dto.effects()) {
                 AbilityEffectModel effect = new AbilityEffectModel();
                 effect.setTargetAttribute(effDto.target());
@@ -206,10 +237,17 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
         AbilityModel ability = abilityRepository.findByIdAndCharacter_FromUserId(abilityId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Habilidade não encontrada."));
 
+        // Passiva é puramente textual — não tem estado de ativação.
+        if (ability.getCategory() == AbilityCategoryEnum.PASSIVE) {
+            throw new BadRequestException("Habilidades passivas não são ativáveis.");
+        }
+
         boolean isActivating = !Boolean.TRUE.equals(ability.getIsActive());
+        // maxUses 0/null = usos ilimitados: não checa nem consome cargas.
+        boolean unlimited = ability.getMaxUses() == null || ability.getMaxUses() <= 0;
 
         if (isActivating) {
-            if (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0) {
+            if (!unlimited && (ability.getCurrentUses() == null || ability.getCurrentUses() <= 0)) {
                 throw new BadRequestException("Sem usos disponíveis para ativar esta habilidade!");
             }
 
@@ -225,7 +263,9 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
             consumeFromPool(ability.getCharacter(), spent);
 
-            ability.setCurrentUses(ability.getCurrentUses() - 1);
+            if (!unlimited) {
+                ability.setCurrentUses(ability.getCurrentUses() - 1);
+            }
             ability.setIsActive(true);
             if (ability.getDurationDice() != null && !ability.getDurationDice().isBlank()) {
                 int turns = rollDice(ability.getDurationDice());
@@ -424,7 +464,8 @@ private AbilityDTO convertToDTO(AbilityModel ab) {
 
         CharacterModel character = ability.getCharacter();
 
-        if (ability.getCurrentUses() >= ability.getMaxUses()) {
+        Integer max = ability.getMaxUses();
+        if (max == null || max <= 0 || (ability.getCurrentUses() != null && ability.getCurrentUses() >= max)) {
             throw new BadRequestException("Os usos já estão cheios!");
         }
 

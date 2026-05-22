@@ -12,12 +12,10 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  /* Scrollbar invisivel — manter a strip discreta. Scroll horizontal via swipe ou wheel. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.bc-tabs::-webkit-scrollbar {
-  display: none;
+  /* Scrollbar fina e visivel: quando ha tabs demais pra largura (ex: Sheet com
+     muitas categorias), o usuario ve e arrasta a barra pra navegar na horizontal.
+     Thumb tematizado vem de .bc-scroll (a strip da Sheet usa as duas classes). */
+  scrollbar-width: thin;
 }
 
 .bc-tab {

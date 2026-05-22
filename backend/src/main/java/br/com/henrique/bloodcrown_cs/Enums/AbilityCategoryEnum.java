@@ -7,5 +7,6 @@ public enum AbilityCategoryEnum {
     WEAPON,
     TRANSFORMATION,
     SPECIAL,
-    INVENTORY
+    INVENTORY,
+    PASSIVE
 }

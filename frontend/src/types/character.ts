@@ -11,7 +11,8 @@ export type AbilityCategory =
   | 'WEAPON'
   | 'TRANSFORMATION'
   | 'SPECIAL'
-  | 'INVENTORY';
+  | 'INVENTORY'
+  | 'PASSIVE';
 
 export type AbilityResource = 'MANA' | 'STAMINA' | 'HYBRID';
 

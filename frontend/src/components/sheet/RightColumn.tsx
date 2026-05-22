@@ -13,7 +13,7 @@
  */
 import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
-import { Plus, Coins, BookOpen, Sword, Sparkles, Zap, Swords, Shapes, Star, Backpack, FileText } from 'lucide-react';
+import { Plus, Coins, BookOpen, Sword, Sparkles, Zap, Swords, Shapes, Star, ShieldCheck, Backpack, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import type {
@@ -33,6 +33,7 @@ import { AbilityModal } from './modals/AbilityModal';
 import { ItemModal } from './modals/ItemModal';
 import { CombatPanel } from './panels/CombatPanel';
 import { AbilityPanel } from './panels/AbilityPanel';
+import { PassivePanel } from './panels/PassivePanel';
 import { InventoryPanel } from './panels/InventoryPanel';
 import { useCreateAttack, useDeleteAttack, useUpdateAttack } from '@/api/attacks';
 import {
@@ -55,6 +56,7 @@ type TabId =
   | 'WEAPON'
   | 'TRANSFORMATION'
   | 'SPECIAL'
+  | 'PASSIVE'
   | 'INVENTORY'
   | 'DESCRIPTION';
 
@@ -72,6 +74,7 @@ const TABS: TabDef[] = [
   { id: 'WEAPON',         label: 'Arma',           Icon: Swords },
   { id: 'TRANSFORMATION', label: 'Transf.',        Icon: Shapes },
   { id: 'SPECIAL',        label: 'Especial',       Icon: Star },
+  { id: 'PASSIVE',        label: 'Passivas',       Icon: ShieldCheck },
   { id: 'INVENTORY',      label: 'Inventario',     Icon: Backpack },
   { id: 'DESCRIPTION',    label: 'Descricao',      Icon: FileText },
 ];
@@ -83,6 +86,7 @@ const ABILITY_TAB_TO_CATEGORY: Record<string, AbilityCategory> = {
   WEAPON: 'WEAPON',
   TRANSFORMATION: 'TRANSFORMATION',
   SPECIAL: 'SPECIAL',
+  PASSIVE: 'PASSIVE',
 };
 
 interface Props {
@@ -416,6 +420,25 @@ export function RightColumn({
               />
             </div>
           ) : null,
+        )}
+
+        {/* PASSIVAS — habilidades puramente textuais (nome + descricao) */}
+        {activeTab === 'PASSIVE' && (
+          <>
+            <SectionHead
+              icon={<ShieldCheck size={14} color="#D4AF37" />}
+              title="HABILIDADES PASSIVAS"
+              actionLabel="Adicionar"
+              onAction={() => setAbilityModalOpen(true)}
+            />
+            <PassivePanel
+              characterId={characterId}
+              abilities={abilities}
+              onDelete={(id) => deleteAbility.mutateAsync(id)}
+              onEdit={setEditingAbility}
+              busy={deleteAbility.isPending}
+            />
+          </>
         )}
 
         {/* INVENTARIO */}
