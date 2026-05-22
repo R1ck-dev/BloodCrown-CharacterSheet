@@ -48,7 +48,9 @@ public class AbilityModel {
      * Categoria da habilidade (ex: Passiva, Ativa), armazenada como String.
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "category")
+    // varchar (nao enum nativo): permite novos valores do enum sem ALTER TABLE.
+    // Hibernate 6 criaria enum('CLASS',...) e ddl-auto=update nao atualiza isso.
+    @Column(name = "category", columnDefinition = "varchar(50)")
     private AbilityCategoryEnum category;
 
     /**
