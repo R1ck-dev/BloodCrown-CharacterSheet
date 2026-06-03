@@ -104,10 +104,9 @@ export function useToggleAbility(characterId: string) {
   return useMutation({
     mutationFn: ({ abilityId, spendAs }: { abilityId: string; spendAs?: ActionType }) =>
       toggleAbility(abilityId, spendAs),
-    onSuccess: (sheet) => {
-      qc.setQueryData(characterKeys.detail(characterId), sheet);
-      playSound('ability');
-    },
+    // Som no clique (antes do round-trip) pra feedback imediato.
+    onMutate: () => playSound('ability'),
+    onSuccess: (sheet) => qc.setQueryData(characterKeys.detail(characterId), sheet),
   });
 }
 
@@ -124,9 +123,8 @@ export function useAdvanceTurn(characterId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => advanceTurn(characterId),
-    onSuccess: (sheet) => {
-      qc.setQueryData(characterKeys.detail(characterId), sheet);
-      playSound('turn');
-    },
+    // Som no clique (antes do round-trip) pra feedback imediato.
+    onMutate: () => playSound('turn'),
+    onSuccess: (sheet) => qc.setQueryData(characterKeys.detail(characterId), sheet),
   });
 }

@@ -247,8 +247,8 @@ export function RightColumn({
       toast.error(`Formula invalida: ${it.useDice}`);
       return;
     }
-    publishRoll(result); // dispara DiceToast com animacao
-    playSound('item'); // feedback imediato do uso (o som do dado vem no settle do toast)
+    publishRoll({ ...result, flavor: 'item' }); // card proprio de item, sem som de dado
+    playSound('item'); // som do item (DiceToast nao toca 'dice' pra rolagem de item)
 
     // Cap na barra correspondente
     const currentField = slot.current as 'status.currentHealth' | 'status.currentMana' | 'status.currentStamina';

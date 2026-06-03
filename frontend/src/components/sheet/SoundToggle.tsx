@@ -6,11 +6,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, Volume1, VolumeX } from 'lucide-react';
 import { useSound } from '@/hooks/useSound';
+import { preloadSounds } from '@/lib/sound';
 
 export function SoundToggle() {
   const { muted, volume, toggleMuted, setVolume } = useSound();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Aquece o cache dos sons assim que a ficha abre, pra 1ª reprodução ser instantânea.
+  useEffect(() => {
+    preloadSounds();
+  }, []);
 
   useEffect(() => {
     if (!open) return;

@@ -26,6 +26,8 @@ export interface DamageRoll {
   maxTotal: number; // soma maxima possivel da formula (pra calcular heavy hit)
   isHeavyHit: boolean; // total > maxTotal / 2 — pra trigger de shake/flash
   maxFace: number;
+  /** 'item' marca uso de item/pocao — DiceToast usa card proprio e nao toca som de dado. */
+  flavor?: 'damage' | 'item';
 }
 
 export type RollResult = AttributeRoll | DamageRoll;

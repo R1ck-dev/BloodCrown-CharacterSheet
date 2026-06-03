@@ -116,3 +116,20 @@ export function playSound(name: SoundName): void {
     /* ambiente sem suporte a Audio — ignora */
   }
 }
+
+// Aquece o cache do browser baixando os arquivos uma vez. Sem isso, a 1ª
+// reprodução de cada som espera o download — gera um delay perceptível.
+let preloaded = false;
+export function preloadSounds(): void {
+  if (preloaded) return;
+  preloaded = true;
+  try {
+    for (const src of Object.values(SOUND_MANIFEST)) {
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = src;
+    }
+  } catch {
+    /* ambiente sem suporte a Audio — ignora */
+  }
+}
