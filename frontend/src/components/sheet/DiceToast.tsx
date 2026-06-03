@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Dice5, X, Sword } from 'lucide-react';
+import { Dice5, X, Sword, FlaskRound } from 'lucide-react';
 import { subscribeRoll } from '@/lib/rollBus';
 import { playSound } from '@/lib/sound';
 import { getConfettiPalette } from '@/lib/themePalette';
@@ -44,6 +44,10 @@ export function DiceToast() {
       setRoll(newRoll);
       setSpinning(true);
 
+      const isCritRoll = newRoll.kind === 'attribute' && newRoll.isCriticalSuccess;
+      const isItemRoll = newRoll.kind === 'damage' && newRoll.flavor === 'item';
+      const isHeavyRoll = newRoll.kind === 'damage' && newRoll.isHeavyHit && !isItemRoll;
+
       // Spin loop
       const maxFace = newRoll.kind === 'damage' ? newRoll.maxFace : 20;
       spinTimerRef.current = setInterval(() => {
@@ -57,14 +61,14 @@ export function DiceToast() {
         if (spinTimerRef.current) clearInterval(spinTimerRef.current);
         setSpinning(false);
 
-        // Som + confetti no momento em que o numero real e revelado.
-        // Prioridade: critico > golpe pesado > rolagem comum (1 som por rolagem).
-        if (newRoll.kind === 'attribute' && newRoll.isCriticalSuccess) {
+        // Som + confetti no momento da revelacao do numero (timing original).
+        // Item nao toca som de dado (o som proprio do item ja tocou em quem o usou).
+        if (isCritRoll) {
           fireGoldConfetti();
           playSound('crit');
-        } else if (newRoll.kind === 'damage' && newRoll.isHeavyHit) {
+        } else if (isHeavyRoll) {
           playSound('heavy');
-        } else {
+        } else if (!isItemRoll) {
           playSound('dice');
         }
       }, SPIN_DURATION);
@@ -137,25 +141,36 @@ function ToastBody({
   spinNumbers: number[];
   onClose: () => void;
 }) {
+  const isItem = roll.kind === 'damage' && roll.flavor === 'item';
   const isCrit = roll.kind === 'attribute' && roll.isCriticalSuccess && !spinning;
-  const isHeavy = roll.kind === 'damage' && roll.isHeavyHit && !spinning;
+  const isHeavy = roll.kind === 'damage' && roll.isHeavyHit && !spinning && !isItem;
 
   // accentColor entra em <SvgIcon color={...}> e em string-concat (`${color}cc`),
   // ambos NAO suportam var() — mantemos hex direto. Aceita ficar fora do tema.
-  const accentColor = isCrit ? '#F5D76E' : roll.kind === 'damage' ? '#FCA5A5' : '#9D4EDD';
+  const accentColor = isCrit
+    ? '#F5D76E'
+    : isItem
+      ? '#6EE7B7'
+      : roll.kind === 'damage'
+        ? '#FCA5A5'
+        : '#9D4EDD';
   const stripeColor = isCrit
     ? 'var(--bc-gold-bright)'
-    : roll.kind === 'damage'
-      ? 'var(--bc-blood)'
-      : 'var(--bc-purple)';
+    : isItem
+      ? '#6EE7B7'
+      : roll.kind === 'damage'
+        ? 'var(--bc-blood)'
+        : 'var(--bc-purple)';
   const titleText =
     isCrit
       ? `CRITICO NATURAL · 20`
-      : roll.kind === 'damage'
-        ? isHeavy
-          ? `GOLPE PESADO`
-          : 'ROLAGEM DE DANO'
-        : 'TESTE';
+      : isItem
+        ? 'ITEM USADO'
+        : roll.kind === 'damage'
+          ? isHeavy
+            ? `GOLPE PESADO`
+            : 'ROLAGEM DE DANO'
+          : 'TESTE';
 
   return (
     <div
@@ -191,7 +206,9 @@ function ToastBody({
         }}
       >
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          {isHeavy ? (
+          {isItem ? (
+            <FlaskRound size={12} color={accentColor} />
+          ) : isHeavy ? (
             <Sword size={12} color={accentColor} />
           ) : (
             <Dice5 size={12} color={accentColor} />
@@ -289,12 +306,16 @@ function ToastBody({
               lineHeight: 0.95,
               color: isCrit
                 ? 'var(--bc-gold-bright)'
-                : roll.kind === 'damage'
-                  ? 'var(--bc-blood-bright)'
-                  : 'var(--bc-purple-soft)',
+                : isItem
+                  ? '#6EE7B7'
+                  : roll.kind === 'damage'
+                    ? 'var(--bc-blood-bright)'
+                    : 'var(--bc-purple-soft)',
               textShadow: isCrit
                 ? '0 0 24px color-mix(in srgb, var(--bc-gold-bright) 80%, transparent), 0 0 48px color-mix(in srgb, var(--bc-gold) 50%, transparent)'
-                : '0 0 24px color-mix(in srgb, var(--bc-purple-hover) 60%, transparent), 0 4px 8px rgba(0,0,0,0.6)',
+                : isItem
+                  ? '0 0 24px color-mix(in srgb, #6EE7B7 55%, transparent), 0 4px 8px rgba(0,0,0,0.6)'
+                  : '0 0 24px color-mix(in srgb, var(--bc-purple-hover) 60%, transparent), 0 4px 8px rgba(0,0,0,0.6)',
             }}
           >
             {spinning ? spinPreview(roll, spinNumbers) : roll.total}

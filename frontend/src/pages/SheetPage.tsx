@@ -203,9 +203,9 @@ export function SheetPage() {
       cancelButtonText: 'Cancelar',
     });
     if (!result.isConfirmed) return;
+    playSound('rest'); // som no confirmar, sem esperar o round-trip
     try {
       await restMutation.mutateAsync();
-      playSound('rest');
       toast.success('Renovado. Voce esta pronto para a aventura.');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro no descanso.';
