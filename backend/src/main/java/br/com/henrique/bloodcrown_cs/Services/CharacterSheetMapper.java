@@ -10,6 +10,7 @@ import br.com.henrique.bloodcrown_cs.DTOs.ActionPoolDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttackDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.AttributesDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.CharacterSheetDTO;
+import br.com.henrique.bloodcrown_cs.DTOs.CustomSkillDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.EffectDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ExpertiseDTO;
 import br.com.henrique.bloodcrown_cs.DTOs.ItemDTO;
@@ -125,6 +126,15 @@ public class CharacterSheetMapper {
             ))
             .toList();
 
+        List<CustomSkillDTO> customSkills = charModel.getCustomSkills().stream()
+            .map(cs -> new CustomSkillDTO(
+                cs.getId(),
+                cs.getName(),
+                cs.getAttribute(),
+                cs.getValue()
+            ))
+            .toList();
+
         CharacterActionPool poolModel = charModel.getActionPool();
         ActionPoolDTO actionPool = poolModel != null
             ? new ActionPoolDTO(
@@ -146,6 +156,7 @@ public class CharacterSheetMapper {
             attacks,
             abilities,
             inventory,
+            customSkills,
             charModel.getMoney(),
             charModel.getHeroPoint(),
             charModel.getBiography(),

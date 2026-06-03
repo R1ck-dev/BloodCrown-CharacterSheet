@@ -20,6 +20,7 @@ import { buildPatch } from '@/lib/buildPatch';
 import { useAdvanceTurn } from '@/api/abilities';
 import { useActiveEffects } from '@/hooks/useActiveEffects';
 import { getConfettiPalette } from '@/lib/themePalette';
+import { playSound } from '@/lib/sound';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useDiceRoll } from '@/hooks/useDiceRoll';
 import { SheetHeader } from '@/components/sheet/SheetHeader';
@@ -129,6 +130,7 @@ export function SheetPage() {
       const previous = previousLevelRef.current;
       if (current > previous && previous > 0) {
         fireLevelUpConfetti();
+        playSound('levelup');
         toast.success(`Nivel ${current}!`, { duration: 3000 });
       }
       previousLevelRef.current = current;
@@ -203,6 +205,7 @@ export function SheetPage() {
     if (!result.isConfirmed) return;
     try {
       await restMutation.mutateAsync();
+      playSound('rest');
       toast.success('Renovado. Voce esta pronto para a aventura.');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro no descanso.';
@@ -274,7 +277,12 @@ export function SheetPage() {
 
           {/* CENTRAL — pericias */}
           <div className="bc-sheet-grid__center">
-            <SkillsBlock buffs={buffs} onRoll={rollAttr} />
+            <SkillsBlock
+              buffs={buffs}
+              customSkills={data.customSkills ?? []}
+              characterId={id}
+              onRoll={rollAttr}
+            />
           </div>
 
           {/* DIREITA — tabs + cards + modais */}
@@ -284,6 +292,7 @@ export function SheetPage() {
               attacks={data.attacks ?? []}
               abilities={data.abilities ?? []}
               inventory={data.inventory ?? []}
+              customSkills={data.customSkills ?? []}
               onRollDamage={rollDmg}
             />
           </div>
@@ -298,6 +307,7 @@ export function SheetPage() {
           activeAbilities={activeAbilities}
           onAdvanceTurn={handleAdvanceTurn}
           isAdvancing={advanceTurnMutation.isPending}
+          customSkills={data.customSkills ?? []}
         />
 
         {/* Notepad — localStorage por personagem, Markdown split editor */}

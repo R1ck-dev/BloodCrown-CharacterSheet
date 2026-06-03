@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Plus, Coins, BookOpen, Sword, Sparkles, Zap, Swords, Shapes, Star, ShieldCheck, Backpack, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { playSound } from '@/lib/sound';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import type {
   Ability,
@@ -23,6 +24,7 @@ import type {
   ActionType,
   Attack,
   CharacterSheet,
+  CustomSkill,
   InventoryItem,
   NewAbilityInput,
   NewAttackInput,
@@ -94,6 +96,7 @@ interface Props {
   attacks: Attack[];
   abilities: Ability[];
   inventory: InventoryItem[];
+  customSkills: CustomSkill[];
   onRollDamage: (formula: string, source: string) => void;
 }
 
@@ -102,6 +105,7 @@ export function RightColumn({
   attacks,
   abilities,
   inventory,
+  customSkills,
   onRollDamage,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('COMBAT');
@@ -244,6 +248,7 @@ export function RightColumn({
       return;
     }
     publishRoll(result); // dispara DiceToast com animacao
+    playSound('item'); // feedback imediato do uso (o som do dado vem no settle do toast)
 
     // Cap na barra correspondente
     const currentField = slot.current as 'status.currentHealth' | 'status.currentMana' | 'status.currentStamina';
@@ -416,6 +421,7 @@ export function RightColumn({
                 onDelete={(id) => deleteAbility.mutateAsync(id)}
                 onEdit={setEditingAbility}
                 onRoll={onRollDamage}
+                customSkills={customSkills}
                 busy={toggleAbility.isPending || recoverAbility.isPending || deleteAbility.isPending}
               />
             </div>
@@ -520,6 +526,7 @@ export function RightColumn({
         onSave={handleSaveAbility}
         defaultCategory={abilityDefaultCategory}
         ability={editingAbility ?? undefined}
+        customSkills={customSkills}
         busy={createAbility.isPending || updateAbility.isPending}
       />
       <ItemModal

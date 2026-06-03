@@ -17,6 +17,7 @@ import java.util.List;
  * @param attacks Lista de ataques e armas disponíveis.
  * @param abilities Lista de habilidades e magias conhecidas.
  * @param inventory Lista de itens possuídos.
+ * @param customSkills Lista de perícias personalizadas (coleção dinâmica do jogador).
  * @param money Representação monetária (ex: "100 PO").
  * @param heroPoint Pontos de herói ou inspiração disponíveis.
  * @param biography Texto descritivo da história do personagem.
@@ -33,6 +34,7 @@ public record CharacterSheetDTO(
     List<AttackDTO> attacks,
     List<AbilityDTO> abilities,
     List<ItemDTO> inventory,
+    List<CustomSkillDTO> customSkills,
     String money,
     Integer heroPoint,
     String biography,

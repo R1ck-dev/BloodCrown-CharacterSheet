@@ -11,7 +11,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Swords, Calculator, Zap } from 'lucide-react';
-import type { Ability } from '@/types/character';
+import type { Ability, CustomSkill } from '@/types/character';
 import { ActionPoolBlock } from './ActionPoolBlock';
 import { DamageCalcBlock } from './DamageCalcBlock';
 import { ActiveEffectsBlock } from './ActiveEffectsBlock';
@@ -30,9 +30,10 @@ interface Props {
   activeAbilities: Ability[];
   onAdvanceTurn: () => void;
   isAdvancing: boolean;
+  customSkills: CustomSkill[];
 }
 
-export function BottomDock({ characterId, activeAbilities, onAdvanceTurn, isAdvancing }: Props) {
+export function BottomDock({ characterId, activeAbilities, onAdvanceTurn, isAdvancing, customSkills }: Props) {
   const [open, setOpen] = useState<PanelKey | null>(null);
   const hasEffects = activeAbilities.length > 0;
 
@@ -115,6 +116,7 @@ export function BottomDock({ characterId, activeAbilities, onAdvanceTurn, isAdva
             activeAbilities={activeAbilities}
             onAdvanceTurn={onAdvanceTurn}
             isAdvancing={isAdvancing}
+            customSkills={customSkills}
           />
         )}
       </BottomSheet>

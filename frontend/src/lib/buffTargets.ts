@@ -155,6 +155,41 @@ export const TARGET_LABELS: Record<string, string> = {
   skillSobrevivencia: 'Sobrevivencia',
 };
 
+/**
+ * Perícias personalizadas como alvo de buff. Como são dinâmicas (criadas em
+ * runtime), não cabem em SKILL_TARGETS fixo — o target encoda o id da perícia
+ * (ex: "customSkill:abc-123"). useActiveEffects soma qualquer target no Map de
+ * buffs genericamente, então isso acumula sem mudança no motor de efeitos.
+ */
+export const CUSTOM_SKILL_PREFIX = 'customSkill:';
+
+/** Monta o target opaco de uma perícia personalizada a partir do seu id. */
+export function customSkillTarget(id: string): string {
+  return `${CUSTOM_SKILL_PREFIX}${id}`;
+}
+
+/** Extrai o id da perícia de um target "customSkill:<id>" (ou null se não for). */
+export function parseCustomSkillId(target: string): string | null {
+  return target.startsWith(CUSTOM_SKILL_PREFIX) ? target.slice(CUSTOM_SKILL_PREFIX.length) : null;
+}
+
+/**
+ * Resolve um target em label legível pra exibição (badges de efeito).
+ * Perícias personalizadas viram o nome da perícia (busca na lista fornecida);
+ * demais usam TARGET_LABELS. Fallback final: o próprio target cru.
+ */
+export function resolveTargetLabel(
+  target: string,
+  customSkills?: ReadonlyArray<{ id: string; name: string }>,
+): string {
+  const customId = parseCustomSkillId(target);
+  if (customId) {
+    const found = customSkills?.find((s) => s.id === customId);
+    return found?.name || 'Perícia';
+  }
+  return TARGET_LABELS[target] || target;
+}
+
 // Helpers de tipo: campos validos de cada embeddable (pra autocomplete)
 export type AttributeField = keyof Attributes;
 export type ExpertiseField = keyof Expertise;

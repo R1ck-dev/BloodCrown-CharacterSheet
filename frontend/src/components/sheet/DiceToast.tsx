@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Dice5, X, Sword } from 'lucide-react';
 import { subscribeRoll } from '@/lib/rollBus';
+import { playSound } from '@/lib/sound';
 import { getConfettiPalette } from '@/lib/themePalette';
 import type { AttributeRoll, DamageRoll, RollResult } from '@/lib/dice';
 
@@ -56,9 +57,15 @@ export function DiceToast() {
         if (spinTimerRef.current) clearInterval(spinTimerRef.current);
         setSpinning(false);
 
-        // Crit nat 20: confetti dourado canvas-confetti
+        // Som + confetti no momento em que o numero real e revelado.
+        // Prioridade: critico > golpe pesado > rolagem comum (1 som por rolagem).
         if (newRoll.kind === 'attribute' && newRoll.isCriticalSuccess) {
           fireGoldConfetti();
+          playSound('crit');
+        } else if (newRoll.kind === 'damage' && newRoll.isHeavyHit) {
+          playSound('heavy');
+        } else {
+          playSound('dice');
         }
       }, SPIN_DURATION);
 

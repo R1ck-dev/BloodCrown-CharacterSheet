@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, useDragControls } from 'motion/react';
 import { Swords, Calculator, Zap, ChevronRight, X } from 'lucide-react';
-import type { Ability } from '@/types/character';
+import type { Ability, CustomSkill } from '@/types/character';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { ActionPoolBlock } from './ActionPoolBlock';
 import { DamageCalcBlock } from './DamageCalcBlock';
@@ -26,6 +26,7 @@ interface Props {
   activeAbilities: Ability[];
   onAdvanceTurn: () => void;
   isAdvancing: boolean;
+  customSkills: CustomSkill[];
 }
 
 const PANEL_WIDTH = 320;
@@ -40,7 +41,7 @@ export function LeftDock(props: Props) {
   return bp === 'mobile' ? <BottomDock {...props} /> : <DesktopDock {...props} />;
 }
 
-function DesktopDock({ characterId, activeAbilities, onAdvanceTurn, isAdvancing }: Props) {
+function DesktopDock({ characterId, activeAbilities, onAdvanceTurn, isAdvancing, customSkills }: Props) {
   // Ordem de abertura: ESTAVEL no DOM (nao reordena no focus pra nao perder pointer capture).
   // Cada item entra append-only. Saida via close/toggle preserva ordem dos restantes.
   const [open, setOpen] = useState<PanelKey[]>([]);
@@ -141,6 +142,7 @@ function DesktopDock({ characterId, activeAbilities, onAdvanceTurn, isAdvancing 
                 activeAbilities={activeAbilities}
                 onAdvanceTurn={onAdvanceTurn}
                 isAdvancing={isAdvancing}
+                customSkills={customSkills}
               />
             )}
           </FloatingPanel>

@@ -11,9 +11,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useFormContext } from 'react-hook-form';
 import { ChevronDown, Clock, Dice5, Pencil, Power, Sparkles, Trash2 } from 'lucide-react';
 import { MarkdownView } from '@/components/ui/MarkdownView';
-import { TARGET_LABELS } from '@/lib/buffTargets';
+import { resolveTargetLabel } from '@/lib/buffTargets';
 import { ACTION_COLORS, ACTION_LABELS, availableSubstitutes, poolRemaining } from '@/lib/actionTypes';
-import type { Ability, AbilityResource, ActionType, CharacterSheet } from '@/types/character';
+import type { Ability, AbilityResource, ActionType, CharacterSheet, CustomSkill } from '@/types/character';
 
 const RESOURCE_LABEL: Record<AbilityResource, string> = {
   MANA: 'Mana',
@@ -35,6 +35,8 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   busy?: boolean;
+  /** Perícias personalizadas — pra resolver o nome em badges de efeito (customSkill:<id>). */
+  customSkills?: CustomSkill[];
 }
 
 export function AbilityCardCompact({
@@ -45,6 +47,7 @@ export function AbilityCardCompact({
   onEdit,
   onDelete,
   busy = false,
+  customSkills = [],
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [showSubstitutes, setShowSubstitutes] = useState(false);
@@ -216,7 +219,7 @@ export function AbilityCardCompact({
                         border: '1px solid rgba(212, 175, 55, 0.2)',
                       }}
                     >
-                      {e.value >= 0 ? `+${e.value}` : e.value} {TARGET_LABELS[e.target] || e.target}
+                      {e.value >= 0 ? `+${e.value}` : e.value} {resolveTargetLabel(e.target, customSkills)}
                     </span>
                   ))}
                 </div>
