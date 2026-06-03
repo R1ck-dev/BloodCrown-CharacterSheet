@@ -15,6 +15,7 @@ import { StickyNote, ArrowLeft, Tent, Save } from 'lucide-react';
 import type { CharacterSheet } from '@/types/character';
 import { Button } from '@/components/ui/Button';
 import { SaveIndicator } from './SaveIndicator';
+import { SoundToggle } from './SoundToggle';
 import type { SaveStatus } from '@/hooks/useAutoSave';
 
 interface Props {
@@ -135,6 +136,8 @@ export function SheetHeader({
         >
           <Tent size={15} />
         </button>
+
+        <SoundToggle />
 
         <div className="bc-sheet-header__save-indicator">
           <SaveIndicator status={saveStatus} />

@@ -8,6 +8,7 @@ import type {
 } from '@/types/character';
 import { request } from './client';
 import { characterKeys } from './characters';
+import { playSound } from '@/lib/sound';
 
 async function createAbility(characterId: string, payload: NewAbilityInput): Promise<Ability> {
   return request<Ability>(`/abilities/${characterId}`, {
@@ -103,7 +104,10 @@ export function useToggleAbility(characterId: string) {
   return useMutation({
     mutationFn: ({ abilityId, spendAs }: { abilityId: string; spendAs?: ActionType }) =>
       toggleAbility(abilityId, spendAs),
-    onSuccess: (sheet) => qc.setQueryData(characterKeys.detail(characterId), sheet),
+    onSuccess: (sheet) => {
+      qc.setQueryData(characterKeys.detail(characterId), sheet);
+      playSound('ability');
+    },
   });
 }
 
@@ -120,6 +124,9 @@ export function useAdvanceTurn(characterId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => advanceTurn(characterId),
-    onSuccess: (sheet) => qc.setQueryData(characterKeys.detail(characterId), sheet),
+    onSuccess: (sheet) => {
+      qc.setQueryData(characterKeys.detail(characterId), sheet);
+      playSound('turn');
+    },
   });
 }

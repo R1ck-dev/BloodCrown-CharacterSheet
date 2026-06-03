@@ -19,8 +19,8 @@ import { Modal } from './Modal';
 import { Field } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
-import type { Ability, AbilityCategory, ActionType, NewAbilityInput } from '@/types/character';
-import { ATTR_TARGETS, SKILL_TARGETS, STATUS_TARGETS, TARGET_LABELS } from '@/lib/buffTargets';
+import type { Ability, AbilityCategory, ActionType, CustomSkill, NewAbilityInput } from '@/types/character';
+import { ATTR_TARGETS, SKILL_TARGETS, STATUS_TARGETS, TARGET_LABELS, customSkillTarget } from '@/lib/buffTargets';
 import { ACTION_LABELS } from '@/lib/actionTypes';
 
 const ACTION_TYPES: ActionType[] = ['STANDARD', 'BONUS', 'MOVEMENT', 'REACTION', 'FREE', 'FULL'];
@@ -66,6 +66,8 @@ interface Props {
   busy?: boolean;
   /** Se fornecida, modal opera em modo edit (preenche campos, troca titulo/botao). */
   ability?: Ability;
+  /** Pericias personalizadas do personagem — viram alvos selecionaveis nos efeitos. */
+  customSkills?: CustomSkill[];
 }
 
 export function AbilityModal({
@@ -75,6 +77,7 @@ export function AbilityModal({
   defaultCategory = 'CLASS',
   busy = false,
   ability,
+  customSkills = [],
 }: Props) {
   const isEdit = !!ability;
   const [tab, setTab] = useState<'general' | 'mechanic'>('general');
@@ -367,6 +370,15 @@ export function AbilityModal({
                       <option key={t} value={t}>{TARGET_LABELS[t]}</option>
                     ))}
                   </optgroup>
+                  {customSkills.length > 0 && (
+                    <optgroup label="Pericias personalizadas">
+                      {customSkills.map((cs) => (
+                        <option key={cs.id} value={customSkillTarget(cs.id)}>
+                          {cs.name || 'Pericia'}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
                 <input
                   type="number"

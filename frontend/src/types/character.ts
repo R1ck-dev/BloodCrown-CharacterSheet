@@ -124,6 +124,19 @@ export interface InventoryItem {
   useDice: string;
 }
 
+/**
+ * Perícia personalizada criada pelo jogador. Coleção dinâmica (igual attacks/
+ * abilities/inventory), gerida por /custom-skills. Renderizada inline no bloco
+ * de Perícias: rolável, vinculada a um atributo e alvo de buffs de habilidade.
+ */
+export interface CustomSkill {
+  id: string;
+  name: string;
+  /** Atributo de vínculo — uma das 6 chaves de Attributes ("forca", "destreza", ...). */
+  attribute: keyof Attributes;
+  value: number;
+}
+
 /** Resposta de GET /characters (listagem resumida) */
 export interface CharacterSummary {
   id: string;
@@ -160,6 +173,7 @@ export interface CharacterSheet {
   attacks: Attack[];
   abilities: Ability[];
   inventory: InventoryItem[];
+  customSkills: CustomSkill[];
   money: string;
   heroPoint: number;
   biography: string;
@@ -213,4 +227,11 @@ export interface NewItemInput {
   effectValue: number;
   quantity: number;
   useDice: string;
+}
+
+/** Input pra criar/editar uma perícia personalizada */
+export interface NewCustomSkillInput {
+  name: string;
+  attribute: keyof Attributes;
+  value: number;
 }

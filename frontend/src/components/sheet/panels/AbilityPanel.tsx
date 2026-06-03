@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useListFilters } from '@/hooks/useListFilters';
 import { ListFilters, ShowMore } from '@/components/ui/ListFilters';
 import { AbilityCardCompact } from '../AbilityCardCompact';
-import type { Ability, AbilityCategory, ActionType, AbilityResource } from '@/types/character';
+import type { Ability, AbilityCategory, ActionType, AbilityResource, CustomSkill } from '@/types/character';
 
 const ACTION_TYPE_OPTIONS = [
   { value: 'STANDARD',   label: 'Padrao' },
@@ -53,6 +53,7 @@ interface Props {
   onDelete: (id: string) => void;
   onEdit: (ab: Ability) => void;
   onRoll: (formula: string, source: string) => void;
+  customSkills: CustomSkill[];
   busy: boolean;
 }
 
@@ -65,6 +66,7 @@ export function AbilityPanel({
   onDelete,
   onEdit,
   onRoll,
+  customSkills,
   busy,
 }: Props) {
   const f = useListFilters<AbilityFilters>({
@@ -154,6 +156,7 @@ export function AbilityPanel({
           onRoll={onRoll}
           onEdit={() => onEdit(ab)}
           onDelete={() => onDelete(ab.id)}
+          customSkills={customSkills}
           busy={busy}
         />
       ))}

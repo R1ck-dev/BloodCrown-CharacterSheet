@@ -1,5 +1,6 @@
 package br.com.henrique.bloodcrown_cs.Models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.henrique.bloodcrown_cs.Models.Embeddables.CharacterActionPool;
@@ -118,6 +119,15 @@ public class CharacterModel {
     @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<ItemModel> inventory;
+
+    /**
+     * Lista de perícias personalizadas criadas pelo jogador. Coleção dinâmica
+     * (igual attacks/abilities/inventory), gerida por endpoints /custom-skills.
+     * Inicializada como ArrayList vazio pra evitar NPE em personagens novos.
+     */
+    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<CustomSkillModel> customSkills = new ArrayList<>();
 
     /**
      * Representação textual da riqueza do personagem.

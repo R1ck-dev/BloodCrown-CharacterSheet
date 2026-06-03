@@ -5,13 +5,15 @@
  * (sem chrome/header/animacao proprios — quem hospeda fornece esses).
  */
 import { Clock, Hourglass } from 'lucide-react';
-import type { Ability } from '@/types/character';
-import { TARGET_LABELS } from '@/lib/buffTargets';
+import type { Ability, CustomSkill } from '@/types/character';
+import { resolveTargetLabel } from '@/lib/buffTargets';
 
 interface Props {
   activeAbilities: Ability[];
   onAdvanceTurn: () => void;
   isAdvancing?: boolean;
+  /** Perícias personalizadas — pra resolver nome em "+X <Perícia>" nos efeitos. */
+  customSkills?: CustomSkill[];
 }
 
 const CATEGORY_COLOR: Record<string, { stripe: string; text: string }> = {
@@ -24,7 +26,7 @@ const CATEGORY_COLOR: Record<string, { stripe: string; text: string }> = {
   INVENTORY:      { stripe: '#D4AF37', text: '#F5D76E' },
 };
 
-export function ActiveEffectsBlock({ activeAbilities, onAdvanceTurn, isAdvancing = false }: Props) {
+export function ActiveEffectsBlock({ activeAbilities, onAdvanceTurn, isAdvancing = false, customSkills = [] }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
       <div
@@ -119,7 +121,7 @@ export function ActiveEffectsBlock({ activeAbilities, onAdvanceTurn, isAdvancing
                     {ab.effects
                       .map(
                         (e) =>
-                          `${e.value >= 0 ? '+' : ''}${e.value} ${TARGET_LABELS[e.target] || e.target}`,
+                          `${e.value >= 0 ? '+' : ''}${e.value} ${resolveTargetLabel(e.target, customSkills)}`,
                       )
                       .join(' · ')}
                   </div>
