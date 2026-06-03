@@ -43,7 +43,8 @@ public class AttackModel {
     /**
      * Descrição adicional, como tipo de dano ou propriedades especiais.
      */
-    @Column
+    // TEXT (nao varchar(255) default): descricao livre pode passar de 255 chars.
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     /**

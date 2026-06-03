@@ -36,7 +36,8 @@ public class ItemModel {
     /**
      * Detalhes sobre o item.
      */
-    @Column(name = "description")
+    // TEXT (nao varchar(255) default): descricao livre pode passar de 255 chars.
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
     /**

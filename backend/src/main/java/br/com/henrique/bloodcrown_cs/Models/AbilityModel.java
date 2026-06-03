@@ -115,7 +115,10 @@ public class AbilityModel {
     /**
      * Descrição textual detalhada do funcionamento da habilidade.
      */
-    @Column(length = 2000)
+    // TEXT (nao varchar(2000)): markdown longo de habilidade passava de 2000 chars
+    // e estourava com "Data truncated" -> 500. ddl-auto nao migra coluna existente:
+    // exige ALTER manual em prod. columnDefinition garante TEXT em bancos novos.
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     /**
