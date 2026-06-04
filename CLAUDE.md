@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Summary
 
-BloodCrown is a full-stack character sheet manager for a homebrew tabletop RPG system. The backend is a Spring Boot 3 (Java 21) REST API with JWT-based stateless auth and JPA/MySQL persistence. The frontend is a single-page React 19 app (Vite + TypeScript) talking to that API. The whole stack is orchestrated by `docker-compose.yml`. Production frontend is hosted on Netlify (`bloodcrown.netlify.app`); production API is on Render.
+BloodCrown is a full-stack character sheet manager for a homebrew tabletop RPG system. The backend is a Spring Boot 4 (Java 21) REST API with JWT-based stateless auth and JPA/MySQL persistence, organized in hexagonal / clean architecture (ports & adapters). The frontend is a single-page React 19 app (Vite + TypeScript) talking to that API. The whole stack is orchestrated by `docker-compose.yml`. Production frontend is hosted on Netlify (`bloodcrown.netlify.app`); production API is on Render.
 
 User-facing strings, comments, and commit messages are in Portuguese (BR). Match that style when editing.
 
 A radical UI/UX refactor was completed in May 2026 (Fases 1-7). Migrou do front vanilla JS multi-page pra React 19 + Vite + TS SPA com design "grimório gótico-ritual" (filigrana, escudo SVG, medalhões esculpidos, dice toast animado com confetti dourado em crítico). Código legado preservado em [docs/legacy-frontend/](docs/legacy-frontend/); design system de referência (JSX gerado pelo Claude Design) em [docs/design-reference/](docs/design-reference/). Plano completo e decisões em `~/.claude/projects/.../memory/project_ui_refactor_2026.md`.
+
+O backend foi migrado de MVC em camadas para **arquitetura hexagonal + clean** (ports & adapters) em junho 2026, espelhando o padrão do projeto IFConecta — domínio isolado de framework, uma use case por operação, adapters de persistência/web na infraestrutura. O contrato HTTP/JSON e o schema do banco foram preservados na migração.
 
 ## Common Commands
 
@@ -44,22 +46,24 @@ Production build goes to `frontend/dist/` and is served by nginx in the containe
 
 ## Architecture
 
-### Backend layering (`br.com.henrique.bloodcrown_cs`)
+### Backend — arquitetura hexagonal / clean (`br.com.henrique.bloodcrown_cs`)
 
-Conventional Spring layered architecture:
+Ports & adapters em três camadas, organizadas por agregado (`usuario`, `character`, `folder`):
 
-- **[Controller/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Controller/)** — thin `@RestController`s under `/auth`, `/characters`, `/attacks`, `/abilities`, `/items`. Receive `Authentication` from Spring Security (the principal is the `UserModel` itself, set by `SecurityFilter`).
-- **[Services/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Services/)** — interface + `Impl/` split. Business logic, ownership checks (a user can only touch their own characters), and Model↔DTO mapping live here. `AuthorizationService` implements `UserDetailsService` for Spring Security's lookup.
-- **[Repositories/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Repositories/)** — Spring Data JPA interfaces.
-- **[Models/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Models/)** — JPA entities. `CharacterModel` is the aggregate root; its attributes/status/expertise are `@Embedded` value objects in [Models/Embeddables/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Models/Embeddables/), and it owns `attacks`, `abilities`, and `inventory` via `@OneToMany(cascade = ALL, orphanRemoval = true)` — so deleting a character cascades to all of them, and editing the list via the parent DTO is the intended write path.
-- **[DTOs/](backend/src/main/java/br/com/henrique/bloodcrown_cs/DTOs/)** — Java records used at the API boundary. `DTOs/Responses/` holds response-shape variants.
-- **[Security/](backend/src/main/java/br/com/henrique/bloodcrown_cs/Security/)** — `WebSecurityConfig` (filter chain, CORS, public-vs-authenticated route matrix), `SecurityFilter` (per-request JWT extraction → loads user via `AuthorizationService` → populates `SecurityContext`), `TokenService` (auth0 `java-jwt`, HS256, issuer `bloodcrown-cs`, 5h expiry computed in UTC-3).
+- **[domain/](backend/src/main/java/br/com/henrique/bloodcrown_cs/domain/)** — núcleo sem dependência de framework. `model/` traz POJOs puros (sem JPA/Spring; Lombok só `@Getter/@Setter` em value objects e sub-entidades); `port/` define as interfaces de saída (repositórios + portas de capacidade como `PasswordEncoderPort`/`TokenServicePort`/`AuthenticationPort`); `enums/`; e `shared/exception/` (`NotFoundException`→404, `ForbiddenException`→403, `BadRequestException`→400). **[Character](backend/src/main/java/br/com/henrique/bloodcrown_cs/domain/character/model/Character.java) é um agregado rico**: dono de `attacks`/`abilities`/`items`/`customSkills` e dos value objects (`Attributes`/`Status`/`Expertise`/`ActionPool`), com toda regra de jogo como método de domínio (`rest()`, `advanceTurn()`, `toggleAbility()`, `recoverAbilityUse()`, `applyPatch()`, …). IDs são gerados no domínio (UUID), então as entidades JPA **não** usam `@GeneratedValue`.
+- **[application/](backend/src/main/java/br/com/henrique/bloodcrown_cs/application/)** — **uma use case por operação** (`@Service` + método `execute(...)`), dependendo só de portas do domínio. Layout `<agg>/usecase/` + `<agg>/dto/` (inputs). Ex.: `CriarPersonagemUseCase`, `AlternarHabilidadeUseCase`, `DeletarPastaUseCase`. Validação de posse e transações (`@Transactional`) ficam aqui; a regra de negócio mora no domínio.
+- **[infrastructure/](backend/src/main/java/br/com/henrique/bloodcrown_cs/infrastructure/)**:
+  - `config/{security,exception,cache}` — `SecurityConfig`, `JwtAuthenticationFilter` e os adapters de segurança; `GlobalExceptionHandler` (`@RestControllerAdvice` → body `{ "message": ... }`); `CacheConfig` (Caffeine).
+  - `persistence/<agg>/{entity,repository,mapper,adapter}` — entidades JPA `*JpaEntity` **separadas** do domínio (preservam tabelas/colunas do schema legado, embeddables em `entity/embeddable/`), `SpringData*Repository`, **mappers manuais** (`toEntity`/`toDomain`, sem MapStruct, `EntityManager.getReference` nas FKs) e `*RepositoryAdapter` implementando a porta. Salvar o agregado = `springRepo.save(mapper.toEntity(domain))`: o merge reconstrói o grafo e o `orphanRemoval` apaga filhos ausentes. `CharacterRepository` tem finders por id de filho (`buscarPorHabilidadeIdEUsuario`, …) pra carregar a raiz a partir do id de um ataque/habilidade/item/perícia.
+  - `web/<agg>/{controller,dto}` — `@RestController`s nas rotas `/auth`, `/characters`, `/attacks`, `/abilities`, `/items`, `/custom-skills`, `/folders`. Pegam o `userId` via `@AuthenticationPrincipal String userId` e mapeiam DTO web ↔ domínio (`CharacterWebMapper`). Os `*Dto`/`*Response` mantêm os mesmos shapes JSON do front — **contrato congelado na migração** (ver `frontend/src/types/`).
 
 ### Auth model
 
-Stateless JWT. Frontend stores the token in `localStorage` after `POST /auth/login` and sends `Authorization: Bearer <token>` on every protected call. The filter chain in [WebSecurityConfig.java:68-74](backend/src/main/java/br/com/henrique/bloodcrown_cs/Security/WebSecurityConfig.java#L68-L74) is `permitAll` only for `POST /auth/register`, `POST /auth/login`, and `OPTIONS /**` (CORS preflight); everything else requires authentication.
+Stateless JWT. O front guarda o token no `localStorage` após `POST /auth/login` e manda `Authorization: Bearer <token>` em toda chamada protegida. O **principal é o `userId` (String)**, setado pelo [JwtAuthenticationFilter](backend/src/main/java/br/com/henrique/bloodcrown_cs/infrastructure/config/security/JwtAuthenticationFilter.java) a partir do claim `id` do token — **não** existe `AuthenticationManager`/`UserDetailsService`, e o domínio `User` não implementa `UserDetails`. O login passa por `AutenticarUsuarioUseCase` → `AuthenticationPort` (carrega o usuário pela porta de repositório e compara a senha via BCrypt; credencial inválida → **400** com `{ "message": ... }`) → `TokenServicePort`/[JwtTokenAdapter](backend/src/main/java/br/com/henrique/bloodcrown_cs/infrastructure/config/security/JwtTokenAdapter.java) (auth0 `java-jwt`, HS256, issuer `bloodcrown-cs`, expiry 5h em UTC-3, claims `id`/`role`).
 
-CORS is whitelisted to `localhost` (default nginx), `localhost:5173` (Vite dev), `localhost:5500` (legacy Live Server), `localhost:8080` (backend self-call), the `127.0.0.1` equivalents, and `https://bloodcrown.netlify.app` — when adding a new origin, edit [WebSecurityConfig.java:86-95](backend/src/main/java/br/com/henrique/bloodcrown_cs/Security/WebSecurityConfig.java#L86-L95).
+Rotas públicas (`permitAll`) em [SecurityConfig](backend/src/main/java/br/com/henrique/bloodcrown_cs/infrastructure/config/security/SecurityConfig.java): `POST /auth/register`, `POST /auth/login`, `OPTIONS /**` (preflight CORS) e `GET /actuator/health`; o resto exige autenticação.
+
+CORS liberado para `localhost` (nginx default), `localhost:5173` (Vite), `localhost:5500` (Live Server legado), `localhost:8080` (self-call), os equivalentes `127.0.0.1` e `https://bloodcrown.netlify.app` — pra adicionar origem, edite `corsConfigurationSource()` em [SecurityConfig](backend/src/main/java/br/com/henrique/bloodcrown_cs/infrastructure/config/security/SecurityConfig.java) (PATCH precisa estar explícito em `allowedMethods`).
 
 ### Frontend (React SPA — pós-Fase 1)
 
@@ -86,4 +90,4 @@ Single-page React 19 app under [frontend/src/](frontend/src/):
 - [application.properties](backend/src/main/resources/application.properties) é o profile default (MySQL local, `${DB_USER}`/`${DB_PASS}` via env, ativa profile `local`).
 - [application-local.properties](backend/src/main/resources/application-local.properties) sobrescreve credenciais e fornece `jwt.secret`.
 - Quando rodando via Docker Compose, o bloco `env` em [docker-compose.yml](docker-compose.yml) injeta `SPRING_DATASOURCE_*` direto, bypassando as properties pra config de DB. `jwt.secret` **não** é passado nesse env — defina antes de deploy.
-- `spring.jpa.hibernate.ddl-auto=update` está ligado em ambos os profiles; schema migra automaticamente das mudanças de entidade. Sem Flyway/Liquibase.
+- `spring.jpa.hibernate.ddl-auto=update` está ligado em ambos os profiles; o schema migra automaticamente das mudanças nas entidades JPA (em `infrastructure/persistence/<agg>/entity/`). Sem Flyway/Liquibase — `ddl-auto=update` só **adiciona** tabela/coluna, nunca altera nem remove uma existente, então mudar valor de enum `@Enumerated` ou tipo/tamanho de `@Column` exige `ALTER TABLE` manual em dev e prod.
