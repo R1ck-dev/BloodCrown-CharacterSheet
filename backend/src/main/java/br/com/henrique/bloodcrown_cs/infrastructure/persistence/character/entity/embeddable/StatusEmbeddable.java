@@ -1,0 +1,43 @@
+package br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.entity.embeddable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * Embeddable JPA dos recursos vitais e defesas — colunas idênticas ao antigo CharacterStatus.
+ */
+@Embeddable
+@Getter
+@Setter
+public class StatusEmbeddable {
+    @Column(name = "max_health")
+    private Integer maxHealth;
+    @Column(name = "current_health")
+    private Integer currentHealth;
+    @Column(name = "max_sanity")
+    private Integer maxSanity;
+    @Column(name = "current_sanity")
+    private Integer currentSanity;
+    @Column(name = "max_mana")
+    private Integer maxMana;
+    @Column(name = "current_mana")
+    private Integer currentMana;
+    @Column(name = "max_stamina")
+    private Integer maxStamina;
+    @Column(name = "current_stamina")
+    private Integer currentStamina;
+    @Column(name = "defense")
+    private Integer defense;
+    @Column(name = "defense_base")
+    private Integer defenseBase;
+    @Column(name = "armor_bonus")
+    private Integer armorBonus;
+    @Column(name = "other_bonus")
+    private Integer otherBonus;
+    @Column(name = "physical_res")
+    private Integer physicalRes;
+    @Column(name = "magical_res")
+    private Integer magicalRes;
+}
