@@ -37,7 +37,10 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin_password
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Schema agora e gerido pelo Flyway (db/migration). validate = Hibernate so confere as
+      # entidades contra o banco, nunca altera. Em volume mysql_data NOVO, o Flyway cria o schema
+      # (V1). Se ja existe um volume antigo com schema divergente, rode `docker-compose down -v`.
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Segredo JWT - exigido. Crie um arquivo .env na raiz copiando .env.example
       # e defina JWT_SECRET com um valor proprio (ver instrucoes no .env.example).
       # Em producao (Render), defina JWT_SECRET no painel de variaveis de ambiente.

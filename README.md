@@ -78,21 +78,24 @@ Armazenamento das fichas e informações dos personagens em banco MySQL hospedad
 ### Backend
 
 * Java 21
-* Spring Boot 3
-* Spring Security
-* JWT
+* Spring Boot 4
+* Arquitetura Hexagonal + Clean Architecture
+* Spring Security + JWT
 * Hibernate / JPA
+* Flyway (migrations de banco)
 * MySQL 8
 * Maven
 
 ### Frontend
 
-* HTML5
-* CSS3
-* JavaScript (Vanilla)
-* Bootstrap 5
+* React 19
+* TypeScript
+* Vite
+* React Router 7
+* TanStack Query 5
+* React Hook Form + Zod
+* Framer Motion
 * SweetAlert2
-* Fetch API
 
 ### DevOps e Infraestrutura
 

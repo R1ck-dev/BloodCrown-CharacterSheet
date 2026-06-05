@@ -3,6 +3,7 @@ package br.com.henrique.bloodcrown_cs.infrastructure.config.security;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * Origens permitidas no CORS, separadas por vírgula. Externalizado para
+     * application.properties (app.cors.allowed-origins) — adicionar uma origem nova
+     * passa a ser mudança de config (ou env APP_CORS_ALLOWED_ORIGINS), não de código.
+     */
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -53,24 +62,19 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS idêntico ao da configuração anterior (origens do nginx do Compose, Vite,
-     * Live Server, self-call, equivalentes 127.0.0.1 e o front em produção no Netlify).
-     * PATCH precisa estar explícito (Spring não o inclui por padrão).
+     * Origens vindas de app.cors.allowed-origins (nginx do Compose, Vite, Live Server,
+     * self-call, equivalentes 127.0.0.1 e o front em produção no Netlify).
+     * PATCH precisa estar explícito em allowedMethods (Spring não o inclui por padrão).
      */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost",           // nginx do Docker Compose (porta 80 default)
-            "http://localhost:5173",      // Vite dev server (React) — default port
-            "http://localhost:5500",      // VS Code Live Server (legado / preview)
-            "http://localhost:8080",      // backend acessando a si mesmo (raro)
-            "http://127.0.0.1",           // equivalente IPv4 do nginx
-            "http://127.0.0.1:5173",      // equivalente IPv4 do Vite dev
-            "http://127.0.0.1:5500",      // equivalente IPv4 do Live Server
-            "https://bloodcrown.netlify.app"
-        ));
+        configuration.setAllowedOrigins(
+            Arrays.stream(allowedOrigins.split(","))
+                  .map(String::trim)
+                  .filter(origin -> !origin.isEmpty())
+                  .toList());
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));

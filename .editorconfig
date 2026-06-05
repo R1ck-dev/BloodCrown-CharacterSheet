@@ -1,0 +1,26 @@
+# EditorConfig — consistência de formatação entre editores. https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Web / config: 2 espaços
+[*.{js,jsx,ts,tsx,mjs,cjs,json,css,scss,html,yml,yaml}]
+indent_size = 2
+
+# XML (pom.xml etc.) usa tab no projeto
+[*.xml]
+indent_style = tab
+
+# Markdown: trailing whitespace pode ser quebra de linha intencional
+[*.md]
+trim_trailing_whitespace = false
+
+# Scripts Windows mantêm CRLF
+[*.{bat,cmd}]
+end_of_line = crlf
