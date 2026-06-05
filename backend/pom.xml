@@ -40,6 +40,21 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+
+		<!-- Flyway: versiona o schema do banco. No Spring Boot 4 os auto-configs foram
+		     modularizados — só o flyway-core NAO ativa a auto-config; é preciso o starter
+		     dedicado spring-boot-starter-flyway (traz a auto-config + flyway-core). O
+		     flyway-mysql adiciona o suporte ao MySQL (módulo separado desde o Flyway 8+).
+		     Versões gerenciadas pelo parent Spring Boot. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>

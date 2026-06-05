@@ -50,6 +50,9 @@ mysql_data/
 
 # Database dumps (podem conter dados sensiveis)
 *.sql
+# ...exceto as migrations do Flyway, que SAO codigo versionado e precisam ir pro build/deploy.
+!**/src/main/resources/db/migration/
+!**/src/main/resources/db/migration/*.sql
 
 # TypeScript incremental build cache
 *.tsbuildinfo
