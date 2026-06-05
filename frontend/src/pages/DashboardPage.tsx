@@ -13,6 +13,7 @@ import { NewCharacterCard } from '@/components/dashboard/NewCharacterCard';
 import { CharacterSkeleton } from '@/components/dashboard/CharacterSkeleton';
 import { FolderDrawer } from '@/components/dashboard/FolderDrawer';
 import type { FolderSelection } from '@/components/dashboard/FolderSidebar';
+import { MesasSection } from '@/components/mesa/MesasSection';
 import { Divider } from '@/components/ornaments/Divider';
 import { useCharacters, useCreateCharacter, useDeleteCharacter } from '@/api/characters';
 import {
@@ -295,6 +296,12 @@ export function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Mesas de jogo (tabletop em tempo real) */}
+        <div style={{ margin: '40px 0 28px' }}>
+          <Divider glyph="✦ ✦ ✦" />
+        </div>
+        <MesasSection />
 
         {/* Footer ornamento */}
         <footer

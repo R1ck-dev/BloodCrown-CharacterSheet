@@ -9,6 +9,7 @@ const LoginPage     = lazy(() => import('@/pages/LoginPage').then((m) => ({ defa
 const RegisterPage  = lazy(() => import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const SheetPage     = lazy(() => import('@/pages/SheetPage').then((m) => ({ default: m.SheetPage })));
+const MesaPage      = lazy(() => import('@/pages/MesaPage').then((m) => ({ default: m.MesaPage })));
 const SandboxPage   = lazy(() => import('@/pages/SandboxPage').then((m) => ({ default: m.SandboxPage })));
 
 const baseRoutes = [
@@ -27,6 +28,14 @@ const baseRoutes = [
     element: (
       <ProtectedRoute>
         <SheetPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/mesa/:id',
+    element: (
+      <ProtectedRoute>
+        <MesaPage />
       </ProtectedRoute>
     ),
   },
