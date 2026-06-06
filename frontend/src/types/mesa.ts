@@ -18,6 +18,8 @@ export interface Token {
   y: number;
   tamanho: number;
   donoUserId: string | null;
+  /** Template/versão da biblioteca que este token representa (null = avulso). */
+  templateId: string | null;
 }
 
 /** Molde de token na biblioteca da mesa (sem posição). */
@@ -25,6 +27,16 @@ export interface TokenTemplate {
   id: string;
   nome: string | null;
   imagemUrl: string | null;
+  /** Id do template base (este é uma versão dele); null = é base. */
+  baseId: string | null;
+  /** Id da pasta onde está organizado; null = raiz. */
+  pastaId: string | null;
+}
+
+/** Pasta da biblioteca (organização dos templates, um nível). */
+export interface BibliotecaPasta {
+  id: string;
+  nome: string | null;
 }
 
 export interface Mesa {
@@ -36,6 +48,7 @@ export interface Mesa {
   grid: Grid;
   tokens: Token[];
   biblioteca: TokenTemplate[];
+  pastas: BibliotecaPasta[];
   participantes: string[];
   codigoConvite: string;
 }
@@ -62,6 +75,15 @@ export interface NovoTokenInput {
   x: number;
   y: number;
   tamanho: number;
+  templateId?: string | null;
+}
+
+/** Dados pra pré-carregar um molde na biblioteca (opcionalmente como versão / em pasta). */
+export interface NovoTemplateInput {
+  nome: string;
+  imagemUrl: string;
+  baseId?: string | null;
+  pastaId?: string | null;
 }
 
 export interface ConfigurarGridInput {

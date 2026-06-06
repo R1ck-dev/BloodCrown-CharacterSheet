@@ -5,6 +5,7 @@ import type {
   Mesa,
   MesaResumo,
   NovaMesaInput,
+  NovoTemplateInput,
   NovoTokenInput,
 } from '@/types/mesa';
 import { request } from './client';
@@ -61,12 +62,32 @@ async function resizeToken(id: string, tokenId: string, tamanho: number): Promis
   return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/tamanho`, { method: 'PUT', body: { tamanho } });
 }
 
-async function addTemplate(id: string, payload: { nome: string; imagemUrl: string }): Promise<Mesa> {
+async function addTemplate(id: string, payload: NovoTemplateInput): Promise<Mesa> {
   return request<Mesa>(`/mesas/${id}/biblioteca`, { method: 'POST', body: payload });
 }
 
 async function removeTemplate(id: string, templateId: string): Promise<void> {
   return request<void>(`/mesas/${id}/biblioteca/${templateId}`, { method: 'DELETE' });
+}
+
+async function moveTemplateToPasta(id: string, templateId: string, pastaId: string | null): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/biblioteca/${templateId}/pasta`, { method: 'PUT', body: { pastaId } });
+}
+
+async function setTemplateBase(id: string, templateId: string, baseId: string | null): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/biblioteca/${templateId}/base`, { method: 'PUT', body: { baseId } });
+}
+
+async function addPasta(id: string, nome: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/biblioteca/pastas`, { method: 'POST', body: { nome } });
+}
+
+async function removePasta(id: string, pastaId: string): Promise<void> {
+  return request<void>(`/mesas/${id}/biblioteca/pastas/${pastaId}`, { method: 'DELETE' });
+}
+
+async function switchTokenVersion(id: string, tokenId: string, templateId: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/versao`, { method: 'PUT', body: { templateId } });
 }
 
 // ---------- Hooks ----------
@@ -166,7 +187,7 @@ export function useResizeToken(id: string) {
 export function useAddTemplate(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { nome: string; imagemUrl: string }) => addTemplate(id, payload),
+    mutationFn: (payload: NovoTemplateInput) => addTemplate(id, payload),
     onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }
@@ -180,5 +201,58 @@ export function useRemoveTemplate(id: string) {
         prev ? { ...prev, biblioteca: prev.biblioteca.filter((t) => t.id !== templateId) } : prev,
       );
     },
+  });
+}
+
+export function useMoveTemplateToPasta(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ templateId, pastaId }: { templateId: string; pastaId: string | null }) =>
+      moveTemplateToPasta(id, templateId, pastaId),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useSetTemplateBase(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ templateId, baseId }: { templateId: string; baseId: string | null }) =>
+      setTemplateBase(id, templateId, baseId),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useAddPasta(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (nome: string) => addPasta(id, nome),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useRemovePasta(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pastaId: string) => removePasta(id, pastaId),
+    onSuccess: (_data, pastaId) => {
+      qc.setQueryData<Mesa>(mesaKeys.detail(id), (prev) =>
+        prev
+          ? {
+              ...prev,
+              pastas: prev.pastas.filter((p) => p.id !== pastaId),
+              biblioteca: prev.biblioteca.map((t) => (t.pastaId === pastaId ? { ...t, pastaId: null } : t)),
+            }
+          : prev,
+      );
+    },
+  });
+}
+
+export function useSwitchTokenVersion(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tokenId, templateId }: { tokenId: string; templateId: string }) =>
+      switchTokenVersion(id, tokenId, templateId),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }

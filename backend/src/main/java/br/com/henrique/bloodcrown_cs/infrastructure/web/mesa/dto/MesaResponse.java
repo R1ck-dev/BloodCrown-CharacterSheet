@@ -12,6 +12,7 @@ public record MesaResponse(
         GridDto grid,
         List<TokenDto> tokens,
         List<TokenTemplateDto> biblioteca,
+        List<PastaDto> pastas,
         List<String> participantes,
         String codigoConvite) {
 }

@@ -19,14 +19,14 @@ public class AdicionarTemplateUseCase {
     private final MesaRepository mesaRepository;
 
     @Transactional
-    public Mesa execute(String mesaId, String userId, String nome, String imagemUrl) {
+    public Mesa execute(String mesaId, String userId, String nome, String imagemUrl, String baseId, String pastaId) {
         if (imagemUrl == null || imagemUrl.isBlank()) {
             throw new BadRequestException("Informe a imagem do token.");
         }
         Mesa mesa = mesaRepository.buscarPorIdComAcesso(mesaId, userId)
                 .orElseThrow(() -> new NotFoundException("Mesa nao encontrada."));
         String nomeFinal = (nome == null || nome.isBlank()) ? "Token" : nome.trim();
-        mesa.adicionarTemplate(TokenTemplate.criar(nomeFinal, imagemUrl.trim()), userId);
+        mesa.adicionarTemplate(TokenTemplate.criar(nomeFinal, imagemUrl.trim(), baseId, pastaId), userId);
         return mesaRepository.salvar(mesa);
     }
 }

@@ -2,22 +2,46 @@
  * Modal de criação de token: nome + imagem opcional (upload pro Cloudinary ou URL colada).
  * Sem imagem, o token vira um círculo colorido com a inicial. A URL é a fonte da verdade —
  * o botão "Upload" só preenche o campo com a secure_url do Cloudinary.
+ *
+ * Opcionalmente (quando `pastas`/`bases` são passados) permite escolher a pasta da biblioteca
+ * e marcar o token como uma versão de um token base.
  */
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Upload, X } from 'lucide-react';
 import { uploadImagemCloudinary } from '@/lib/cloudinary';
+import type { BibliotecaPasta, TokenTemplate } from '@/types/mesa';
 
 interface Props {
   uploadHabilitado: boolean;
   titulo?: string;
+  pastas?: BibliotecaPasta[];
+  bases?: TokenTemplate[];
+  pastaPadrao?: string | null;
+  basePadrao?: string | null;
   onClose: () => void;
-  onConfirm: (data: { nome: string; imagemUrl: string | null }) => void;
+  onConfirm: (data: {
+    nome: string;
+    imagemUrl: string | null;
+    baseId: string | null;
+    pastaId: string | null;
+  }) => void;
 }
 
-export function AddTokenModal({ uploadHabilitado, titulo = 'Novo token', onClose, onConfirm }: Props) {
+export function AddTokenModal({
+  uploadHabilitado,
+  titulo = 'Novo token',
+  pastas,
+  bases,
+  pastaPadrao = null,
+  basePadrao = null,
+  onClose,
+  onConfirm,
+}: Props) {
   const [nome, setNome] = useState('');
   const [imagemUrl, setImagemUrl] = useState('');
+  const [pastaId, setPastaId] = useState<string>(pastaPadrao ?? '');
+  const [baseId, setBaseId] = useState<string>(basePadrao ?? '');
   const [enviando, setEnviando] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +62,12 @@ export function AddTokenModal({ uploadHabilitado, titulo = 'Novo token', onClose
   };
 
   const confirmar = () => {
-    onConfirm({ nome: nome.trim(), imagemUrl: imagemUrl.trim() || null });
+    onConfirm({
+      nome: nome.trim(),
+      imagemUrl: imagemUrl.trim() || null,
+      baseId: baseId || null,
+      pastaId: pastaId || null,
+    });
     onClose();
   };
 
@@ -103,11 +132,39 @@ export function AddTokenModal({ uploadHabilitado, titulo = 'Novo token', onClose
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
         </div>
 
+        {pastas && (
+          <>
+            <label style={{ fontSize: 12, color: 'var(--bc-ink-dim)' }}>Pasta</label>
+            <select className="bc-input" value={pastaId} onChange={(e) => setPastaId(e.target.value)}>
+              <option value="">Raiz da biblioteca</option>
+              {pastas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome ?? 'Pasta'}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
+        {bases && (
+          <>
+            <label style={{ fontSize: 12, color: 'var(--bc-ink-dim)' }}>Versão de (token base)</label>
+            <select className="bc-input" value={baseId} onChange={(e) => setBaseId(e.target.value)}>
+              <option value="">Nenhum — é um token base</option>
+              {bases.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.nome ?? 'Token'}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
         {imagemUrl && (
           <img
             src={imagemUrl}
             alt="prévia do token"
-            style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--bc-gold)', alignSelf: 'center' }}
+            style={{ width: 72, height: 72, borderRadius: 6, objectFit: 'contain', border: '1px solid var(--bc-edge)', alignSelf: 'center' }}
           />
         )}
 
