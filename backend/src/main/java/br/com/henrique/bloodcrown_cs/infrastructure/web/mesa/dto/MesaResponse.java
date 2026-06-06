@@ -11,6 +11,7 @@ public record MesaResponse(
         String mapaUrl,
         GridDto grid,
         List<TokenDto> tokens,
+        List<TokenTemplateDto> biblioteca,
         List<String> participantes,
         String codigoConvite) {
 }

@@ -9,8 +9,10 @@ import org.springframework.stereotype.Component;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.MesaJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenJpaEntity;
+import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenTemplateJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.embeddable.GridEmbeddable;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.usuario.entity.UserJpaEntity;
 
@@ -44,8 +46,23 @@ public class MesaMapper {
         }
         entity.setTokens(tokens);
 
+        List<TokenTemplateJpaEntity> biblioteca = new ArrayList<>();
+        for (TokenTemplate tt : domain.getBiblioteca()) {
+            biblioteca.add(toTemplateEntity(tt, entity));
+        }
+        entity.setBiblioteca(biblioteca);
+
         entity.setParticipantes(new LinkedHashSet<>(domain.getParticipantes()));
         return entity;
+    }
+
+    private TokenTemplateJpaEntity toTemplateEntity(TokenTemplate tt, MesaJpaEntity parent) {
+        TokenTemplateJpaEntity e = new TokenTemplateJpaEntity();
+        e.setId(tt.getId());
+        e.setNome(tt.getNome());
+        e.setImagemUrl(tt.getImagemUrl());
+        e.setMesa(parent);
+        return e;
     }
 
     private TokenJpaEntity toTokenEntity(Token t, MesaJpaEntity parent) {
@@ -78,6 +95,10 @@ public class MesaMapper {
         for (TokenJpaEntity e : entity.getTokens()) {
             tokens.add(toTokenDomain(e));
         }
+        List<TokenTemplate> biblioteca = new ArrayList<>();
+        for (TokenTemplateJpaEntity e : entity.getBiblioteca()) {
+            biblioteca.add(toTemplateDomain(e));
+        }
         return new Mesa(
                 entity.getId(),
                 entity.getNome(),
@@ -85,8 +106,17 @@ public class MesaMapper {
                 entity.getMapaUrl(),
                 toGridDomain(entity.getGrid()),
                 tokens,
+                biblioteca,
                 new LinkedHashSet<>(entity.getParticipantes()),
                 entity.getCodigoConvite());
+    }
+
+    private TokenTemplate toTemplateDomain(TokenTemplateJpaEntity e) {
+        TokenTemplate tt = new TokenTemplate();
+        tt.setId(e.getId());
+        tt.setNome(e.getNome());
+        tt.setImagemUrl(e.getImagemUrl());
+        return tt;
     }
 
     private Token toTokenDomain(TokenJpaEntity e) {

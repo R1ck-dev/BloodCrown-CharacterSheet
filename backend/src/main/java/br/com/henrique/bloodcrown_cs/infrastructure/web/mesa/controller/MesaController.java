@@ -23,13 +23,15 @@ import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ConfigurarGridUseC
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.CriarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DeletarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.EntrarMesaUseCase;
-import br.com.henrique.bloodcrown_cs.application.mesa.usecase.GerarUrlUploadMapaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ListarMesasUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.MoverTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RedimensionarTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverTokenUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TrocarMapaMesaUseCase;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
-import br.com.henrique.bloodcrown_cs.domain.mesa.port.MediaStoragePort.UploadAlvo;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTemplateRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTokenRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.ConfigurarGridRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CriarMesaRequest;
@@ -38,9 +40,8 @@ import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaEvento;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResumoResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MoverTokenRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.RedimensionarTokenRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TrocarMapaRequest;
-import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.UploadUrlRequest;
-import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.UploadUrlResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.mapper.MesaWebMapper;
 
 import jakarta.validation.Valid;
@@ -66,8 +67,10 @@ public class MesaController {
     private final ConfigurarGridUseCase configurarGrid;
     private final AdicionarTokenUseCase adicionarToken;
     private final MoverTokenUseCase moverToken;
+    private final RedimensionarTokenUseCase redimensionarToken;
     private final RemoverTokenUseCase removerToken;
-    private final GerarUrlUploadMapaUseCase gerarUrlUpload;
+    private final AdicionarTemplateUseCase adicionarTemplate;
+    private final RemoverTemplateUseCase removerTemplate;
     private final MesaWebMapper mapper;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -105,14 +108,6 @@ public class MesaController {
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
-    @PostMapping("/{id}/mapa/upload-url")
-    public ResponseEntity<UploadUrlResponse> uploadUrl(@PathVariable String id,
-                                                       @RequestBody UploadUrlRequest req,
-                                                       @AuthenticationPrincipal String userId) {
-        UploadAlvo alvo = gerarUrlUpload.execute(id, userId, req.contentType());
-        return ResponseEntity.ok(new UploadUrlResponse(alvo.urlUpload(), alvo.urlPublica()));
-    }
-
     @PutMapping("/{id}/mapa")
     public ResponseEntity<MesaResponse> mapa(@PathVariable String id, @RequestBody TrocarMapaRequest req,
                                              @AuthenticationPrincipal String userId) {
@@ -146,10 +141,36 @@ public class MesaController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/tokens/{tokenId}/tamanho")
+    public ResponseEntity<MesaResponse> resizeToken(@PathVariable String id, @PathVariable String tokenId,
+                                                    @RequestBody RedimensionarTokenRequest req,
+                                                    @AuthenticationPrincipal String userId) {
+        Mesa mesa = redimensionarToken.execute(id, userId, tokenId, req.tamanho());
+        notificarAtualizada(id);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
     @DeleteMapping("/{id}/tokens/{tokenId}")
     public ResponseEntity<Void> deleteToken(@PathVariable String id, @PathVariable String tokenId,
                                             @AuthenticationPrincipal String userId) {
         removerToken.execute(id, userId, tokenId);
+        notificarAtualizada(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/biblioteca")
+    public ResponseEntity<MesaResponse> addTemplate(@PathVariable String id,
+                                                    @RequestBody AdicionarTemplateRequest req,
+                                                    @AuthenticationPrincipal String userId) {
+        Mesa mesa = adicionarTemplate.execute(id, userId, req.nome(), req.imagemUrl());
+        notificarAtualizada(id);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @DeleteMapping("/{id}/biblioteca/{templateId}")
+    public ResponseEntity<Void> deleteTemplate(@PathVariable String id, @PathVariable String templateId,
+                                               @AuthenticationPrincipal String userId) {
+        removerTemplate.execute(id, userId, templateId);
         notificarAtualizada(id);
         return ResponseEntity.noContent().build();
     }

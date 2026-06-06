@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Konva from 'konva';
-import { Circle, Group, Image as KonvaImage, Layer, Line, Stage, Text } from 'react-konva';
+import { Circle, Group, Image as KonvaImage, Layer, Line, Stage, Text, Transformer } from 'react-konva';
 import type { Grid, Token } from '@/types/mesa';
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
@@ -12,7 +12,8 @@ function useImageElement(url: string | null): HTMLImageElement | undefined {
       return;
     }
     const image = new window.Image();
-    image.crossOrigin = 'anonymous';
+    // Sem crossOrigin: só EXIBIMOS (não exportamos o canvas), então qualquer URL pública
+    // renderiza sem exigir CORS no host (Cloudinary, Imgur, GitHub raw, etc.).
     image.src = url;
     const onLoad = () => setImg(image);
     image.addEventListener('load', onLoad);
@@ -22,19 +23,102 @@ function useImageElement(url: string | null): HTMLImageElement | undefined {
 }
 
 const SEM_MAPA = 2000; // área de grid padrão quando não há mapa
+const TAM_MIN = 10;
+const TAM_MAX = 1000;
+
+interface TokenNodeProps {
+  token: Token;
+  onSelect: (tokenId: string) => void;
+  onDragStart: (tokenId: string) => void;
+  onDragMove: (tokenId: string, x: number, y: number) => void;
+  onDragEnd: (tokenId: string, x: number, y: number) => void;
+  onResize: (tokenId: string, tamanho: number) => void;
+}
+
+/**
+ * Um token no mapa. Com imagemUrl: a própria imagem (proporção preservada, SEM borda nem
+ * recorte). Sem imagem (ou enquanto carrega): círculo colorido com a inicial. Posição = centro.
+ */
+function TokenNode({ token, onSelect, onDragStart, onDragMove, onDragEnd, onResize }: TokenNodeProps) {
+  const img = useImageElement(token.imagemUrl);
+  const r = token.tamanho / 2;
+  const label = (token.nome ?? '?').trim().slice(0, 3).toUpperCase();
+
+  const largura = token.tamanho;
+  const altura = img ? Math.round(token.tamanho * (img.naturalHeight / img.naturalWidth)) : token.tamanho;
+
+  const aoTransformar = (e: Konva.KonvaEventObject<Event>) => {
+    const node = e.target;
+    const escala = node.scaleX();
+    node.scaleX(1);
+    node.scaleY(1);
+    const novo = Math.round(token.tamanho * escala);
+    onResize(token.id, Math.max(TAM_MIN, Math.min(TAM_MAX, novo)));
+  };
+
+  return (
+    <Group
+      id={token.id}
+      x={token.x}
+      y={token.y}
+      draggable
+      onClick={() => onSelect(token.id)}
+      onTap={() => onSelect(token.id)}
+      onDragStart={() => onDragStart(token.id)}
+      onDragMove={(e) => onDragMove(token.id, Math.round(e.target.x()), Math.round(e.target.y()))}
+      onDragEnd={(e) => onDragEnd(token.id, Math.round(e.target.x()), Math.round(e.target.y()))}
+      onTransformEnd={aoTransformar}
+    >
+      {img ? (
+        <KonvaImage image={img} width={largura} height={altura} offsetX={largura / 2} offsetY={altura / 2} />
+      ) : (
+        <>
+          <Circle radius={r} fill={token.cor ?? '#8b1e2d'} />
+          <Text
+            text={label}
+            fontSize={Math.max(10, r * 0.5)}
+            fontStyle="bold"
+            fill="#EDE6D6"
+            width={token.tamanho}
+            height={token.tamanho}
+            offsetX={r}
+            offsetY={r}
+            align="center"
+            verticalAlign="middle"
+            listening={false}
+          />
+        </>
+      )}
+    </Group>
+  );
+}
 
 interface BoardProps {
   mapaUrl: string | null;
   grid: Grid;
   tokens: Token[];
+  selectedTokenId: string | null;
+  onSelectToken: (id: string | null) => void;
   onTokenDragStart: (tokenId: string) => void;
   onTokenDragMove: (tokenId: string, x: number, y: number) => void;
   onTokenDragEnd: (tokenId: string, x: number, y: number) => void;
+  onTokenResize: (tokenId: string, tamanho: number) => void;
 }
 
-export function Board({ mapaUrl, grid, tokens, onTokenDragStart, onTokenDragMove, onTokenDragEnd }: BoardProps) {
+export function Board({
+  mapaUrl,
+  grid,
+  tokens,
+  selectedTokenId,
+  onSelectToken,
+  onTokenDragStart,
+  onTokenDragMove,
+  onTokenDragEnd,
+  onTokenResize,
+}: BoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
+  const trRef = useRef<Konva.Transformer>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
 
   const mapImg = useImageElement(mapaUrl);
@@ -50,6 +134,16 @@ export function Board({ mapaUrl, grid, tokens, onTokenDragStart, onTokenDragMove
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Anexa o Transformer (alças de resize) ao token selecionado.
+  useEffect(() => {
+    const tr = trRef.current;
+    const stage = stageRef.current;
+    if (!tr || !stage) return;
+    const node = selectedTokenId ? stage.findOne<Konva.Group>(`#${selectedTokenId}`) : undefined;
+    tr.nodes(node ? [node] : []);
+    tr.getLayer()?.batchDraw();
+  }, [selectedTokenId, tokens]);
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -69,6 +163,11 @@ export function Board({ mapaUrl, grid, tokens, onTokenDragStart, onTokenDragMove
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     });
+  };
+
+  // Clique no vazio (mapa/grid têm listening=false → target é o stage) deseleciona.
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (e.target === e.target.getStage()) onSelectToken(null);
   };
 
   const gridLines = () => {
@@ -103,40 +202,33 @@ export function Board({ mapaUrl, grid, tokens, onTokenDragStart, onTokenDragMove
         height={size.height}
         draggable
         onWheel={handleWheel}
+        onClick={handleStageClick}
+        onTap={handleStageClick}
       >
         <Layer>
           {mapImg && <KonvaImage image={mapImg} x={0} y={0} listening={false} />}
           {gridLines()}
-          {tokens.map((t) => {
-            const r = t.tamanho / 2;
-            const label = (t.nome ?? '?').trim().slice(0, 3).toUpperCase();
-            return (
-              <Group
-                key={t.id}
-                x={t.x}
-                y={t.y}
-                draggable
-                onDragStart={() => onTokenDragStart(t.id)}
-                onDragMove={(e) => onTokenDragMove(t.id, Math.round(e.target.x()), Math.round(e.target.y()))}
-                onDragEnd={(e) => onTokenDragEnd(t.id, Math.round(e.target.x()), Math.round(e.target.y()))}
-              >
-                <Circle radius={r} fill={t.cor ?? '#8b1e2d'} stroke="#D4AF37" strokeWidth={2} shadowBlur={8} shadowColor="#000" />
-                <Text
-                  text={label}
-                  fontSize={Math.max(10, r * 0.5)}
-                  fontStyle="bold"
-                  fill="#EDE6D6"
-                  width={t.tamanho}
-                  height={t.tamanho}
-                  offsetX={r}
-                  offsetY={r}
-                  align="center"
-                  verticalAlign="middle"
-                  listening={false}
-                />
-              </Group>
-            );
-          })}
+          {tokens.map((t) => (
+            <TokenNode
+              key={t.id}
+              token={t}
+              onSelect={onSelectToken}
+              onDragStart={onTokenDragStart}
+              onDragMove={onTokenDragMove}
+              onDragEnd={onTokenDragEnd}
+              onResize={onTokenResize}
+            />
+          ))}
+          <Transformer
+            ref={trRef}
+            rotateEnabled={false}
+            keepRatio
+            enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+            anchorStroke="#D4AF37"
+            anchorFill="#0A0507"
+            borderStroke="#D4AF37"
+            boundBoxFunc={(oldBox, newBox) => (newBox.width < TAM_MIN ? oldBox : newBox)}
+          />
         </Layer>
       </Stage>
     </div>

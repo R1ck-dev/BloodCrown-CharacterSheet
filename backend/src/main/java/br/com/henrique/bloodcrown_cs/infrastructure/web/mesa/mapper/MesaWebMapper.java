@@ -7,10 +7,12 @@ import org.springframework.stereotype.Component;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.GridDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResumoResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TokenDto;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TokenTemplateDto;
 
 /** Mapeia o domínio Mesa para os DTOs web. souDono é calculado a partir do userId da requisição. */
 @Component
@@ -18,6 +20,7 @@ public class MesaWebMapper {
 
     public MesaResponse toResponse(Mesa mesa, String userId) {
         List<TokenDto> tokens = mesa.getTokens().stream().map(this::toTokenDto).toList();
+        List<TokenTemplateDto> biblioteca = mesa.getBiblioteca().stream().map(this::toTemplateDto).toList();
         return new MesaResponse(
                 mesa.getId(),
                 mesa.getNome(),
@@ -26,8 +29,13 @@ public class MesaWebMapper {
                 mesa.getMapaUrl(),
                 toGridDto(mesa.getGrid()),
                 tokens,
+                biblioteca,
                 List.copyOf(mesa.getParticipantes()),
                 mesa.getCodigoConvite());
+    }
+
+    public TokenTemplateDto toTemplateDto(TokenTemplate t) {
+        return new TokenTemplateDto(t.getId(), t.getNome(), t.getImagemUrl());
     }
 
     public MesaResumoResponse toResumo(Mesa mesa, String userId) {
