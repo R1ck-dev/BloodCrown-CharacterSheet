@@ -29,6 +29,10 @@ public class TokenTemplateJpaEntity {
     @Column(name = "imagem_url", length = 512)
     private String imagemUrl;
 
+    /** Tipo do item da biblioteca (TOKEN | MAPA | DOCUMENTO). Persistido como String. */
+    @Column(name = "tipo", length = 20, nullable = false)
+    private String tipo;
+
     /** Id do template base (este é uma versão dele); nulo = é base. String solta, não FK JPA. */
     @Column(name = "base_id", columnDefinition = "VARCHAR(36)")
     private String baseId;

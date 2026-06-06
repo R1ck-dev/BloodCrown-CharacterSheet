@@ -10,6 +10,7 @@ import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Cena;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TipoTemplate;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.BibliotecaPastaJpaEntity;
@@ -94,6 +95,7 @@ public class MesaMapper {
         e.setId(tt.getId());
         e.setNome(tt.getNome());
         e.setImagemUrl(tt.getImagemUrl());
+        e.setTipo((tt.getTipo() != null ? tt.getTipo() : TipoTemplate.TOKEN).name());
         e.setBaseId(tt.getBaseId());
         e.setPastaId(tt.getPastaId());
         e.setMesa(parent);
@@ -188,6 +190,7 @@ public class MesaMapper {
         tt.setId(e.getId());
         tt.setNome(e.getNome());
         tt.setImagemUrl(e.getImagemUrl());
+        tt.setTipo(TipoTemplate.from(e.getTipo()));
         tt.setBaseId(e.getBaseId());
         tt.setPastaId(e.getPastaId());
         return tt;
