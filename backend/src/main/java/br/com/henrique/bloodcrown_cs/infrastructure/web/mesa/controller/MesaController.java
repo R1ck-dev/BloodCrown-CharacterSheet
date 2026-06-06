@@ -254,7 +254,7 @@ public class MesaController {
     public ResponseEntity<MesaResponse> addTemplate(@PathVariable String id,
                                                     @RequestBody AdicionarTemplateRequest req,
                                                     @AuthenticationPrincipal String userId) {
-        Mesa mesa = adicionarTemplate.execute(id, userId, req.nome(), req.imagemUrl(), req.baseId(), req.pastaId());
+        Mesa mesa = adicionarTemplate.execute(id, userId, req.nome(), req.imagemUrl(), req.tipo(), req.baseId(), req.pastaId());
         notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }

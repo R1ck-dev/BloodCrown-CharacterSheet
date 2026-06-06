@@ -8,6 +8,7 @@ import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Cena;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TipoTemplate;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CenaDto;
@@ -58,7 +59,8 @@ public class MesaWebMapper {
     }
 
     public TokenTemplateDto toTemplateDto(TokenTemplate t) {
-        return new TokenTemplateDto(t.getId(), t.getNome(), t.getImagemUrl(), t.getBaseId(), t.getPastaId());
+        String tipo = (t.getTipo() != null ? t.getTipo() : TipoTemplate.TOKEN).name();
+        return new TokenTemplateDto(t.getId(), t.getNome(), t.getImagemUrl(), tipo, t.getBaseId(), t.getPastaId());
     }
 
     public PastaDto toPastaDto(BibliotecaPasta p) {

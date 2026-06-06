@@ -237,6 +237,10 @@ public class Mesa {
             template.setBaseId(null);
             return;
         }
+        // Só token tem versões (mapa/documento nunca são "versão de" — mesmo invariante de criar()).
+        if (template.getTipo() != TipoTemplate.TOKEN) {
+            throw new BadRequestException("Apenas tokens podem ser versões.");
+        }
         validarBaseEscolhida(baseId, templateId);
         // Um template que já é base de outras versões não pode virar versão (mantém um nível).
         boolean ehBaseDeOutros = biblioteca.stream().anyMatch(t -> templateId.equals(t.getBaseId()));
@@ -261,6 +265,9 @@ public class Mesa {
                 .filter(t -> t.getId().equals(baseId))
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException("Token base não encontrado nesta mesa."));
+        if (base.getTipo() != TipoTemplate.TOKEN) {
+            throw new BadRequestException("A base de uma versão precisa ser um token.");
+        }
         if (base.getBaseId() != null) {
             throw new BadRequestException("O token base não pode ser ele mesmo uma versão.");
         }

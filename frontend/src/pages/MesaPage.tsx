@@ -255,7 +255,8 @@ export function MesaPage() {
   const handleColocarTemplate = (template: TokenTemplate) => {
     if (!cenaAtiva) return;
     const passo = (tokensDaCena.length % 8) * 30;
-    const tamanho = cenaAtiva.grid.tamanhoCelula || 50;
+    // Documento (handout/lore) entra maior, pra ser legível; token usa o tamanho da célula.
+    const tamanho = template.tipo === 'DOCUMENTO' ? 300 : cenaAtiva.grid.tamanhoCelula || 50;
     addToken.mutate(
       {
         nome: template.nome ?? 'Token',
@@ -266,7 +267,19 @@ export function MesaPage() {
         templateId: template.id,
         cenaId: cenaAtiva.id,
       },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao colocar token.') },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao colocar no tabuleiro.') },
+    );
+  };
+
+  // Mapa da biblioteca: aplica a imagem como mapa da cena ativa (só dono).
+  const handleUsarMapaDaBiblioteca = (template: TokenTemplate) => {
+    if (!cenaAtiva || !template.imagemUrl) return;
+    setMapa.mutate(
+      { cenaId: cenaAtiva.id, mapaUrl: template.imagemUrl },
+      {
+        onSuccess: () => toast.success('Mapa aplicado à cena.'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao aplicar o mapa.'),
+      },
     );
   };
 
@@ -544,8 +557,10 @@ export function MesaPage() {
             biblioteca={mesa.biblioteca}
             pastas={mesa.pastas}
             uploadHabilitado={cloudinaryConfigurado()}
+            souDono={mesa.souDono}
             onClose={() => setBibliotecaAberta(false)}
             onColocar={handleColocarTemplate}
+            onUsarMapa={handleUsarMapaDaBiblioteca}
             onAdicionar={handleAddTemplate}
             onRemover={handleRemoveTemplate}
             onAdicionarPasta={handleAddPasta}

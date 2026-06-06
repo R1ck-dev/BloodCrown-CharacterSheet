@@ -21,6 +21,8 @@ public class TokenTemplate {
     private String id;
     private String nome;
     private String imagemUrl;
+    /** Tipo do item: token (criatura/PJ), mapa (cena) ou documento (handout). Default TOKEN. */
+    private TipoTemplate tipo = TipoTemplate.TOKEN;
     /** Id do template base do qual este é uma versão; nulo = é um template base. */
     private String baseId;
     /** Id da pasta onde está organizado; nulo = raiz da biblioteca. */
@@ -29,12 +31,14 @@ public class TokenTemplate {
     public TokenTemplate() {
     }
 
-    public static TokenTemplate criar(String nome, String imagemUrl, String baseId, String pastaId) {
+    public static TokenTemplate criar(String nome, String imagemUrl, TipoTemplate tipo, String baseId, String pastaId) {
         TokenTemplate t = new TokenTemplate();
         t.id = UUID.randomUUID().toString();
         t.nome = nome;
         t.imagemUrl = imagemUrl;
-        t.baseId = (baseId != null && !baseId.isBlank()) ? baseId : null;
+        t.tipo = tipo != null ? tipo : TipoTemplate.TOKEN;
+        // Só token tem versões; mapa/documento nunca são versão de outro item.
+        t.baseId = (t.tipo == TipoTemplate.TOKEN && baseId != null && !baseId.isBlank()) ? baseId : null;
         t.pastaId = (pastaId != null && !pastaId.isBlank()) ? pastaId : null;
         return t;
     }

@@ -45,12 +45,17 @@ export interface Token {
   nomeVisivel: boolean;
 }
 
-/** Molde de token na biblioteca da mesa (sem posição). */
+/** Tipo de item da biblioteca: token (criatura/PJ), mapa (cena) ou documento (handout). */
+export type TipoTemplate = 'TOKEN' | 'MAPA' | 'DOCUMENTO';
+
+/** Item da biblioteca da mesa (sem posição): token, mapa ou documento. */
 export interface TokenTemplate {
   id: string;
   nome: string | null;
   imagemUrl: string | null;
-  /** Id do template base (este é uma versão dele); null = é base. */
+  /** Tipo do item; define a seção/filtro e o que acontece ao clicar. */
+  tipo: TipoTemplate;
+  /** Id do template base (este é uma versão dele); null = é base. Só vale pra TOKEN. */
   baseId: string | null;
   /** Id da pasta onde está organizado; null = raiz. */
   pastaId: string | null;
@@ -103,10 +108,11 @@ export interface NovoTokenInput {
   cenaId: string;
 }
 
-/** Dados pra pré-carregar um molde na biblioteca (opcionalmente como versão / em pasta). */
+/** Dados pra pré-carregar um item na biblioteca (opcionalmente como versão / em pasta). */
 export interface NovoTemplateInput {
   nome: string;
   imagemUrl: string;
+  tipo: TipoTemplate;
   baseId?: string | null;
   pastaId?: string | null;
 }
