@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
@@ -11,6 +12,7 @@ import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.GridDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResumoResponse;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.PastaDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TokenDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TokenTemplateDto;
 
@@ -21,6 +23,7 @@ public class MesaWebMapper {
     public MesaResponse toResponse(Mesa mesa, String userId) {
         List<TokenDto> tokens = mesa.getTokens().stream().map(this::toTokenDto).toList();
         List<TokenTemplateDto> biblioteca = mesa.getBiblioteca().stream().map(this::toTemplateDto).toList();
+        List<PastaDto> pastas = mesa.getPastas().stream().map(this::toPastaDto).toList();
         return new MesaResponse(
                 mesa.getId(),
                 mesa.getNome(),
@@ -30,12 +33,17 @@ public class MesaWebMapper {
                 toGridDto(mesa.getGrid()),
                 tokens,
                 biblioteca,
+                pastas,
                 List.copyOf(mesa.getParticipantes()),
                 mesa.getCodigoConvite());
     }
 
     public TokenTemplateDto toTemplateDto(TokenTemplate t) {
-        return new TokenTemplateDto(t.getId(), t.getNome(), t.getImagemUrl());
+        return new TokenTemplateDto(t.getId(), t.getNome(), t.getImagemUrl(), t.getBaseId(), t.getPastaId());
+    }
+
+    public PastaDto toPastaDto(BibliotecaPasta p) {
+        return new PastaDto(p.getId(), p.getNome());
     }
 
     public MesaResumoResponse toResumo(Mesa mesa, String userId) {
@@ -44,7 +52,7 @@ public class MesaWebMapper {
 
     public TokenDto toTokenDto(Token t) {
         return new TokenDto(t.getId(), t.getNome(), t.getImagemUrl(), t.getCor(),
-                t.getX(), t.getY(), t.getTamanho(), t.getDonoUserId());
+                t.getX(), t.getY(), t.getTamanho(), t.getDonoUserId(), t.getTemplateId());
     }
 
     private GridDto toGridDto(Grid g) {

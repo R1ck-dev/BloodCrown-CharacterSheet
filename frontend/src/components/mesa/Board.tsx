@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Circle, Group, Image as KonvaImage, Layer, Line, Stage, Text, Transformer } from 'react-konva';
-import type { Grid, Token } from '@/types/mesa';
+import type { Grid, Token, TokenTemplate } from '@/types/mesa';
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
 function useImageElement(url: string | null): HTMLImageElement | undefined {
@@ -98,11 +98,14 @@ interface BoardProps {
   grid: Grid;
   tokens: Token[];
   selectedTokenId: string | null;
+  /** Versões do token selecionado (base + variações). >=2 mostra o menu de troca rápida. */
+  versoesDoSelecionado: TokenTemplate[];
   onSelectToken: (id: string | null) => void;
   onTokenDragStart: (tokenId: string) => void;
   onTokenDragMove: (tokenId: string, x: number, y: number) => void;
   onTokenDragEnd: (tokenId: string, x: number, y: number) => void;
   onTokenResize: (tokenId: string, tamanho: number) => void;
+  onTrocarVersao: (tokenId: string, templateId: string) => void;
 }
 
 export function Board({
@@ -110,16 +113,21 @@ export function Board({
   grid,
   tokens,
   selectedTokenId,
+  versoesDoSelecionado,
   onSelectToken,
   onTokenDragStart,
   onTokenDragMove,
   onTokenDragEnd,
   onTokenResize,
+  onTrocarVersao,
 }: BoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
+  // Incrementa em pan/zoom pra reposicionar o popover de versão (que segue o token).
+  const [viewTick, setViewTick] = useState(0);
+  const [arrastando, setArrastando] = useState(false);
 
   const mapImg = useImageElement(mapaUrl);
   const mapW = mapImg?.naturalWidth ?? SEM_MAPA;
@@ -163,12 +171,41 @@ export function Board({
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     });
+    setViewTick((t) => t + 1);
   };
 
   // Clique no vazio (mapa/grid têm listening=false → target é o stage) deseleciona.
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (e.target === e.target.getStage()) onSelectToken(null);
   };
+
+  const aoIniciarArrasto = (tokenId: string) => {
+    setArrastando(true);
+    onTokenDragStart(tokenId);
+  };
+  const aoFinalizarArrasto = (tokenId: string, x: number, y: number) => {
+    setArrastando(false);
+    onTokenDragEnd(tokenId, x, y);
+  };
+
+  // Posição (em px do container) do popover de versão, ancorado acima do token selecionado.
+  const menuPos = useMemo(() => {
+    void viewTick; // recomputa em pan/zoom
+    const stage = stageRef.current;
+    if (!stage || !selectedTokenId) return null;
+    const node = stage.findOne(`#${selectedTokenId}`);
+    if (!node) return null;
+    const abs = node.absolutePosition();
+    const escala = stage.scaleX();
+    const token = tokens.find((t) => t.id === selectedTokenId);
+    const meiaAltura = ((token?.tamanho ?? 50) / 2) * escala;
+    const left = Math.max(8, Math.min(size.width - 8, abs.x));
+    const top = Math.max(8, abs.y - meiaAltura - 12);
+    return { left, top };
+  }, [selectedTokenId, tokens, size.width, viewTick]);
+
+  const tokenAtual = tokens.find((t) => t.id === selectedTokenId);
+  const mostrarMenuVersao = !arrastando && menuPos && versoesDoSelecionado.length >= 2;
 
   const gridLines = () => {
     if (!grid.visivel || grid.tamanhoCelula <= 0) return null;
@@ -190,8 +227,15 @@ export function Board({
     <div
       ref={containerRef}
       style={{
+        position: 'relative',
         flex: 1,
+        // minWidth:0 deixa o Board encolher abaixo da largura do canvas (senão o
+        // <canvas> de largura fixa trava o flex em min-width:auto e empurra a
+        // Biblioteca pra fora da tela); overflow:hidden clipa o canvas grande até
+        // o ResizeObserver reajustar a largura do Stage.
+        minWidth: 0,
         minHeight: 0,
+        overflow: 'hidden',
         background: 'radial-gradient(ellipse at center, #14121A 0%, #0A0507 100%)',
         cursor: 'grab',
       }}
@@ -204,6 +248,7 @@ export function Board({
         onWheel={handleWheel}
         onClick={handleStageClick}
         onTap={handleStageClick}
+        onDragMove={() => setViewTick((t) => t + 1)}
       >
         <Layer>
           {mapImg && <KonvaImage image={mapImg} x={0} y={0} listening={false} />}
@@ -213,9 +258,9 @@ export function Board({
               key={t.id}
               token={t}
               onSelect={onSelectToken}
-              onDragStart={onTokenDragStart}
+              onDragStart={aoIniciarArrasto}
               onDragMove={onTokenDragMove}
-              onDragEnd={onTokenDragEnd}
+              onDragEnd={aoFinalizarArrasto}
               onResize={onTokenResize}
             />
           ))}
@@ -238,6 +283,55 @@ export function Board({
           />
         </Layer>
       </Stage>
+
+      {mostrarMenuVersao && tokenAtual && menuPos && (
+        <div
+          style={{
+            position: 'absolute',
+            left: menuPos.left,
+            top: menuPos.top,
+            transform: 'translate(-50%, -100%)',
+            display: 'flex',
+            gap: 4,
+            padding: 4,
+            background: 'rgba(10, 5, 7, 0.96)',
+            border: '1px solid var(--bc-gold)',
+            borderRadius: 8,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            zIndex: 10,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {versoesDoSelecionado.map((v) => {
+            const ativo = v.id === tokenAtual.templateId;
+            return (
+              <button
+                key={v.id}
+                type="button"
+                title={v.nome ?? 'versão'}
+                onClick={() => onTrocarVersao(tokenAtual.id, v.id)}
+                style={{
+                  width: 38,
+                  height: 38,
+                  padding: 0,
+                  border: ativo ? '2px solid var(--bc-gold)' : '1px solid var(--bc-edge)',
+                  borderRadius: 6,
+                  background: '#14121A',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  opacity: ativo ? 1 : 0.85,
+                }}
+              >
+                {v.imagemUrl ? (
+                  <img src={v.imagemUrl} alt={v.nome ?? 'versão'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <span style={{ fontSize: 10, color: 'var(--bc-ink-faint)' }}>?</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

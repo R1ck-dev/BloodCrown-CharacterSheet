@@ -6,10 +6,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
+import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.BibliotecaPastaJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.MesaJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenTemplateJpaEntity;
@@ -52,6 +54,12 @@ public class MesaMapper {
         }
         entity.setBiblioteca(biblioteca);
 
+        List<BibliotecaPastaJpaEntity> pastas = new ArrayList<>();
+        for (BibliotecaPasta p : domain.getPastas()) {
+            pastas.add(toPastaEntity(p, entity));
+        }
+        entity.setPastas(pastas);
+
         entity.setParticipantes(new LinkedHashSet<>(domain.getParticipantes()));
         return entity;
     }
@@ -61,6 +69,16 @@ public class MesaMapper {
         e.setId(tt.getId());
         e.setNome(tt.getNome());
         e.setImagemUrl(tt.getImagemUrl());
+        e.setBaseId(tt.getBaseId());
+        e.setPastaId(tt.getPastaId());
+        e.setMesa(parent);
+        return e;
+    }
+
+    private BibliotecaPastaJpaEntity toPastaEntity(BibliotecaPasta p, MesaJpaEntity parent) {
+        BibliotecaPastaJpaEntity e = new BibliotecaPastaJpaEntity();
+        e.setId(p.getId());
+        e.setNome(p.getNome());
         e.setMesa(parent);
         return e;
     }
@@ -75,6 +93,7 @@ public class MesaMapper {
         e.setY(t.getY());
         e.setTamanho(t.getTamanho());
         e.setDonoUserId(t.getDonoUserId());
+        e.setTemplateId(t.getTemplateId());
         e.setMesa(parent);
         return e;
     }
@@ -99,6 +118,10 @@ public class MesaMapper {
         for (TokenTemplateJpaEntity e : entity.getBiblioteca()) {
             biblioteca.add(toTemplateDomain(e));
         }
+        List<BibliotecaPasta> pastas = new ArrayList<>();
+        for (BibliotecaPastaJpaEntity e : entity.getPastas()) {
+            pastas.add(toPastaDomain(e));
+        }
         return new Mesa(
                 entity.getId(),
                 entity.getNome(),
@@ -107,6 +130,7 @@ public class MesaMapper {
                 toGridDomain(entity.getGrid()),
                 tokens,
                 biblioteca,
+                pastas,
                 new LinkedHashSet<>(entity.getParticipantes()),
                 entity.getCodigoConvite());
     }
@@ -116,7 +140,16 @@ public class MesaMapper {
         tt.setId(e.getId());
         tt.setNome(e.getNome());
         tt.setImagemUrl(e.getImagemUrl());
+        tt.setBaseId(e.getBaseId());
+        tt.setPastaId(e.getPastaId());
         return tt;
+    }
+
+    private BibliotecaPasta toPastaDomain(BibliotecaPastaJpaEntity e) {
+        BibliotecaPasta p = new BibliotecaPasta();
+        p.setId(e.getId());
+        p.setNome(e.getNome());
+        return p;
     }
 
     private Token toTokenDomain(TokenJpaEntity e) {
@@ -129,6 +162,7 @@ public class MesaMapper {
         t.setY(e.getY());
         t.setTamanho(e.getTamanho());
         t.setDonoUserId(e.getDonoUserId());
+        t.setTemplateId(e.getTemplateId());
         return t;
     }
 

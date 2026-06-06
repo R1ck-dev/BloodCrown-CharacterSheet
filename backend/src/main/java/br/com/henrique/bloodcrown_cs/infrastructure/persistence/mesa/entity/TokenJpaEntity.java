@@ -44,6 +44,10 @@ public class TokenJpaEntity {
     @Column(name = "dono_user_id", columnDefinition = "VARCHAR(36)")
     private String donoUserId;
 
+    /** Template/versão que este token representa; nulo = avulso. String solta, não FK JPA. */
+    @Column(name = "template_id", columnDefinition = "VARCHAR(36)")
+    private String templateId;
+
     @ManyToOne
     @JoinColumn(name = "mesa_id")
     private MesaJpaEntity mesa;

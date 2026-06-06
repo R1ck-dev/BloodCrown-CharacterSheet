@@ -4,7 +4,7 @@
  * biblioteca (aba lateral): pré-carrega moldes e clica pra colocar na mesa. Seleção → resize
  * (alças) e apagar (botão/Delete). Mudanças estruturais chegam como "atualizada" → re-busca.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -13,20 +13,25 @@ import { MesaToolbar } from '@/components/mesa/MesaToolbar';
 import { BibliotecaPanel } from '@/components/mesa/BibliotecaPanel';
 import {
   mesaKeys,
+  useAddPasta,
   useAddTemplate,
   useAddToken,
   useConfigurarGrid,
   useMesa,
+  useMoveTemplateToPasta,
   useMoveTokenPersist,
+  useRemovePasta,
   useRemoveTemplate,
   useRemoveToken,
   useResizeToken,
   useSetMapa,
+  useSetTemplateBase,
+  useSwitchTokenVersion,
 } from '@/api/mesas';
 import { useMesaSocket } from '@/hooks/useMesaSocket';
 import { tokenStorage } from '@/api/client';
 import { cloudinaryConfigurado, uploadImagemCloudinary } from '@/lib/cloudinary';
-import type { MesaEvento, Token, TokenTemplate } from '@/types/mesa';
+import type { MesaEvento, NovoTemplateInput, Token, TokenTemplate } from '@/types/mesa';
 
 function Centro({ texto }: { texto: string }) {
   return (
@@ -50,6 +55,11 @@ export function MesaPage() {
   const resizeToken = useResizeToken(id ?? '');
   const addTemplate = useAddTemplate(id ?? '');
   const removeTemplate = useRemoveTemplate(id ?? '');
+  const addPasta = useAddPasta(id ?? '');
+  const removePasta = useRemovePasta(id ?? '');
+  const moverParaPasta = useMoveTemplateToPasta(id ?? '');
+  const definirBase = useSetTemplateBase(id ?? '');
+  const switchVersao = useSwitchTokenVersion(id ?? '');
   const setMapa = useSetMapa(id ?? '');
   const configurarGrid = useConfigurarGrid(id ?? '');
   const moverPersist = useMoveTokenPersist(id ?? '');
@@ -168,12 +178,13 @@ export function MesaPage() {
         x: 200 + passo,
         y: 200 + passo,
         tamanho,
+        templateId: template.id,
       },
       { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao colocar token.') },
     );
   };
 
-  const handleAddTemplate = (payload: { nome: string; imagemUrl: string }) => {
+  const handleAddTemplate = (payload: NovoTemplateInput) => {
     addTemplate.mutate(payload, {
       onSuccess: () => toast.success('Token adicionado à biblioteca.'),
       onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao adicionar à biblioteca.'),
@@ -184,6 +195,63 @@ export function MesaPage() {
     removeTemplate.mutate(templateId, {
       onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao remover da biblioteca.'),
     });
+  };
+
+  const handleAddPasta = (nome: string) => {
+    addPasta.mutate(nome, {
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao criar pasta.'),
+    });
+  };
+
+  const handleRemovePasta = (pastaId: string) => {
+    removePasta.mutate(pastaId, {
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao excluir pasta.'),
+    });
+  };
+
+  const handleMoverParaPasta = (templateId: string, pastaId: string | null) => {
+    moverParaPasta.mutate(
+      { templateId, pastaId },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao mover token.') },
+    );
+  };
+
+  const handleDefinirBase = (templateId: string, baseId: string | null) => {
+    definirBase.mutate(
+      { templateId, baseId },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao vincular versão.') },
+    );
+  };
+
+  // Versões do token selecionado (base + variações), pra montar o popover de troca rápida.
+  const versoesDoSelecionado = useMemo<TokenTemplate[]>(() => {
+    if (!mesa || !selectedTokenId) return [];
+    const tk = tokens.find((t) => t.id === selectedTokenId);
+    if (!tk?.templateId) return [];
+    const atual = mesa.biblioteca.find((t) => t.id === tk.templateId);
+    if (!atual) return [];
+    const grupo = atual.baseId ?? atual.id;
+    return mesa.biblioteca
+      .filter((t) => (t.baseId ?? t.id) === grupo)
+      .sort((a, b) => {
+        const ordemBase = (a.baseId ? 1 : 0) - (b.baseId ? 1 : 0);
+        return ordemBase !== 0 ? ordemBase : (a.nome ?? '').localeCompare(b.nome ?? '');
+      });
+  }, [mesa, tokens, selectedTokenId]);
+
+  const handleTrocarVersao = (tokenId: string, templateId: string) => {
+    const tpl = mesa?.biblioteca.find((t) => t.id === templateId);
+    if (tpl) {
+      setTokens((prev) =>
+        prev.map((t) =>
+          t.id === tokenId ? { ...t, nome: tpl.nome, imagemUrl: tpl.imagemUrl, templateId: tpl.id } : t,
+        ),
+      );
+    }
+    switchVersao.mutate(
+      { tokenId, templateId },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao trocar versão.') },
+    );
   };
 
   // ----- mapa / grid -----
@@ -239,20 +307,27 @@ export function MesaPage() {
           grid={mesa.grid}
           tokens={tokens}
           selectedTokenId={selectedTokenId}
+          versoesDoSelecionado={versoesDoSelecionado}
           onSelectToken={setSelectedTokenId}
           onTokenDragStart={onTokenDragStart}
           onTokenDragMove={onTokenDragMove}
           onTokenDragEnd={onTokenDragEnd}
           onTokenResize={handleResizeToken}
+          onTrocarVersao={handleTrocarVersao}
         />
         {bibliotecaAberta && (
           <BibliotecaPanel
             biblioteca={mesa.biblioteca}
+            pastas={mesa.pastas}
             uploadHabilitado={cloudinaryConfigurado()}
             onClose={() => setBibliotecaAberta(false)}
             onColocar={handleColocarTemplate}
             onAdicionar={handleAddTemplate}
             onRemover={handleRemoveTemplate}
+            onAdicionarPasta={handleAddPasta}
+            onRemoverPasta={handleRemovePasta}
+            onMoverParaPasta={handleMoverParaPasta}
+            onDefinirBase={handleDefinirBase}
           />
         )}
       </div>

@@ -23,13 +23,19 @@ public class Token {
     private int tamanho;
     /** Usuário que controla este token (o dono da mesa também pode movê-lo). */
     private String donoUserId;
+    /**
+     * Template da biblioteca que este token representa atualmente; nulo = token avulso (criado
+     * antes das versões ou fora da biblioteca). Permite a troca rápida de versão no tabuleiro:
+     * o grupo de versões é resolvido a partir deste id contra a biblioteca da mesa.
+     */
+    private String templateId;
 
     public Token() {
     }
 
     /** Cria um token novo com id gerado no domínio. */
     public static Token criar(String nome, String imagemUrl, String cor, int x, int y,
-                              int tamanho, String donoUserId) {
+                              int tamanho, String donoUserId, String templateId) {
         Token t = new Token();
         t.id = UUID.randomUUID().toString();
         t.nome = nome;
@@ -39,6 +45,7 @@ public class Token {
         t.y = y;
         t.tamanho = tamanho > 0 ? tamanho : 50;
         t.donoUserId = donoUserId;
+        t.templateId = (templateId != null && !templateId.isBlank()) ? templateId : null;
         return t;
     }
 }
