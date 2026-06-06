@@ -13,55 +13,25 @@ interface CenasBarProps {
 /**
  * Barra de cenas (só o mestre). Cada cena é uma aba: clicar troca a cena exibida pra todos.
  * Na aba ativa, ✎ renomeia e ✕ exclui (some quando há só uma cena). "+ Cena" cria uma nova.
+ * Criar/renomear/excluir abrem modais temáticos (geridos pela MesaPage).
  */
 export function CenasBar({ cenas, cenaAtivaId, onAtivar, onAdicionar, onRenomear, onRemover }: CenasBarProps) {
   const ordenadas = [...cenas].sort((a, b) => a.ordem - b.ordem);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '6px 12px',
-        borderBottom: '1px solid var(--bc-edge)',
-        background: 'rgba(10, 5, 7, 0.7)',
-        overflowX: 'auto',
-      }}
-    >
-      <span style={{ fontSize: 11, color: 'var(--bc-ink-faint)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        Cenas
-      </span>
+    <div className="bc-cena-bar">
+      <span className="bc-cena-bar__label">Cenas</span>
+
       {ordenadas.map((c) => {
         const ativa = c.id === cenaAtivaId;
         return (
-          <div
-            key={c.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 8px',
-              borderRadius: 6,
-              border: ativa ? '1px solid var(--bc-gold)' : '1px solid var(--bc-edge)',
-              background: ativa ? 'rgba(212,175,55,0.12)' : 'transparent',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <div key={c.id} className={`bc-cena${ativa ? ' bc-cena--ativa' : ''}`}>
             <button
               type="button"
+              className="bc-cena__btn"
               onClick={() => onAtivar(c.id)}
               onDoubleClick={() => onRenomear(c.id)}
-              title={ativa ? 'Cena ativa' : 'Ativar cena'}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: ativa ? 'var(--bc-gold)' : 'var(--bc-ink-dim)',
-                fontSize: 13,
-                fontWeight: ativa ? 700 : 500,
-                padding: 0,
-              }}
+              title={ativa ? 'Cena ativa (2 cliques renomeia)' : 'Ativar cena'}
             >
               {c.nome ?? 'Cena'}
             </button>
@@ -69,18 +39,20 @@ export function CenasBar({ cenas, cenaAtivaId, onAtivar, onAdicionar, onRenomear
               <>
                 <button
                   type="button"
+                  className="bc-cena__action"
                   onClick={() => onRenomear(c.id)}
                   title="Renomear cena"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bc-ink-faint)', padding: 0, display: 'flex' }}
+                  aria-label="Renomear cena"
                 >
                   <Pencil size={13} />
                 </button>
                 {cenas.length > 1 && (
                   <button
                     type="button"
+                    className="bc-cena__action bc-cena__action--danger"
                     onClick={() => onRemover(c.id)}
                     title="Excluir cena"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', padding: 0, display: 'flex' }}
+                    aria-label="Excluir cena"
                   >
                     <X size={13} />
                   </button>
@@ -90,8 +62,10 @@ export function CenasBar({ cenas, cenaAtivaId, onAtivar, onAdicionar, onRenomear
           </div>
         );
       })}
-      <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={onAdicionar} style={{ gap: 4 }}>
-        <Plus size={14} /> Cena
+
+      <button type="button" className="bc-tool-btn" onClick={onAdicionar} title="Nova cena" aria-label="Nova cena" style={{ marginLeft: 2 }}>
+        <Plus size={14} />
+        <span className="bc-tool-btn__label">Cena</span>
       </button>
     </div>
   );

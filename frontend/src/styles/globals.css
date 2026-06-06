@@ -18,6 +18,7 @@
 @import './components/bar.css';
 @import './components/switch.css';
 @import './components/tabs.css';
+@import './components/segmented.css';
 @import './components/listfilters.css';
 @import './components/card-compact.css';
 @import './components/folder-sidebar.css';
@@ -26,6 +27,7 @@
 @import './components/nav.css';
 @import './components/character-card.css';
 @import './components/dashboard.css';
+@import './components/mesa.css';
 
 /* --- Reset --- */
 

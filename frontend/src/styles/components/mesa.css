@@ -1,0 +1,886 @@
+/* ============================================================================
+   BloodCrown — Mesa (tabletop)
+   Chrome da tela da mesa (top bar, painel Mestre, barra de cenas, popover de
+   token) + cards de mesa e empty state no Dashboard. Tabuleiro Konva à parte.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   Botões de ferramenta (toggles da top bar) e ícone-botões genéricos
+   -------------------------------------------------------------------------- */
+
+.bc-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.4);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--bc-tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-tool-btn:hover:not(:disabled) {
+  color: var(--bc-ink);
+  border-color: var(--bc-edge-strong);
+}
+
+.bc-tool-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bc-tool-btn--active {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bc-gold) 14%, transparent),
+    color-mix(in srgb, var(--bc-purple) 10%, transparent)
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--bc-gold) 20%, transparent),
+    0 0 12px color-mix(in srgb, var(--bc-gold) 18%, transparent);
+}
+
+.bc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.4);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-icon-btn:hover:not(:disabled) {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+}
+
+.bc-icon-btn--danger:hover:not(:disabled) {
+  color: var(--bc-error-bright);
+  border-color: var(--bc-error-border-hover);
+  background: var(--bc-error-bg-hover);
+}
+
+/* ----------------------------------------------------------------------------
+   Top bar da mesa
+   -------------------------------------------------------------------------- */
+
+.bc-mesa-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px clamp(12px, 2vw, 18px);
+  border-bottom: 1px solid var(--bc-edge);
+  background: linear-gradient(180deg, rgba(10, 5, 7, 0.92), rgba(10, 5, 7, 0.82));
+  backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+  z-index: var(--bc-z-sticky);
+}
+
+/* Hairline dourada inferior (igual à navbar) */
+.bc-mesa-topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--bc-gold) 35%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.bc-mesa-topbar__title {
+  font-family: var(--bc-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: var(--bc-tracking-wide);
+  color: var(--bc-ink);
+  margin: 0;
+  max-width: 32ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-mesa-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.5);
+  font-family: var(--bc-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--bc-gold-bright);
+  cursor: pointer;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-mesa-code:hover {
+  border-color: var(--bc-edge-strong);
+  background: color-mix(in srgb, var(--bc-gold) 6%, transparent);
+}
+
+.bc-mesa-code__label {
+  font-family: var(--bc-font-display);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bc-ink-faint);
+}
+
+.bc-mesa-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bc-mesa-conn--on { color: var(--bc-success); }
+.bc-mesa-conn--off { color: var(--bc-error-soft); }
+
+.bc-mesa-conn__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.bc-mesa-conn--on .bc-mesa-conn__dot {
+  animation: bc-conn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes bc-conn-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.bc-mesa-spacer { flex: 1 1 auto; }
+
+.bc-mesa-toggles {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bc-vsep {
+  width: 1px;
+  align-self: stretch;
+  min-height: 22px;
+  background: var(--bc-edge);
+  margin: 0 2px;
+}
+
+/* Em telas estreitas, esconde os rótulos dos toggles (mantém ícones) */
+@media (max-width: 639px) {
+  .bc-tool-btn__label { display: none; }
+  .bc-mesa-code__label { display: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   Biblioteca de tokens (aside lateral; vira drawer sobreposto em telas estreitas)
+   -------------------------------------------------------------------------- */
+
+.bc-biblioteca-panel {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.92);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Em telas estreitas a Biblioteca passa a flutuar sobre o tabuleiro (drawer à
+   direita) em vez de roubar largura e esmagar o Board. */
+@media (max-width: 640px) {
+  .bc-biblioteca-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(300px, 86vw);
+    z-index: var(--bc-z-dropdown);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.55);
+  }
+}
+
+.bc-lib-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bc-edge);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), transparent);
+}
+
+.bc-lib-header__title {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  color: var(--bc-gold-bright);
+}
+
+.bc-lib-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.bc-lib-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bc-lib-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.bc-lib-group__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bc-lib-group__title {
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bc-ink-dim);
+}
+
+.bc-lib-group__count {
+  font-family: var(--bc-font-mono);
+  font-size: 10px;
+  color: var(--bc-ink-faint);
+}
+
+.bc-lib-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-content: start;
+}
+
+.bc-lib-empty {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--bc-ink-faint);
+}
+
+.bc-lib-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: linear-gradient(180deg, var(--bc-surface-2), var(--bc-surface-1));
+  transition:
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-fast) var(--bc-ease-out-quart),
+    transform var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-lib-card:hover {
+  border-color: var(--bc-edge-strong);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--bc-purple) 20%, transparent);
+}
+
+.bc-lib-card__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bc-lib-card__img {
+  width: 100%;
+  height: 64px;
+  object-fit: contain;
+  border-radius: var(--bc-radius-sm);
+}
+
+.bc-lib-card__noimg {
+  height: 64px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--bc-ink-faint);
+}
+
+.bc-lib-card__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--bc-ink-dim);
+  text-align: center;
+}
+
+.bc-lib-card__count {
+  color: var(--bc-gold);
+}
+
+.bc-lib-card__kebab {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--bc-radius-sm);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid transparent;
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-lib-card__kebab:hover {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge);
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.bc-lib-versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.bc-lib-ver {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.bc-lib-ver__btn {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px solid var(--bc-edge);
+  border-radius: var(--bc-radius-sm);
+  background: #0a0507;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.bc-lib-ver__btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bc-lib-ver__remove {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #0a0507;
+  border: 1px solid var(--bc-edge);
+  color: #fca5a5;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.bc-lib-ver__remove:hover {
+  color: var(--bc-error-bright);
+  border-color: var(--bc-error-border-hover);
+}
+
+/* Hint de "modo régua" ancorado no tabuleiro (descoberta de estado, inclusive touch). */
+.bc-mesa-regua-hint {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--bc-radius-pill);
+  border: 1px solid var(--bc-edge-strong);
+  background: color-mix(in srgb, var(--bc-gold) 12%, rgba(10, 5, 7, 0.9));
+  color: var(--bc-gold-bright);
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------------------------
+   Painel Mestre (overlay flutuante sobre o tabuleiro)
+   -------------------------------------------------------------------------- */
+
+.bc-mestre-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 290px;
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(26, 24, 32, 0.97), rgba(14, 10, 18, 0.97));
+  border: 1px solid var(--bc-edge);
+  border-radius: var(--bc-radius-lg);
+  box-shadow: var(--bc-shadow-lg), inset 0 1px 0 rgba(212, 175, 55, 0.08);
+  backdrop-filter: blur(10px);
+  z-index: var(--bc-z-dropdown);
+  overflow: hidden;
+}
+
+.bc-mestre-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bc-edge);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.1), transparent);
+}
+
+.bc-mestre-panel__title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--bc-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--bc-tracking-wider);
+  text-transform: uppercase;
+  color: var(--bc-gold-bright);
+}
+
+.bc-mestre-panel__body {
+  padding: 14px;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bc-mestre-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.bc-mestre-section__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bc-ink-dim);
+}
+
+.bc-mestre-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bc-mestre-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bc-mestre-map-preview {
+  width: 100%;
+  height: 84px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.6);
+  object-fit: contain;
+}
+
+.bc-mestre-empty {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--bc-ink-faint);
+}
+
+/* Color picker nativo estilizado discretamente */
+.bc-color-input {
+  width: 38px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--bc-edge);
+  border-radius: var(--bc-radius-md);
+  background: rgba(10, 5, 7, 0.5);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.bc-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+.bc-color-input::-webkit-color-swatch { border: none; border-radius: 2px; }
+
+/* ----------------------------------------------------------------------------
+   Barra de cenas
+   -------------------------------------------------------------------------- */
+
+.bc-cena-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px clamp(10px, 2vw, 14px);
+  border-bottom: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.6);
+  overflow-x: auto;
+}
+
+.bc-cena-bar__label {
+  flex: 0 0 auto;
+  padding-right: 4px;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bc-ink-faint);
+  white-space: nowrap;
+}
+
+.bc-cena {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 11px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.4);
+  white-space: nowrap;
+  transition: border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-cena:hover { border-color: var(--bc-edge-strong); }
+
+.bc-cena--ativa {
+  border-color: var(--bc-gold);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bc-purple) 18%, transparent), transparent);
+}
+
+.bc-cena__btn {
+  padding: 2px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--bc-ink-dim);
+}
+
+.bc-cena--ativa .bc-cena__btn { color: var(--bc-gold-bright); }
+
+.bc-cena__action {
+  display: flex;
+  padding: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--bc-ink-faint);
+  border-radius: var(--bc-radius-sm);
+  transition: color var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-cena__action:hover { color: var(--bc-gold-bright); }
+.bc-cena__action--danger:hover { color: var(--bc-error-bright); }
+
+/* ----------------------------------------------------------------------------
+   Popover de token (overlay no tabuleiro, ancorado no token selecionado)
+   -------------------------------------------------------------------------- */
+
+.bc-token-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--bc-radius-lg);
+  background: rgba(10, 5, 7, 0.97);
+  border: 1px solid var(--bc-edge-strong);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+}
+
+.bc-token-popover__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.bc-token-popover__versions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 224px;
+  padding-top: 6px;
+  border-top: 1px solid var(--bc-edge);
+}
+
+.bc-token-popover__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: transparent;
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-token-popover__btn:hover { color: var(--bc-gold-bright); border-color: var(--bc-edge-strong); }
+
+.bc-token-popover__btn--active {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: color-mix(in srgb, var(--bc-gold) 12%, transparent);
+}
+
+.bc-token-popover__btn--danger { color: var(--bc-error-soft); border-color: var(--bc-error-border); }
+.bc-token-popover__btn--danger:hover {
+  color: var(--bc-error-bright);
+  background: var(--bc-error-bg-hover);
+  border-color: var(--bc-error-border-hover);
+}
+
+.bc-token-ver {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--bc-edge);
+  border-radius: var(--bc-radius-md);
+  background: #14121a;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.bc-token-ver--ativa { border: 2px solid var(--bc-gold); }
+.bc-token-ver img { width: 100%; height: 100%; object-fit: contain; }
+.bc-token-ver__none { font-size: 10px; color: var(--bc-ink-faint); }
+
+/* ----------------------------------------------------------------------------
+   Cards de mesa + empty state (Dashboard, aba Mesas)
+   -------------------------------------------------------------------------- */
+
+.bc-mesa-join {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bc-mesa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: clamp(12px, 2.5vw, 20px);
+}
+
+.bc-mesa-card {
+  position: relative;
+  padding: 18px 16px 16px;
+  border-radius: var(--bc-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition:
+    transform var(--bc-duration-base) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+.bc-mesa-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--bc-edge-strong);
+  box-shadow: var(--bc-shadow-frame), 0 0 22px color-mix(in srgb, var(--bc-purple) 22%, transparent);
+}
+
+.bc-mesa-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.bc-mesa-card__crest {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--bc-radius-md);
+  display: grid;
+  place-items: center;
+  color: var(--bc-gold);
+  background: linear-gradient(180deg, #1a1820, #0a0507);
+  border: 1px solid var(--bc-edge);
+  box-shadow: inset 0 1px 0 rgba(212, 175, 55, 0.16), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.bc-mesa-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.bc-mesa-card__name {
+  font-family: var(--bc-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--bc-ink);
+  word-break: break-word;
+}
+
+.bc-mesa-card__actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.bc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: var(--bc-radius-pill);
+  font-family: var(--bc-font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+}
+
+.bc-chip--mestre {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: color-mix(in srgb, var(--bc-gold) 10%, transparent);
+}
+
+.bc-mesa-card__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.5);
+  font-family: var(--bc-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--bc-gold-bright);
+  cursor: pointer;
+  transition: all var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-mesa-card__code:hover { border-color: var(--bc-edge-strong); }
+
+.bc-mesa-card__code-label {
+  font-family: var(--bc-font-display);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bc-ink-faint);
+}
+
+.bc-mesa-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--bc-edge);
+  border-radius: var(--bc-radius-md);
+  background: rgba(10, 5, 7, 0.35);
+}
+
+.bc-mesa-empty__icon { color: var(--bc-gold-dim); }
+
+.bc-mesa-empty__title {
+  font-family: var(--bc-font-display);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--bc-ink);
+}
+
+.bc-mesa-empty__text {
+  max-width: 360px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--bc-ink-faint);
+}

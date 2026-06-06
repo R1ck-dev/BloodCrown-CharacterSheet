@@ -9,9 +9,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Board, type ReguaRemota } from '@/components/mesa/Board';
-import { MesaToolbar } from '@/components/mesa/MesaToolbar';
+import { MesaTopBar } from '@/components/mesa/MesaTopBar';
+import { MestrePanel } from '@/components/mesa/MestrePanel';
 import { CenasBar } from '@/components/mesa/CenasBar';
 import { BibliotecaPanel } from '@/components/mesa/BibliotecaPanel';
+import { PromptModal } from '@/components/ui/PromptModal';
 import {
   mesaKeys,
   useActivateCena,
@@ -38,7 +40,8 @@ import {
 import { useMesaSocket } from '@/hooks/useMesaSocket';
 import { tokenStorage } from '@/api/client';
 import { cloudinaryConfigurado, uploadImagemCloudinary } from '@/lib/cloudinary';
-import type { MesaEvento, NovoTemplateInput, Token, TokenTemplate } from '@/types/mesa';
+import { confirmDanger } from '@/lib/swal';
+import type { ConfigurarGridInput, MesaEvento, NovoTemplateInput, Token, TokenTemplate } from '@/types/mesa';
 
 function Centro({ texto }: { texto: string }) {
   return (
@@ -85,6 +88,9 @@ export function MesaPage() {
   const [bibliotecaAberta, setBibliotecaAberta] = useState(false);
   const [mostrarNomes, setMostrarNomes] = useState(true);
   const [modoRegua, setModoRegua] = useState(false);
+  const [mestreAberto, setMestreAberto] = useState(false);
+  const [novaCenaAberta, setNovaCenaAberta] = useState(false);
+  const [renomearCenaId, setRenomearCenaId] = useState<string | null>(null);
   const [reguasRemotas, setReguasRemotas] = useState<Record<string, ReguaRemotaCena>>({});
   const draggingRef = useRef<string | null>(null);
   const lastSentRef = useRef(0);
@@ -149,9 +155,12 @@ export function MesaPage() {
           return next;
         });
       } else if (evento.tipo === 'atualizada' && id) {
-        // Ignora o eco da própria ação (a mutation já atualizou o cache) — evita
-        // refetch redundante e fecha a janela de corrida do re-seed.
-        if (evento.porUserId && evento.porUserId === tokenStorage.getUserId()) return;
+        // Sempre re-busca em mudança estrutural (resize/versão/nome/mapa/grid/cena…).
+        // NÃO filtramos pelo porUserId de propósito: com 2 abas no mesmo navegador o
+        // localStorage (e o token/userId) é compartilhado, então o id do "autor" pode
+        // coincidir e o outro cliente descartaria a atualização — foi o bug do resize/
+        // troca de versão não refletirem. O re-seed preserva o x/y local (sem snap em
+        // arraste) e a query é deduplicada, então o custo é só um GET barato.
         qc.invalidateQueries({ queryKey: mesaKeys.detail(id) });
       }
     },
@@ -227,6 +236,9 @@ export function MesaPage() {
   // Apagar com a tecla Delete/Backspace (fora de inputs).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Com qualquer modal aberto (foco pode estar num botão dele, não num input),
+      // não vaza o atalho de apagar pro token selecionado por trás do diálogo.
+      if (document.querySelector('[role="dialog"]')) return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTokenId) {
@@ -352,43 +364,36 @@ export function MesaPage() {
     }
   };
 
-  const handleToggleGrid = () => {
+  // Toggle rápido do grid (sem toast — evita ruído a cada clique no switch).
+  const handleConfigurarGrid = (payload: ConfigurarGridInput) => {
     if (!cenaAtiva) return;
     configurarGrid.mutate(
-      {
-        cenaId: cenaAtiva.id,
-        tamanhoCelula: cenaAtiva.grid.tamanhoCelula,
-        visivel: !cenaAtiva.grid.visivel,
-        cor: cenaAtiva.grid.cor,
-        escalaValor: cenaAtiva.escalaValor,
-        escalaUnidade: cenaAtiva.escalaUnidade ?? 'm',
-      },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar grid.') },
+      { cenaId: cenaAtiva.id, ...payload },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar o grid.') },
     );
   };
 
-  const handleConfigurarEscala = () => {
+  // Salvar pelo modal Grid e escala (com confirmação visível).
+  const handleSalvarGridEscala = (payload: ConfigurarGridInput) => {
     if (!cenaAtiva) return;
-    const cel = window.prompt('Tamanho da célula do grid (px):', String(cenaAtiva.grid.tamanhoCelula));
-    if (cel === null) return;
-    const valor = window.prompt('1 célula equivale a quantas unidades? (ex.: 1.5)', String(cenaAtiva.escalaValor));
-    if (valor === null) return;
-    const unidade = window.prompt('Unidade da escala (ex.: m, ft):', cenaAtiva.escalaUnidade ?? 'm');
-    if (unidade === null) return;
     configurarGrid.mutate(
+      { cenaId: cenaAtiva.id, ...payload },
       {
-        cenaId: cenaAtiva.id,
-        tamanhoCelula: Math.max(1, Math.round(Number(cel) || cenaAtiva.grid.tamanhoCelula)),
-        visivel: cenaAtiva.grid.visivel,
-        cor: cenaAtiva.grid.cor,
-        escalaValor: Math.max(0.01, Number(valor) || cenaAtiva.escalaValor),
-        escalaUnidade: unidade.trim() || 'm',
-      },
-      {
-        onSuccess: () => toast.success('Escala atualizada.'),
-        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar escala.'),
+        onSuccess: () => toast.success('Grid e escala atualizados.'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar o grid.'),
       },
     );
+  };
+
+  // Em telas estreitas, Biblioteca e Mestre são overlays — abrir um fecha o outro.
+  const ESTREITO = 768;
+  const handleToggleBiblioteca = () => {
+    setBibliotecaAberta((v) => !v);
+    if (!bibliotecaAberta && window.innerWidth <= ESTREITO) setMestreAberto(false);
+  };
+  const handleToggleMestre = () => {
+    setMestreAberto((v) => !v);
+    if (!mestreAberto && window.innerWidth <= ESTREITO) setBibliotecaAberta(false);
   };
 
   const handleTransformarMapa = (t: { x: number; y: number; largura: number; altura: number; travado: boolean }) => {
@@ -425,30 +430,35 @@ export function MesaPage() {
     });
   };
 
-  const handleAddCena = () => {
-    const proximo = (mesa?.cenas.length ?? 0) + 1;
-    const nome = window.prompt('Nome da nova cena:', `Cena ${proximo}`);
-    if (nome === null) return;
+  // CenasBar "+ Cena" → abre o modal de nova cena.
+  const handleAbrirNovaCena = () => {
     setSelectedTokenId(null);
-    addCena.mutate(nome.trim() || `Cena ${proximo}`, {
+    setNovaCenaAberta(true);
+  };
+
+  const handleCriarCena = (nome: string) => {
+    addCena.mutate(nome.trim() || `Cena ${(mesa?.cenas.length ?? 0) + 1}`, {
       onSuccess: () => toast.success('Cena criada.'),
       onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao criar cena.'),
     });
   };
 
-  const handleRenomearCena = (cenaId: string) => {
-    const atual = mesa?.cenas.find((c) => c.id === cenaId);
-    const nome = window.prompt('Novo nome da cena:', atual?.nome ?? '');
-    if (nome === null || !nome.trim()) return;
+  const handleConfirmarRenomearCena = (nome: string) => {
+    if (!renomearCenaId || !nome.trim()) return;
     renameCena.mutate(
-      { cenaId, nome: nome.trim() },
+      { cenaId: renomearCenaId, nome: nome.trim() },
       { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao renomear cena.') },
     );
   };
 
-  const handleRemoverCena = (cenaId: string) => {
+  const handleRemoverCena = async (cenaId: string) => {
     const atual = mesa?.cenas.find((c) => c.id === cenaId);
-    if (!window.confirm(`Excluir a cena "${atual?.nome ?? ''}" e os tokens dela?`)) return;
+    const ok = await confirmDanger({
+      title: `Excluir a cena "${atual?.nome ?? ''}"?`,
+      text: 'A cena e os tokens dela serão removidos. Essa ação é permanente.',
+      confirmText: 'Sim, excluir',
+    });
+    if (!ok) return;
     removeCena.mutate(cenaId, {
       onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao excluir cena.'),
     });
@@ -460,62 +470,75 @@ export function MesaPage() {
   }
 
   const tokenSel = tokensDaCena.find((t) => t.id === selectedTokenId) ?? null;
+  const cenaParaRenomear = mesa.cenas.find((c) => c.id === renomearCenaId) ?? null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0A0507' }}>
-      <MesaToolbar
+      <MesaTopBar
         mesa={mesa}
         conectado={conectado}
         onSair={() => navigate('/dashboard')}
-        bibliotecaAberta={bibliotecaAberta}
-        onToggleBiblioteca={() => setBibliotecaAberta((v) => !v)}
-        tokenSelecionado={tokenSel !== null}
-        tokenNomeVisivel={tokenSel?.nomeVisivel ?? null}
-        onApagarToken={() => selectedTokenId && apagarToken(selectedTokenId)}
-        onToggleNomeToken={handleToggleNomeToken}
-        mostrarNomes={mostrarNomes}
-        onToggleNomes={() => setMostrarNomes((v) => !v)}
         modoRegua={modoRegua}
         onToggleRegua={() => setModoRegua((v) => !v)}
-        mapaUrlAtual={cenaAtiva?.mapaUrl ?? null}
-        cenaTravada={cenaAtiva?.mapaTravado ?? true}
-        temMapa={Boolean(cenaAtiva?.mapaUrl)}
-        onToggleTravaMapa={handleToggleTravaMapa}
-        onSetMapaUrl={handleSetMapaUrl}
-        onUploadMapa={handleUploadMapa}
-        uploadHabilitado={cloudinaryConfigurado()}
-        onToggleGrid={handleToggleGrid}
-        onConfigurarEscala={handleConfigurarEscala}
+        mostrarNomes={mostrarNomes}
+        onToggleNomes={() => setMostrarNomes((v) => !v)}
+        bibliotecaAberta={bibliotecaAberta}
+        onToggleBiblioteca={handleToggleBiblioteca}
+        mestreAberto={mestreAberto}
+        onToggleMestre={handleToggleMestre}
       />
+
       {mesa.souDono && (
         <CenasBar
           cenas={mesa.cenas}
           cenaAtivaId={mesa.cenaAtivaId}
           onAtivar={handleAtivarCena}
-          onAdicionar={handleAddCena}
-          onRenomear={handleRenomearCena}
+          onAdicionar={handleAbrirNovaCena}
+          onRenomear={setRenomearCenaId}
           onRemover={handleRemoverCena}
         />
       )}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        <Board
-          cena={cenaAtiva}
-          tokens={tokensDaCena}
-          souDono={mesa.souDono}
-          mostrarNomes={mostrarNomes}
-          modoRegua={modoRegua}
-          reguasRemotas={reguasDaCena}
-          selectedTokenId={selectedTokenId}
-          versoesDoSelecionado={versoesDoSelecionado}
-          onSelectToken={setSelectedTokenId}
-          onTokenDragStart={onTokenDragStart}
-          onTokenDragMove={onTokenDragMove}
-          onTokenDragEnd={onTokenDragEnd}
-          onTokenResize={handleResizeToken}
-          onTrocarVersao={handleTrocarVersao}
-          onTransformarMapa={handleTransformarMapa}
-          onRegua={handleRegua}
-        />
+
+      <div style={{ position: 'relative', display: 'flex', flex: 1, minHeight: 0 }}>
+        <div style={{ position: 'relative', display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
+          <Board
+            cena={cenaAtiva}
+            tokens={tokensDaCena}
+            souDono={mesa.souDono}
+            mostrarNomes={mostrarNomes}
+            modoRegua={modoRegua}
+            reguasRemotas={reguasDaCena}
+            selectedTokenId={selectedTokenId}
+            versoesDoSelecionado={versoesDoSelecionado}
+            tokenNomeVisivel={tokenSel?.nomeVisivel ?? false}
+            onSelectToken={setSelectedTokenId}
+            onTokenDragStart={onTokenDragStart}
+            onTokenDragMove={onTokenDragMove}
+            onTokenDragEnd={onTokenDragEnd}
+            onTokenResize={handleResizeToken}
+            onTrocarVersao={handleTrocarVersao}
+            onToggleNomeToken={handleToggleNomeToken}
+            onApagarToken={() => {
+              if (selectedTokenId) apagarToken(selectedTokenId);
+            }}
+            onTransformarMapa={handleTransformarMapa}
+            onRegua={handleRegua}
+          />
+
+          {mesa.souDono && mestreAberto && cenaAtiva && (
+            <MestrePanel
+              cena={cenaAtiva}
+              uploadHabilitado={cloudinaryConfigurado()}
+              onClose={() => setMestreAberto(false)}
+              onSetMapaUrl={handleSetMapaUrl}
+              onUploadMapa={handleUploadMapa}
+              onToggleTravaMapa={handleToggleTravaMapa}
+              onConfigurarGrid={handleConfigurarGrid}
+              onSalvarGridEscala={handleSalvarGridEscala}
+            />
+          )}
+        </div>
+
         {bibliotecaAberta && (
           <BibliotecaPanel
             biblioteca={mesa.biblioteca}
@@ -532,6 +555,26 @@ export function MesaPage() {
           />
         )}
       </div>
+
+      {/* Modais de cena (só dono) */}
+      <PromptModal
+        isOpen={novaCenaAberta}
+        title="Nova cena"
+        label="Nome da cena"
+        initialValue={`Cena ${mesa.cenas.length + 1}`}
+        confirmText="Criar cena"
+        onConfirm={handleCriarCena}
+        onClose={() => setNovaCenaAberta(false)}
+      />
+      <PromptModal
+        isOpen={renomearCenaId !== null}
+        title="Renomear cena"
+        label="Novo nome da cena"
+        initialValue={cenaParaRenomear?.nome ?? ''}
+        confirmText="Salvar"
+        onConfirm={handleConfirmarRenomearCena}
+        onClose={() => setRenomearCenaId(null)}
+      />
     </div>
   );
 }
