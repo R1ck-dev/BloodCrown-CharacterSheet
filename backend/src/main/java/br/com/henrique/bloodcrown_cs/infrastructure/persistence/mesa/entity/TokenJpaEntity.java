@@ -48,6 +48,14 @@ public class TokenJpaEntity {
     @Column(name = "template_id", columnDefinition = "VARCHAR(36)")
     private String templateId;
 
+    /** Cena a que o token pertence; só aparece quando é a cena ativa. String solta, não FK JPA. */
+    @Column(name = "cena_id", columnDefinition = "VARCHAR(36)")
+    private String cenaId;
+
+    /** Mostra o nome embaixo do token no tabuleiro. */
+    @Column(name = "nome_visivel", nullable = false)
+    private boolean nomeVisivel;
+
     @ManyToOne
     @JoinColumn(name = "mesa_id")
     private MesaJpaEntity mesa;

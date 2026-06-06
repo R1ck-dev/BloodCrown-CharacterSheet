@@ -68,5 +68,19 @@ export function useMesaSocket(
     [mesaId],
   );
 
-  return { conectado, enviarMovimento };
+  /** Régua ao vivo (efêmera): início (x1,y1) → fim (x2,y2). ativa=false limpa nos outros. */
+  const enviarRegua = useCallback(
+    (cenaId: string, x1: number, y1: number, x2: number, y2: number, ativa: boolean) => {
+      const client = clientRef.current;
+      if (client?.connected && mesaId) {
+        client.publish({
+          destination: `/app/mesas/${mesaId}/regua`,
+          body: JSON.stringify({ cenaId, x1, y1, x2, y2, ativa }),
+        });
+      }
+    },
+    [mesaId],
+  );
+
+  return { conectado, enviarMovimento, enviarRegua };
 }

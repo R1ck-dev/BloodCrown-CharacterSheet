@@ -7,11 +7,13 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.Cena;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.BibliotecaPastaJpaEntity;
+import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.CenaJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.MesaJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenJpaEntity;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.TokenTemplateJpaEntity;
@@ -22,7 +24,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Mapeamento bidirecional do agregado Mesa (raiz + grid + tokens + participantes).
+ * Mapeamento bidirecional do agregado Mesa (raiz + cenas + tokens + biblioteca + participantes).
  * Usa EntityManager.getReference para a FK do dono, evitando SELECT extra.
  */
 @Component
@@ -38,9 +40,14 @@ public class MesaMapper {
         entity.setId(domain.getId());
         entity.setNome(domain.getNome());
         entity.setDono(entityManager.getReference(UserJpaEntity.class, domain.getDonoUserId()));
-        entity.setMapaUrl(domain.getMapaUrl());
+        entity.setCenaAtivaId(domain.getCenaAtivaId());
         entity.setCodigoConvite(domain.getCodigoConvite());
-        entity.setGrid(toGridEmbeddable(domain.getGrid()));
+
+        List<CenaJpaEntity> cenas = new ArrayList<>();
+        for (Cena c : domain.getCenas()) {
+            cenas.add(toCenaEntity(c, entity));
+        }
+        entity.setCenas(cenas);
 
         List<TokenJpaEntity> tokens = new ArrayList<>();
         for (Token t : domain.getTokens()) {
@@ -62,6 +69,24 @@ public class MesaMapper {
 
         entity.setParticipantes(new LinkedHashSet<>(domain.getParticipantes()));
         return entity;
+    }
+
+    private CenaJpaEntity toCenaEntity(Cena c, MesaJpaEntity parent) {
+        CenaJpaEntity e = new CenaJpaEntity();
+        e.setId(c.getId());
+        e.setMesa(parent);
+        e.setNome(c.getNome());
+        e.setOrdem(c.getOrdem());
+        e.setMapaUrl(c.getMapaUrl());
+        e.setGrid(toGridEmbeddable(c.getGrid()));
+        e.setEscalaValor(c.getEscalaValor());
+        e.setEscalaUnidade(c.getEscalaUnidade());
+        e.setMapaX(c.getMapaX());
+        e.setMapaY(c.getMapaY());
+        e.setMapaLargura(c.getMapaLargura());
+        e.setMapaAltura(c.getMapaAltura());
+        e.setMapaTravado(c.isMapaTravado());
+        return e;
     }
 
     private TokenTemplateJpaEntity toTemplateEntity(TokenTemplate tt, MesaJpaEntity parent) {
@@ -94,6 +119,8 @@ public class MesaMapper {
         e.setTamanho(t.getTamanho());
         e.setDonoUserId(t.getDonoUserId());
         e.setTemplateId(t.getTemplateId());
+        e.setCenaId(t.getCenaId());
+        e.setNomeVisivel(t.isNomeVisivel());
         e.setMesa(parent);
         return e;
     }
@@ -110,6 +137,10 @@ public class MesaMapper {
     // ---------------------------------------------------------------- entity -> domain
 
     public Mesa toDomain(MesaJpaEntity entity) {
+        List<Cena> cenas = new ArrayList<>();
+        for (CenaJpaEntity e : entity.getCenas()) {
+            cenas.add(toCenaDomain(e));
+        }
         List<Token> tokens = new ArrayList<>();
         for (TokenJpaEntity e : entity.getTokens()) {
             tokens.add(toTokenDomain(e));
@@ -126,13 +157,30 @@ public class MesaMapper {
                 entity.getId(),
                 entity.getNome(),
                 entity.getDono() != null ? entity.getDono().getId() : null,
-                entity.getMapaUrl(),
-                toGridDomain(entity.getGrid()),
+                cenas,
+                entity.getCenaAtivaId(),
                 tokens,
                 biblioteca,
                 pastas,
                 new LinkedHashSet<>(entity.getParticipantes()),
                 entity.getCodigoConvite());
+    }
+
+    private Cena toCenaDomain(CenaJpaEntity e) {
+        Cena c = new Cena();
+        c.setId(e.getId());
+        c.setNome(e.getNome());
+        c.setOrdem(e.getOrdem());
+        c.setMapaUrl(e.getMapaUrl());
+        c.setGrid(toGridDomain(e.getGrid()));
+        c.setEscalaValor(e.getEscalaValor());
+        c.setEscalaUnidade(e.getEscalaUnidade());
+        c.setMapaX(e.getMapaX());
+        c.setMapaY(e.getMapaY());
+        c.setMapaLargura(e.getMapaLargura());
+        c.setMapaAltura(e.getMapaAltura());
+        c.setMapaTravado(e.isMapaTravado());
+        return c;
     }
 
     private TokenTemplate toTemplateDomain(TokenTemplateJpaEntity e) {
@@ -163,6 +211,8 @@ public class MesaMapper {
         t.setTamanho(e.getTamanho());
         t.setDonoUserId(e.getDonoUserId());
         t.setTemplateId(e.getTemplateId());
+        t.setCenaId(e.getCenaId());
+        t.setNomeVisivel(e.isNomeVisivel());
         return t;
     }
 

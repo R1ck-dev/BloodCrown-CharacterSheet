@@ -1,18 +1,21 @@
 /**
  * Página da mesa tabletop. Carrega o estado via REST, mantém os tokens em estado local
- * sincronizado pelo canal STOMP (arraste ao vivo) e persiste posição/tamanho. Tokens vêm da
- * biblioteca (aba lateral): pré-carrega moldes e clica pra colocar na mesa. Seleção → resize
- * (alças) e apagar (botão/Delete). Mudanças estruturais chegam como "atualizada" → re-busca.
+ * sincronizado pelo canal STOMP (arraste ao vivo + régua) e persiste posição/tamanho. A mesa tem
+ * várias cenas (cada uma com seu mapa/grid/escala); só os tokens da cena ativa aparecem. A
+ * biblioteca de tokens é compartilhada. Mudanças estruturais chegam como "atualizada" → re-busca.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Board } from '@/components/mesa/Board';
+import { Board, type ReguaRemota } from '@/components/mesa/Board';
 import { MesaToolbar } from '@/components/mesa/MesaToolbar';
+import { CenasBar } from '@/components/mesa/CenasBar';
 import { BibliotecaPanel } from '@/components/mesa/BibliotecaPanel';
 import {
   mesaKeys,
+  useActivateCena,
+  useAddCena,
   useAddPasta,
   useAddTemplate,
   useAddToken,
@@ -20,13 +23,17 @@ import {
   useMesa,
   useMoveTemplateToPasta,
   useMoveTokenPersist,
+  useRemoveCena,
   useRemovePasta,
   useRemoveTemplate,
   useRemoveToken,
+  useRenameCena,
   useResizeToken,
   useSetMapa,
   useSetTemplateBase,
+  useSetTokenNameVisible,
   useSwitchTokenVersion,
+  useTransformarMapa,
 } from '@/api/mesas';
 import { useMesaSocket } from '@/hooks/useMesaSocket';
 import { tokenStorage } from '@/api/client';
@@ -43,6 +50,8 @@ function Centro({ texto }: { texto: string }) {
   );
 }
 
+type ReguaRemotaCena = ReguaRemota & { cenaId: string | null; ts: number };
+
 export function MesaPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -53,6 +62,7 @@ export function MesaPage() {
   const addToken = useAddToken(id ?? '');
   const removeToken = useRemoveToken(id ?? '');
   const resizeToken = useResizeToken(id ?? '');
+  const setNomeVisivel = useSetTokenNameVisible(id ?? '');
   const addTemplate = useAddTemplate(id ?? '');
   const removeTemplate = useRemoveTemplate(id ?? '');
   const addPasta = useAddPasta(id ?? '');
@@ -62,20 +72,40 @@ export function MesaPage() {
   const switchVersao = useSwitchTokenVersion(id ?? '');
   const setMapa = useSetMapa(id ?? '');
   const configurarGrid = useConfigurarGrid(id ?? '');
+  const transformarMapa = useTransformarMapa(id ?? '');
+  const addCena = useAddCena(id ?? '');
+  const removeCena = useRemoveCena(id ?? '');
+  const renameCena = useRenameCena(id ?? '');
+  const activateCena = useActivateCena(id ?? '');
   const moverPersist = useMoveTokenPersist(id ?? '');
 
   // Tokens vivos: semeados do servidor, atualizados por arraste/resize local/remoto.
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [bibliotecaAberta, setBibliotecaAberta] = useState(false);
+  const [mostrarNomes, setMostrarNomes] = useState(true);
+  const [modoRegua, setModoRegua] = useState(false);
+  const [reguasRemotas, setReguasRemotas] = useState<Record<string, ReguaRemotaCena>>({});
   const draggingRef = useRef<string | null>(null);
   const lastSentRef = useRef(0);
+
+  // Cena ativa exibida no tabuleiro (cai pra primeira se a referência sumir).
+  const cenaAtiva = useMemo(() => {
+    if (!mesa) return null;
+    return mesa.cenas.find((c) => c.id === mesa.cenaAtivaId) ?? mesa.cenas[0] ?? null;
+  }, [mesa]);
+
+  // Só os tokens da cena ativa vão pro tabuleiro.
+  const tokensDaCena = useMemo(
+    () => (cenaAtiva ? tokens.filter((t) => t.cenaId === cenaAtiva.id) : tokens),
+    [tokens, cenaAtiva],
+  );
 
   useEffect(() => {
     if (!mesa) return;
     // Reconcilia por id: a posição é "ao vivo" no cliente (segue os eventos 'mover'),
     // então preserva x/y local pra não puxar de volta um token em arraste quando chega
-    // um refetch ('atualizada'). Demais campos (tamanho/nome/imagem) vêm do servidor.
+    // um refetch ('atualizada'). Demais campos vêm do servidor.
     setTokens((prev) => {
       const locais = new Map(prev.map((t) => [t.id, t]));
       return mesa.tokens.map((s) => {
@@ -83,8 +113,14 @@ export function MesaPage() {
         return local ? { ...s, x: local.x, y: local.y } : s;
       });
     });
-    setSelectedTokenId((sel) => (sel && mesa.tokens.some((t) => t.id === sel) ? sel : null));
   }, [mesa]);
+
+  // Ao trocar de cena (ou sumir o token), limpa a seleção que não pertence à cena ativa.
+  useEffect(() => {
+    setSelectedTokenId((sel) =>
+      sel && tokens.some((t) => t.id === sel && t.cenaId === cenaAtiva?.id) ? sel : null,
+    );
+  }, [cenaAtiva?.id, tokens]);
 
   const onEvento = useCallback(
     (evento: MesaEvento) => {
@@ -95,6 +131,23 @@ export function MesaPage() {
             t.id === evento.tokenId ? { ...t, x: evento.x ?? t.x, y: evento.y ?? t.y } : t,
           ),
         );
+      } else if (evento.tipo === 'regua') {
+        if (evento.porUserId && evento.porUserId === tokenStorage.getUserId()) return; // próprio eco
+        const key = evento.porUserId ?? 'anon';
+        const agora = performance.now();
+        setReguasRemotas((prev) => {
+          // Poda réguas paradas (peer caiu no meio do arraste sem mandar ativa=false).
+          const next: Record<string, ReguaRemotaCena> = {};
+          for (const [k, r] of Object.entries(prev)) {
+            if (agora - r.ts < 5000) next[k] = r;
+          }
+          if (evento.ativa && evento.x != null && evento.y != null && evento.x2 != null && evento.y2 != null) {
+            next[key] = { porUserId: key, x1: evento.x, y1: evento.y, x2: evento.x2, y2: evento.y2, cenaId: evento.cenaId, ts: agora };
+          } else {
+            delete next[key];
+          }
+          return next;
+        });
       } else if (evento.tipo === 'atualizada' && id) {
         // Ignora o eco da própria ação (a mutation já atualizou o cache) — evita
         // refetch redundante e fecha a janela de corrida do re-seed.
@@ -105,7 +158,18 @@ export function MesaPage() {
     [id, qc],
   );
 
-  const { conectado, enviarMovimento } = useMesaSocket(id, onEvento);
+  const { conectado, enviarMovimento, enviarRegua } = useMesaSocket(id, onEvento);
+
+  // Réguas de outros, restritas à cena ativa.
+  const reguasDaCena = useMemo<ReguaRemota[]>(
+    () => Object.values(reguasRemotas).filter((r) => r.cenaId === cenaAtiva?.id),
+    [reguasRemotas, cenaAtiva?.id],
+  );
+
+  // Sem conexão, descarta as réguas remotas (repovoam pelos eventos ao reconectar).
+  useEffect(() => {
+    if (!conectado) setReguasRemotas({});
+  }, [conectado]);
 
   // ----- tokens: arrastar / redimensionar / apagar -----
 
@@ -115,9 +179,6 @@ export function MesaPage() {
   };
 
   const onTokenDragMove = (tokenId: string, x: number, y: number) => {
-    // Mantém o state coerente com o nó a cada frame: o Group é controlado (x/y vêm do
-    // state), então sem isso qualquer re-render no meio do arraste teleportaria o token
-    // de volta. Throttle só vale pro envio via socket.
     setTokens((prev) => prev.map((t) => (t.id === tokenId ? { ...t, x, y } : t)));
     const agora = Date.now();
     if (agora - lastSentRef.current > 45) {
@@ -152,6 +213,17 @@ export function MesaPage() {
     [removeToken],
   );
 
+  const handleToggleNomeToken = () => {
+    const tk = tokens.find((t) => t.id === selectedTokenId);
+    if (!tk) return;
+    const visivel = !tk.nomeVisivel;
+    setTokens((prev) => prev.map((t) => (t.id === tk.id ? { ...t, nomeVisivel: visivel } : t)));
+    setNomeVisivel.mutate(
+      { tokenId: tk.id, visivel },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao alternar o nome.') },
+    );
+  };
+
   // Apagar com a tecla Delete/Backspace (fora de inputs).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -169,8 +241,9 @@ export function MesaPage() {
   // ----- biblioteca -----
 
   const handleColocarTemplate = (template: TokenTemplate) => {
-    const passo = (tokens.length % 8) * 30;
-    const tamanho = mesa?.grid.tamanhoCelula ?? 50;
+    if (!cenaAtiva) return;
+    const passo = (tokensDaCena.length % 8) * 30;
+    const tamanho = cenaAtiva.grid.tamanhoCelula || 50;
     addToken.mutate(
       {
         nome: template.nome ?? 'Token',
@@ -179,6 +252,7 @@ export function MesaPage() {
         y: 200 + passo,
         tamanho,
         templateId: template.id,
+        cenaId: cenaAtiva.id,
       },
       { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao colocar token.') },
     );
@@ -254,19 +328,24 @@ export function MesaPage() {
     );
   };
 
-  // ----- mapa / grid -----
+  // ----- mapa / grid / escala (por cena) -----
 
   const handleSetMapaUrl = (url: string) => {
-    setMapa.mutate(url || null, {
-      onSuccess: () => toast.success('Mapa atualizado.'),
-      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao definir mapa.'),
-    });
+    if (!cenaAtiva) return;
+    setMapa.mutate(
+      { cenaId: cenaAtiva.id, mapaUrl: url || null },
+      {
+        onSuccess: () => toast.success('Mapa atualizado.'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao definir mapa.'),
+      },
+    );
   };
 
   const handleUploadMapa = async (file: File) => {
+    if (!cenaAtiva) return;
     try {
       const url = await uploadImagemCloudinary(file);
-      await setMapa.mutateAsync(url);
+      await setMapa.mutateAsync({ cenaId: cenaAtiva.id, mapaUrl: url });
       toast.success('Mapa enviado.');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Falha no upload. Use "Mapa (URL)".');
@@ -274,17 +353,113 @@ export function MesaPage() {
   };
 
   const handleToggleGrid = () => {
-    if (!mesa) return;
+    if (!cenaAtiva) return;
     configurarGrid.mutate(
-      { tamanhoCelula: mesa.grid.tamanhoCelula, visivel: !mesa.grid.visivel, cor: mesa.grid.cor },
+      {
+        cenaId: cenaAtiva.id,
+        tamanhoCelula: cenaAtiva.grid.tamanhoCelula,
+        visivel: !cenaAtiva.grid.visivel,
+        cor: cenaAtiva.grid.cor,
+        escalaValor: cenaAtiva.escalaValor,
+        escalaUnidade: cenaAtiva.escalaUnidade ?? 'm',
+      },
       { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar grid.') },
     );
+  };
+
+  const handleConfigurarEscala = () => {
+    if (!cenaAtiva) return;
+    const cel = window.prompt('Tamanho da célula do grid (px):', String(cenaAtiva.grid.tamanhoCelula));
+    if (cel === null) return;
+    const valor = window.prompt('1 célula equivale a quantas unidades? (ex.: 1.5)', String(cenaAtiva.escalaValor));
+    if (valor === null) return;
+    const unidade = window.prompt('Unidade da escala (ex.: m, ft):', cenaAtiva.escalaUnidade ?? 'm');
+    if (unidade === null) return;
+    configurarGrid.mutate(
+      {
+        cenaId: cenaAtiva.id,
+        tamanhoCelula: Math.max(1, Math.round(Number(cel) || cenaAtiva.grid.tamanhoCelula)),
+        visivel: cenaAtiva.grid.visivel,
+        cor: cenaAtiva.grid.cor,
+        escalaValor: Math.max(0.01, Number(valor) || cenaAtiva.escalaValor),
+        escalaUnidade: unidade.trim() || 'm',
+      },
+      {
+        onSuccess: () => toast.success('Escala atualizada.'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar escala.'),
+      },
+    );
+  };
+
+  const handleTransformarMapa = (t: { x: number; y: number; largura: number; altura: number; travado: boolean }) => {
+    if (!cenaAtiva) return;
+    transformarMapa.mutate(
+      { cenaId: cenaAtiva.id, ...t },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao ajustar o mapa.') },
+    );
+  };
+
+  const handleToggleTravaMapa = () => {
+    if (!cenaAtiva) return;
+    handleTransformarMapa({
+      x: cenaAtiva.mapaX,
+      y: cenaAtiva.mapaY,
+      largura: cenaAtiva.mapaLargura,
+      altura: cenaAtiva.mapaAltura,
+      travado: !cenaAtiva.mapaTravado,
+    });
+  };
+
+  const handleRegua = (x1: number, y1: number, x2: number, y2: number, ativa: boolean) => {
+    if (!cenaAtiva) return;
+    enviarRegua(cenaAtiva.id, x1, y1, x2, y2, ativa);
+  };
+
+  // ----- cenas -----
+
+  const handleAtivarCena = (cenaId: string) => {
+    if (cenaId === mesa?.cenaAtivaId) return;
+    setSelectedTokenId(null);
+    activateCena.mutate(cenaId, {
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao trocar de cena.'),
+    });
+  };
+
+  const handleAddCena = () => {
+    const proximo = (mesa?.cenas.length ?? 0) + 1;
+    const nome = window.prompt('Nome da nova cena:', `Cena ${proximo}`);
+    if (nome === null) return;
+    setSelectedTokenId(null);
+    addCena.mutate(nome.trim() || `Cena ${proximo}`, {
+      onSuccess: () => toast.success('Cena criada.'),
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao criar cena.'),
+    });
+  };
+
+  const handleRenomearCena = (cenaId: string) => {
+    const atual = mesa?.cenas.find((c) => c.id === cenaId);
+    const nome = window.prompt('Novo nome da cena:', atual?.nome ?? '');
+    if (nome === null || !nome.trim()) return;
+    renameCena.mutate(
+      { cenaId, nome: nome.trim() },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao renomear cena.') },
+    );
+  };
+
+  const handleRemoverCena = (cenaId: string) => {
+    const atual = mesa?.cenas.find((c) => c.id === cenaId);
+    if (!window.confirm(`Excluir a cena "${atual?.nome ?? ''}" e os tokens dela?`)) return;
+    removeCena.mutate(cenaId, {
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao excluir cena.'),
+    });
   };
 
   if (isLoading) return <Centro texto="Abrindo a mesa..." />;
   if (isError || !mesa) {
     return <Centro texto={error instanceof Error ? error.message : 'Mesa não encontrada.'} />;
   }
+
+  const tokenSel = tokensDaCena.find((t) => t.id === selectedTokenId) ?? null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0A0507' }}>
@@ -294,18 +469,42 @@ export function MesaPage() {
         onSair={() => navigate('/dashboard')}
         bibliotecaAberta={bibliotecaAberta}
         onToggleBiblioteca={() => setBibliotecaAberta((v) => !v)}
-        tokenSelecionado={selectedTokenId !== null}
+        tokenSelecionado={tokenSel !== null}
+        tokenNomeVisivel={tokenSel?.nomeVisivel ?? null}
         onApagarToken={() => selectedTokenId && apagarToken(selectedTokenId)}
+        onToggleNomeToken={handleToggleNomeToken}
+        mostrarNomes={mostrarNomes}
+        onToggleNomes={() => setMostrarNomes((v) => !v)}
+        modoRegua={modoRegua}
+        onToggleRegua={() => setModoRegua((v) => !v)}
+        mapaUrlAtual={cenaAtiva?.mapaUrl ?? null}
+        cenaTravada={cenaAtiva?.mapaTravado ?? true}
+        temMapa={Boolean(cenaAtiva?.mapaUrl)}
+        onToggleTravaMapa={handleToggleTravaMapa}
         onSetMapaUrl={handleSetMapaUrl}
         onUploadMapa={handleUploadMapa}
         uploadHabilitado={cloudinaryConfigurado()}
         onToggleGrid={handleToggleGrid}
+        onConfigurarEscala={handleConfigurarEscala}
       />
+      {mesa.souDono && (
+        <CenasBar
+          cenas={mesa.cenas}
+          cenaAtivaId={mesa.cenaAtivaId}
+          onAtivar={handleAtivarCena}
+          onAdicionar={handleAddCena}
+          onRenomear={handleRenomearCena}
+          onRemover={handleRemoverCena}
+        />
+      )}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <Board
-          mapaUrl={mesa.mapaUrl}
-          grid={mesa.grid}
-          tokens={tokens}
+          cena={cenaAtiva}
+          tokens={tokensDaCena}
+          souDono={mesa.souDono}
+          mostrarNomes={mostrarNomes}
+          modoRegua={modoRegua}
+          reguasRemotas={reguasDaCena}
           selectedTokenId={selectedTokenId}
           versoesDoSelecionado={versoesDoSelecionado}
           onSelectToken={setSelectedTokenId}
@@ -314,6 +513,8 @@ export function MesaPage() {
           onTokenDragEnd={onTokenDragEnd}
           onTokenResize={handleResizeToken}
           onTrocarVersao={handleTrocarVersao}
+          onTransformarMapa={handleTransformarMapa}
+          onRegua={handleRegua}
         />
         {bibliotecaAberta && (
           <BibliotecaPanel

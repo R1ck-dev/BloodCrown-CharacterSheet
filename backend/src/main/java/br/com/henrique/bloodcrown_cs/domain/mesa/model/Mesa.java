@@ -1,6 +1,7 @@
 package br.com.henrique.bloodcrown_cs.domain.mesa.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,9 +14,11 @@ import br.com.henrique.bloodcrown_cs.domain.shared.exception.NotFoundException;
 import lombok.Getter;
 
 /**
- * Raiz do agregado Mesa (tabletop compartilhado). Dona do mapa, do grid, dos tokens, da
- * biblioteca de templates e da lista de participantes. Toda regra de acesso/posse mora aqui
- * como método de domínio; a use case só orquestra e persiste. IDs gerados no domínio (UUID).
+ * Raiz do agregado Mesa (tabletop compartilhado). Dona das cenas (cada uma com seu mapa, grid,
+ * escala e transformação), dos tokens, da biblioteca de templates e da lista de participantes.
+ * Cada token guarda a cena a que pertence; só aparece quando aquela é a cena ativa. Toda regra
+ * de acesso/posse mora aqui como método de domínio; a use case só orquestra e persiste. IDs
+ * gerados no domínio (UUID).
  */
 @Getter
 public class Mesa {
@@ -26,22 +29,23 @@ public class Mesa {
     private final String id;
     private String nome;
     private final String donoUserId;
-    private String mapaUrl;
-    private Grid grid;
+    private final List<Cena> cenas;
+    private String cenaAtivaId;
     private final List<Token> tokens;
     private final List<TokenTemplate> biblioteca;
     private final List<BibliotecaPasta> pastas;
     private final Set<String> participantes;
     private final String codigoConvite;
 
-    public Mesa(String id, String nome, String donoUserId, String mapaUrl, Grid grid,
+    public Mesa(String id, String nome, String donoUserId, List<Cena> cenas, String cenaAtivaId,
                 List<Token> tokens, List<TokenTemplate> biblioteca, List<BibliotecaPasta> pastas,
                 Set<String> participantes, String codigoConvite) {
         this.id = (id != null && !id.isBlank()) ? id : UUID.randomUUID().toString();
         this.nome = nome;
         this.donoUserId = donoUserId;
-        this.mapaUrl = mapaUrl;
-        this.grid = grid != null ? grid : new Grid();
+        this.cenas = cenas != null ? new ArrayList<>(cenas) : new ArrayList<>();
+        // Autocorreção: se a cena ativa sumiu/veio inválida (ex.: dado legado), aponta pra 1ª cena.
+        this.cenaAtivaId = normalizarCenaAtiva(cenaAtivaId);
         this.tokens = tokens != null ? new ArrayList<>(tokens) : new ArrayList<>();
         this.biblioteca = biblioteca != null ? new ArrayList<>(biblioteca) : new ArrayList<>();
         this.pastas = pastas != null ? new ArrayList<>(pastas) : new ArrayList<>();
@@ -49,9 +53,12 @@ public class Mesa {
         this.codigoConvite = codigoConvite;
     }
 
-    /** Cria uma mesa nova: id e código de convite gerados no domínio. */
+    /** Cria uma mesa nova com uma cena inicial; id e código de convite gerados no domínio. */
     public static Mesa criar(String nome, String donoUserId) {
-        return new Mesa(null, nome, donoUserId, null, new Grid(), new ArrayList<>(),
+        Cena inicial = Cena.criar("Cena 1", 0);
+        List<Cena> cenas = new ArrayList<>();
+        cenas.add(inicial);
+        return new Mesa(null, nome, donoUserId, cenas, inicial.getId(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new LinkedHashSet<>(), gerarCodigoConvite());
     }
 
@@ -88,24 +95,112 @@ public class Mesa {
         }
     }
 
-    // ----------------------------------------------------------------- mapa / grid
-
-    public void trocarMapa(String url, String userId) {
-        garantirDono(userId);
-        this.mapaUrl = url;
-    }
-
-    public void configurarGrid(Grid grid, String userId) {
-        garantirDono(userId);
-        if (grid != null) {
-            this.grid = grid;
-        }
-    }
-
     public void renomear(String nome, String userId) {
         garantirDono(userId);
         if (nome != null && !nome.isBlank()) {
             this.nome = nome;
+        }
+    }
+
+    // ----------------------------------------------------------------- cenas
+
+    /** Cria uma cena nova (vazia) e a deixa ativa. Só o mestre. */
+    public Cena adicionarCena(String nome, String userId) {
+        garantirDono(userId);
+        int proximaOrdem = cenas.stream().mapToInt(Cena::getOrdem).max().orElse(-1) + 1;
+        Cena cena = Cena.criar(nome, proximaOrdem);
+        cenas.add(cena);
+        this.cenaAtivaId = cena.getId();
+        return cena;
+    }
+
+    /** Remove uma cena (e os tokens dela). Não pode remover a última. Só o mestre. */
+    public void removerCena(String cenaId, String userId) {
+        garantirDono(userId);
+        Cena cena = buscarCena(cenaId);
+        if (cenas.size() <= 1) {
+            throw new BadRequestException("A mesa precisa de pelo menos uma cena.");
+        }
+        tokens.removeIf(t -> cenaId.equals(t.getCenaId()));
+        cenas.remove(cena);
+        if (cenaId.equals(cenaAtivaId)) {
+            this.cenaAtivaId = primeiraCenaId();
+        }
+    }
+
+    /** Id da cena de menor ordem (1ª aba); null se não houver cenas. */
+    private String primeiraCenaId() {
+        return cenas.stream().min(Comparator.comparingInt(Cena::getOrdem)).map(Cena::getId).orElse(null);
+    }
+
+    private String normalizarCenaAtiva(String cenaAtivaId) {
+        if (cenas.isEmpty()) {
+            return cenaAtivaId;
+        }
+        boolean valida = cenaAtivaId != null && cenas.stream().anyMatch(c -> c.getId().equals(cenaAtivaId));
+        return valida ? cenaAtivaId : primeiraCenaId();
+    }
+
+    public void renomearCena(String cenaId, String nome, String userId) {
+        garantirDono(userId);
+        Cena cena = buscarCena(cenaId);
+        if (nome != null && !nome.isBlank()) {
+            cena.setNome(nome);
+        }
+    }
+
+    /** Troca a cena ativa exibida no tabuleiro. Só o mestre. */
+    public void ativarCena(String cenaId, String userId) {
+        garantirDono(userId);
+        buscarCena(cenaId);
+        this.cenaAtivaId = cenaId;
+    }
+
+    // ----------------------------------------------------------------- mapa / grid / escala (por cena)
+
+    public void trocarMapa(String cenaId, String url, String userId) {
+        garantirDono(userId);
+        Cena cena = buscarCena(cenaId);
+        cena.setMapaUrl(url);
+    }
+
+    public void configurarGrid(String cenaId, Grid grid, double escalaValor, String escalaUnidade, String userId) {
+        garantirDono(userId);
+        Cena cena = buscarCena(cenaId);
+        if (grid != null) {
+            cena.setGrid(grid);
+        }
+        if (escalaValor > 0) {
+            cena.setEscalaValor(escalaValor);
+        }
+        if (escalaUnidade != null && !escalaUnidade.isBlank()) {
+            cena.setEscalaUnidade(escalaUnidade);
+        }
+    }
+
+    /** Move/redimensiona o mapa da cena e define se ele fica travado como fundo. Só o mestre. */
+    public void transformarMapa(String cenaId, int x, int y, int largura, int altura,
+                                boolean travado, String userId) {
+        garantirDono(userId);
+        Cena cena = buscarCena(cenaId);
+        cena.setMapaX(x);
+        cena.setMapaY(y);
+        cena.setMapaLargura(Math.max(0, largura));
+        cena.setMapaAltura(Math.max(0, altura));
+        cena.setMapaTravado(travado);
+    }
+
+    private Cena buscarCena(String cenaId) {
+        return cenas.stream()
+                .filter(c -> c.getId().equals(cenaId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Cena nao encontrada nesta mesa."));
+    }
+
+    private void garantirCenaExiste(String cenaId) {
+        boolean existe = cenas.stream().anyMatch(c -> c.getId().equals(cenaId));
+        if (!existe) {
+            throw new NotFoundException("Cena nao encontrada nesta mesa.");
         }
     }
 
@@ -213,9 +308,11 @@ public class Mesa {
 
     // ----------------------------------------------------------------- tokens
 
-    /** Qualquer participante pode adicionar tokens (colaborativo). */
-    public Token adicionarToken(Token token, String userId) {
+    /** Qualquer participante pode adicionar tokens a uma cena (colaborativo). */
+    public Token adicionarToken(String cenaId, Token token, String userId) {
         garantirAcesso(userId);
+        garantirCenaExiste(cenaId);
+        token.setCenaId(cenaId);
         tokens.add(token);
         return token;
     }
@@ -234,6 +331,14 @@ public class Mesa {
         garantirAcesso(userId);
         Token token = buscarToken(tokenId);
         token.setTamanho(Math.max(TAMANHO_MIN, Math.min(TAMANHO_MAX, tamanho)));
+        return token;
+    }
+
+    /** Mostra/esconde o nome embaixo do token. Colaborativo. */
+    public Token definirNomeVisivel(String tokenId, boolean visivel, String userId) {
+        garantirAcesso(userId);
+        Token token = buscarToken(tokenId);
+        token.setNomeVisivel(visivel);
         return token;
     }
 

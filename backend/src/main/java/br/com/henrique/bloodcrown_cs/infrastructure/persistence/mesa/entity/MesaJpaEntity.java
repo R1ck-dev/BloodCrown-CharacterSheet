@@ -7,25 +7,24 @@ import java.util.Set;
 
 import org.hibernate.annotations.BatchSize;
 
-import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.embeddable.GridEmbeddable;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.usuario.entity.UserJpaEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Entidade JPA da mesa tabletop (tabela "mesas"). Raiz que cascateia os tokens
+ * Entidade JPA da mesa tabletop (tabela "mesas"). Raiz que cascateia as cenas e os tokens
  * (orphanRemoval) e mantém os participantes numa @ElementCollection (mesa_participantes).
  * Id e código de convite atribuídos pelo domínio.
  */
@@ -46,14 +45,16 @@ public class MesaJpaEntity {
     @JoinColumn(name = "dono_user_id", nullable = false)
     private UserJpaEntity dono;
 
-    @Column(name = "mapa_url", length = 512)
-    private String mapaUrl;
-
-    @Embedded
-    private GridEmbeddable grid;
+    @Column(name = "cena_ativa_id", columnDefinition = "VARCHAR(36)")
+    private String cenaAtivaId;
 
     @Column(name = "codigo_convite", length = 12, unique = true)
     private String codigoConvite;
+
+    @OneToMany(mappedBy = "mesa", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordem ASC")
+    @BatchSize(size = 30)
+    private List<CenaJpaEntity> cenas = new ArrayList<>();
 
     @OneToMany(mappedBy = "mesa", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 30)

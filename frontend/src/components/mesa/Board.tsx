@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
-import { Circle, Group, Image as KonvaImage, Layer, Line, Stage, Text, Transformer } from 'react-konva';
-import type { Grid, Token, TokenTemplate } from '@/types/mesa';
+import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
+import type { Cena, Token, TokenTemplate } from '@/types/mesa';
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
 function useImageElement(url: string | null): HTMLImageElement | undefined {
@@ -25,9 +25,31 @@ function useImageElement(url: string | null): HTMLImageElement | undefined {
 const SEM_MAPA = 2000; // área de grid padrão quando não há mapa
 const TAM_MIN = 10;
 const TAM_MAX = 1000;
+const MAPA_MIN = 100;
+const MAPA_MAX = 20000;
+
+/** Régua de outro jogador (recebida ao vivo via STOMP). */
+export interface ReguaRemota {
+  porUserId: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/** Distância da régua em células e em unidades de jogo (usa o grid+escala da cena). */
+function formatarDistancia(x1: number, y1: number, x2: number, y2: number, cena: Cena): string {
+  const dpx = Math.hypot(x2 - x1, y2 - y1);
+  const cel = cena.grid.tamanhoCelula > 0 ? dpx / cena.grid.tamanhoCelula : 0;
+  const unidades = cel * (cena.escalaValor || 0);
+  const u = (cena.escalaUnidade ?? '').trim();
+  return `${cel.toFixed(1)} cél · ${unidades.toFixed(1)} ${u}`.trim();
+}
 
 interface TokenNodeProps {
   token: Token;
+  interativo: boolean;
+  mostrarNome: boolean;
   onSelect: (tokenId: string) => void;
   onDragStart: (tokenId: string) => void;
   onDragMove: (tokenId: string, x: number, y: number) => void;
@@ -38,14 +60,16 @@ interface TokenNodeProps {
 /**
  * Um token no mapa. Com imagemUrl: a própria imagem (proporção preservada, SEM borda nem
  * recorte). Sem imagem (ou enquanto carrega): círculo colorido com a inicial. Posição = centro.
+ * O nome aparece embaixo quando mostrarNome (toggle global + flag por token).
  */
-function TokenNode({ token, onSelect, onDragStart, onDragMove, onDragEnd, onResize }: TokenNodeProps) {
+function TokenNode({ token, interativo, mostrarNome, onSelect, onDragStart, onDragMove, onDragEnd, onResize }: TokenNodeProps) {
   const img = useImageElement(token.imagemUrl);
   const r = token.tamanho / 2;
   const label = (token.nome ?? '?').trim().slice(0, 3).toUpperCase();
 
   const largura = token.tamanho;
   const altura = img ? Math.round(token.tamanho * (img.naturalHeight / img.naturalWidth)) : token.tamanho;
+  const baixoDoToken = altura / 2;
 
   const aoTransformar = (e: Konva.KonvaEventObject<Event>) => {
     const node = e.target;
@@ -56,12 +80,15 @@ function TokenNode({ token, onSelect, onDragStart, onDragMove, onDragEnd, onResi
     onResize(token.id, Math.max(TAM_MIN, Math.min(TAM_MAX, novo)));
   };
 
+  const nome = (token.nome ?? '').trim();
+
   return (
     <Group
       id={token.id}
       x={token.x}
       y={token.y}
-      draggable
+      draggable={interativo}
+      listening={interativo}
       onClick={() => onSelect(token.id)}
       onTap={() => onSelect(token.id)}
       onDragStart={() => onDragStart(token.id)}
@@ -89,14 +116,36 @@ function TokenNode({ token, onSelect, onDragStart, onDragMove, onDragEnd, onResi
           />
         </>
       )}
+      {mostrarNome && nome && (
+        <Text
+          text={nome}
+          fontSize={14}
+          fontStyle="bold"
+          fill="#EDE6D6"
+          stroke="#0A0507"
+          strokeWidth={2}
+          fillAfterStrokeEnabled
+          width={Math.max(120, token.tamanho * 1.4)}
+          offsetX={Math.max(120, token.tamanho * 1.4) / 2}
+          y={baixoDoToken + 4}
+          align="center"
+          listening={false}
+        />
+      )}
     </Group>
   );
 }
 
 interface BoardProps {
-  mapaUrl: string | null;
-  grid: Grid;
+  cena: Cena | null;
   tokens: Token[];
+  souDono: boolean;
+  /** Toggle global (preferência local de quem olha) pra mostrar/ocultar todos os nomes. */
+  mostrarNomes: boolean;
+  /** Modo régua ativo: clicar-arrastar mede distância (em vez de pan). */
+  modoRegua: boolean;
+  /** Réguas de outros jogadores, ao vivo. */
+  reguasRemotas: ReguaRemota[];
   selectedTokenId: string | null;
   /** Versões do token selecionado (base + variações). >=2 mostra o menu de troca rápida. */
   versoesDoSelecionado: TokenTemplate[];
@@ -106,12 +155,19 @@ interface BoardProps {
   onTokenDragEnd: (tokenId: string, x: number, y: number) => void;
   onTokenResize: (tokenId: string, tamanho: number) => void;
   onTrocarVersao: (tokenId: string, templateId: string) => void;
+  /** Persiste a transformação do mapa (mestre move/redimensiona o mapa destravado). */
+  onTransformarMapa: (t: { x: number; y: number; largura: number; altura: number; travado: boolean }) => void;
+  /** Régua ao vivo: início (x1,y1) → fim (x2,y2); ativa=false limpa. */
+  onRegua: (x1: number, y1: number, x2: number, y2: number, ativa: boolean) => void;
 }
 
 export function Board({
-  mapaUrl,
-  grid,
+  cena,
   tokens,
+  souDono,
+  mostrarNomes,
+  modoRegua,
+  reguasRemotas,
   selectedTokenId,
   versoesDoSelecionado,
   onSelectToken,
@@ -120,18 +176,33 @@ export function Board({
   onTokenDragEnd,
   onTokenResize,
   onTrocarVersao,
+  onTransformarMapa,
+  onRegua,
 }: BoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
+  const mapaTrRef = useRef<Konva.Transformer>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
   // Incrementa em pan/zoom pra reposicionar o popover de versão (que segue o token).
   const [viewTick, setViewTick] = useState(0);
   const [arrastando, setArrastando] = useState(false);
+  // Régua local enquanto o usuário mede (coordenadas do mundo/stage). reguaRef é a fonte da
+  // verdade de "está medindo" (null = não); o state só dispara o re-render do desenho.
+  const [reguaLocal, setReguaLocal] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const reguaRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const ultimaReguaRef = useRef(0);
 
+  const mapaUrl = cena?.mapaUrl ?? null;
   const mapImg = useImageElement(mapaUrl);
-  const mapW = mapImg?.naturalWidth ?? SEM_MAPA;
-  const mapH = mapImg?.naturalHeight ?? SEM_MAPA;
+  const travado = cena?.mapaTravado ?? true;
+  const mapaEditavel = Boolean(mapImg) && !travado && souDono && !modoRegua;
+
+  // Dimensões/posição exibidas do mapa (0 = tamanho natural).
+  const larguraMapa = mapImg ? (cena && cena.mapaLargura > 0 ? cena.mapaLargura : mapImg.naturalWidth) : SEM_MAPA;
+  const alturaMapa = mapImg ? (cena && cena.mapaAltura > 0 ? cena.mapaAltura : mapImg.naturalHeight) : SEM_MAPA;
+  const mapaX = mapImg ? cena?.mapaX ?? 0 : 0;
+  const mapaY = mapImg ? cena?.mapaY ?? 0 : 0;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -148,10 +219,20 @@ export function Board({
     const tr = trRef.current;
     const stage = stageRef.current;
     if (!tr || !stage) return;
-    const node = selectedTokenId ? stage.findOne<Konva.Group>(`#${selectedTokenId}`) : undefined;
+    const node = selectedTokenId && !modoRegua ? stage.findOne<Konva.Group>(`#${selectedTokenId}`) : undefined;
     tr.nodes(node ? [node] : []);
     tr.getLayer()?.batchDraw();
-  }, [selectedTokenId, tokens]);
+  }, [selectedTokenId, tokens, modoRegua]);
+
+  // Anexa o Transformer do mapa quando ele está destravado (mestre pode mover/redimensionar).
+  useEffect(() => {
+    const tr = mapaTrRef.current;
+    const stage = stageRef.current;
+    if (!tr || !stage) return;
+    const node = mapaEditavel ? stage.findOne<Konva.Image>('#mapa-bg') : undefined;
+    tr.nodes(node ? [node] : []);
+    tr.getLayer()?.batchDraw();
+  }, [mapaEditavel, mapaUrl, larguraMapa, alturaMapa, mapaX, mapaY]);
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -176,6 +257,7 @@ export function Board({
 
   // Clique no vazio (mapa/grid têm listening=false → target é o stage) deseleciona.
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (modoRegua) return;
     if (e.target === e.target.getStage()) onSelectToken(null);
   };
 
@@ -186,6 +268,70 @@ export function Board({
   const aoFinalizarArrasto = (tokenId: string, x: number, y: number) => {
     setArrastando(false);
     onTokenDragEnd(tokenId, x, y);
+  };
+
+  const aoTransformarMapa = (e: Konva.KonvaEventObject<Event>) => {
+    const node = e.target as Konva.Image;
+    const novaLargura = Math.max(MAPA_MIN, Math.min(MAPA_MAX, Math.round(node.width() * node.scaleX())));
+    const novaAltura = Math.max(MAPA_MIN, Math.min(MAPA_MAX, Math.round(node.height() * node.scaleY())));
+    // Fixa o tamanho no nó pra ele não "voltar" ao tamanho antigo até o servidor responder.
+    node.scaleX(1);
+    node.scaleY(1);
+    node.width(novaLargura);
+    node.height(novaAltura);
+    onTransformarMapa({
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      largura: novaLargura,
+      altura: novaAltura,
+      travado: false,
+    });
+  };
+
+  const aoArrastarMapa = (e: Konva.KonvaEventObject<DragEvent>) => {
+    const node = e.target;
+    onTransformarMapa({
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      largura: larguraMapa,
+      altura: alturaMapa,
+      travado: false,
+    });
+  };
+
+  // -------- régua: clicar-arrastar no modo régua mede distância (mundo = coords do stage) --------
+  const pontoMundo = () => stageRef.current?.getRelativePointerPosition() ?? null;
+
+  const aoMouseDownRegua = () => {
+    if (!modoRegua || !cena) return;
+    const p = pontoMundo();
+    if (!p) return;
+    const nova = { x1: p.x, y1: p.y, x2: p.x, y2: p.y };
+    reguaRef.current = nova;
+    setReguaLocal(nova);
+  };
+
+  const aoMouseMoveRegua = () => {
+    const r = reguaRef.current;
+    if (!r || !cena) return;
+    const p = pontoMundo();
+    if (!p) return;
+    const nova = { x1: r.x1, y1: r.y1, x2: p.x, y2: p.y };
+    reguaRef.current = nova;
+    setReguaLocal(nova);
+    const agora = performance.now();
+    if (agora - ultimaReguaRef.current > 40) {
+      ultimaReguaRef.current = agora;
+      onRegua(nova.x1, nova.y1, nova.x2, nova.y2, true);
+    }
+  };
+
+  const aoMouseUpRegua = () => {
+    const r = reguaRef.current;
+    if (!r) return;
+    reguaRef.current = null;
+    onRegua(r.x1, r.y1, r.x2, r.y2, false);
+    setReguaLocal(null);
   };
 
   // Posição (em px do container) do popover de versão, ancorado acima do token selecionado.
@@ -205,22 +351,68 @@ export function Board({
   }, [selectedTokenId, tokens, size.width, viewTick]);
 
   const tokenAtual = tokens.find((t) => t.id === selectedTokenId);
-  const mostrarMenuVersao = !arrastando && menuPos && versoesDoSelecionado.length >= 2;
+  const mostrarMenuVersao = !arrastando && !modoRegua && menuPos && versoesDoSelecionado.length >= 2;
 
-  const gridLines = () => {
-    if (!grid.visivel || grid.tamanhoCelula <= 0) return null;
+  const grid = cena?.grid;
+  // Memoizado: só recalcula quando grid/mapa mudam (o tabuleiro re-renderiza a cada frame da
+  // régua). Limite de linhas por eixo evita travar se a célula for minúscula num mapa enorme.
+  const gridLines = useMemo(() => {
+    if (!grid || !grid.visivel || grid.tamanhoCelula <= 0) return null;
+    const MAX_LINHAS = 1000;
     const linhas = [];
-    for (let x = 0; x <= mapW; x += grid.tamanhoCelula) {
+    const x0 = mapaX;
+    const y0 = mapaY;
+    const x1 = mapaX + larguraMapa;
+    const y1 = mapaY + alturaMapa;
+    let n = 0;
+    for (let x = x0; x <= x1 && n < MAX_LINHAS; x += grid.tamanhoCelula, n++) {
       linhas.push(
-        <Line key={`v${x}`} points={[x, 0, x, mapH]} stroke={grid.cor} strokeWidth={1} opacity={0.35} listening={false} />,
+        <Line key={`v${x}`} points={[x, y0, x, y1]} stroke={grid.cor} strokeWidth={1} opacity={0.35} listening={false} />,
       );
     }
-    for (let y = 0; y <= mapH; y += grid.tamanhoCelula) {
+    n = 0;
+    for (let y = y0; y <= y1 && n < MAX_LINHAS; y += grid.tamanhoCelula, n++) {
       linhas.push(
-        <Line key={`h${y}`} points={[0, y, mapW, y]} stroke={grid.cor} strokeWidth={1} opacity={0.35} listening={false} />,
+        <Line key={`h${y}`} points={[x0, y, x1, y]} stroke={grid.cor} strokeWidth={1} opacity={0.35} listening={false} />,
       );
     }
     return linhas;
+  }, [grid, mapaX, mapaY, larguraMapa, alturaMapa]);
+
+  const reguaSegmento = (
+    key: string,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    cor: string,
+  ) => {
+    if (!cena) return null;
+    const meioX = (x1 + x2) / 2;
+    const meioY = (y1 + y2) / 2;
+    const texto = formatarDistancia(x1, y1, x2, y2, cena);
+    const larguraCaixa = Math.max(120, texto.length * 8);
+    return (
+      <Group key={key} listening={false}>
+        <Line points={[x1, y1, x2, y2]} stroke={cor} strokeWidth={2} dash={[8, 6]} />
+        <Circle x={x1} y={y1} radius={4} fill={cor} />
+        <Circle x={x2} y={y2} radius={4} fill={cor} />
+        <Group x={meioX} y={meioY - 22}>
+          <Rect width={larguraCaixa} height={20} offsetX={larguraCaixa / 2} cornerRadius={4} fill="rgba(10,5,7,0.9)" stroke={cor} />
+          <Text
+            text={texto}
+            fontSize={13}
+            fontStyle="bold"
+            fill="#EDE6D6"
+            width={larguraCaixa}
+            height={20}
+            offsetX={larguraCaixa / 2}
+            align="center"
+            verticalAlign="middle"
+          />
+        </Group>
+      </Group>
+    );
   };
 
   return (
@@ -237,26 +429,47 @@ export function Board({
         minHeight: 0,
         overflow: 'hidden',
         background: 'radial-gradient(ellipse at center, #14121A 0%, #0A0507 100%)',
-        cursor: 'grab',
+        cursor: modoRegua ? 'crosshair' : 'grab',
       }}
     >
       <Stage
         ref={stageRef}
         width={size.width}
         height={size.height}
-        draggable
+        draggable={!modoRegua}
         onWheel={handleWheel}
         onClick={handleStageClick}
         onTap={handleStageClick}
         onDragMove={() => setViewTick((t) => t + 1)}
+        onMouseDown={aoMouseDownRegua}
+        onMouseMove={aoMouseMoveRegua}
+        onMouseUp={aoMouseUpRegua}
+        onTouchStart={aoMouseDownRegua}
+        onTouchMove={aoMouseMoveRegua}
+        onTouchEnd={aoMouseUpRegua}
       >
         <Layer>
-          {mapImg && <KonvaImage image={mapImg} x={0} y={0} listening={false} />}
-          {gridLines()}
+          {mapImg && (
+            <KonvaImage
+              id="mapa-bg"
+              image={mapImg}
+              x={mapaX}
+              y={mapaY}
+              width={larguraMapa}
+              height={alturaMapa}
+              listening={mapaEditavel}
+              draggable={mapaEditavel}
+              onDragEnd={aoArrastarMapa}
+              onTransformEnd={aoTransformarMapa}
+            />
+          )}
+          {gridLines}
           {tokens.map((t) => (
             <TokenNode
               key={t.id}
               token={t}
+              interativo={!modoRegua}
+              mostrarNome={mostrarNomes && t.nomeVisivel}
               onSelect={onSelectToken}
               onDragStart={aoIniciarArrasto}
               onDragMove={onTokenDragMove}
@@ -264,6 +477,17 @@ export function Board({
               onResize={onTokenResize}
             />
           ))}
+          {reguasRemotas.map((r) => reguaSegmento(`rem-${r.porUserId}`, r.x1, r.y1, r.x2, r.y2, '#5BC0EB'))}
+          {reguaLocal && reguaSegmento('local', reguaLocal.x1, reguaLocal.y1, reguaLocal.x2, reguaLocal.y2, '#D4AF37')}
+          <Transformer
+            ref={mapaTrRef}
+            rotateEnabled={false}
+            enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+            anchorStroke="#5BC0EB"
+            anchorFill="#0A0507"
+            borderStroke="#5BC0EB"
+            borderDash={[6, 4]}
+          />
           <Transformer
             ref={trRef}
             rotateEnabled={false}

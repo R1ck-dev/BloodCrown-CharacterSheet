@@ -1,6 +1,21 @@
 import { useRef } from 'react';
 import { toast } from 'sonner';
-import { ArrowLeft, Copy, Grid3x3, Library, Link2, Trash2, Upload, Wifi, WifiOff } from 'lucide-react';
+import {
+  ArrowLeft,
+  Copy,
+  Grid3x3,
+  Library,
+  Link2,
+  Lock,
+  Ruler,
+  Scaling,
+  Tag,
+  Trash2,
+  Unlock,
+  Upload,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 import type { Mesa } from '@/types/mesa';
 
 interface ToolbarProps {
@@ -10,12 +25,27 @@ interface ToolbarProps {
   bibliotecaAberta: boolean;
   onToggleBiblioteca: () => void;
   tokenSelecionado: boolean;
+  /** nomeVisivel do token selecionado (null = nenhum selecionado). */
+  tokenNomeVisivel: boolean | null;
   onApagarToken: () => void;
+  onToggleNomeToken: () => void;
+  /** Toggle global (preferência de quem olha) de mostrar/ocultar todos os nomes. */
+  mostrarNomes: boolean;
+  onToggleNomes: () => void;
+  /** Modo régua de medição. */
+  modoRegua: boolean;
+  onToggleRegua: () => void;
+  mapaUrlAtual: string | null;
+  /** Mapa da cena travado como fundo. */
+  cenaTravada: boolean;
+  temMapa: boolean;
+  onToggleTravaMapa: () => void;
   onSetMapaUrl: (url: string) => void;
   onUploadMapa: (file: File) => void;
   /** Mostra o botão Upload só quando o host de imagem (Cloudinary) está configurado. */
   uploadHabilitado: boolean;
   onToggleGrid: () => void;
+  onConfigurarEscala: () => void;
 }
 
 export function MesaToolbar({
@@ -25,11 +55,22 @@ export function MesaToolbar({
   bibliotecaAberta,
   onToggleBiblioteca,
   tokenSelecionado,
+  tokenNomeVisivel,
   onApagarToken,
+  onToggleNomeToken,
+  mostrarNomes,
+  onToggleNomes,
+  modoRegua,
+  onToggleRegua,
+  mapaUrlAtual,
+  cenaTravada,
+  temMapa,
+  onToggleTravaMapa,
   onSetMapaUrl,
   onUploadMapa,
   uploadHabilitado,
   onToggleGrid,
+  onConfigurarEscala,
 }: ToolbarProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +84,7 @@ export function MesaToolbar({
   };
 
   const mapaPorUrl = () => {
-    const url = window.prompt('URL da imagem do mapa (cole um link público):', mesa.mapaUrl ?? '');
+    const url = window.prompt('URL da imagem do mapa (cole um link público):', mapaUrlAtual ?? '');
     if (url !== null) onSetMapaUrl(url.trim());
   };
 
@@ -94,15 +135,43 @@ export function MesaToolbar({
       <div style={{ flex: 1 }} />
 
       {tokenSelecionado && (
-        <button
-          type="button"
-          className="bc-btn bc-btn--danger bc-btn--sm"
-          onClick={onApagarToken}
-          title="Apagar token selecionado (Delete)"
-        >
-          <Trash2 size={16} /> Apagar
-        </button>
+        <>
+          <button
+            type="button"
+            className={`bc-btn bc-btn--sm ${tokenNomeVisivel ? 'bc-btn--primary' : 'bc-btn--ghost'}`}
+            onClick={onToggleNomeToken}
+            title="Mostrar/esconder o nome deste token"
+          >
+            <Tag size={16} /> Nome
+          </button>
+          <button
+            type="button"
+            className="bc-btn bc-btn--danger bc-btn--sm"
+            onClick={onApagarToken}
+            title="Apagar token selecionado (Delete)"
+          >
+            <Trash2 size={16} /> Apagar
+          </button>
+        </>
       )}
+
+      <button
+        type="button"
+        className={`bc-btn bc-btn--sm ${modoRegua ? 'bc-btn--primary' : 'bc-btn--ghost'}`}
+        onClick={onToggleRegua}
+        title="Régua de medição (clicar e arrastar no mapa)"
+      >
+        <Ruler size={16} /> Régua
+      </button>
+
+      <button
+        type="button"
+        className={`bc-btn bc-btn--sm ${mostrarNomes ? 'bc-btn--primary' : 'bc-btn--ghost'}`}
+        onClick={onToggleNomes}
+        title="Mostrar/ocultar todos os nomes"
+      >
+        <Tag size={16} /> Nomes
+      </button>
 
       <button
         type="button"
@@ -117,6 +186,19 @@ export function MesaToolbar({
           <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={onToggleGrid} title="Ligar/desligar grid">
             <Grid3x3 size={16} /> Grid
           </button>
+          <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={onConfigurarEscala} title="Tamanho da célula e escala de medição">
+            <Scaling size={16} /> Escala
+          </button>
+          {temMapa && (
+            <button
+              type="button"
+              className={`bc-btn bc-btn--sm ${cenaTravada ? 'bc-btn--ghost' : 'bc-btn--primary'}`}
+              onClick={onToggleTravaMapa}
+              title={cenaTravada ? 'Mapa travado como fundo — clique pra destravar e mover/redimensionar' : 'Mapa livre — clique pra travar como fundo'}
+            >
+              {cenaTravada ? <Lock size={16} /> : <Unlock size={16} />} Mapa
+            </button>
+          )}
           <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={mapaPorUrl}>
             <Link2 size={16} /> Mapa (URL)
           </button>

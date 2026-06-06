@@ -9,6 +9,25 @@ export interface Grid {
   cor: string;
 }
 
+/** Cena: um mapa com seu grid, escala de medição e transformação. */
+export interface Cena {
+  id: string;
+  nome: string | null;
+  ordem: number;
+  mapaUrl: string | null;
+  grid: Grid;
+  /** Quanto vale 1 célula em unidades de jogo (ex.: 1.5 = "1 célula = 1,5 m"). */
+  escalaValor: number;
+  escalaUnidade: string | null;
+  mapaX: number;
+  mapaY: number;
+  /** 0 = tamanho natural da imagem. */
+  mapaLargura: number;
+  mapaAltura: number;
+  /** Mapa travado como fundo (não arrastável/redimensionável). */
+  mapaTravado: boolean;
+}
+
 export interface Token {
   id: string;
   nome: string | null;
@@ -20,6 +39,10 @@ export interface Token {
   donoUserId: string | null;
   /** Template/versão da biblioteca que este token representa (null = avulso). */
   templateId: string | null;
+  /** Cena a que o token pertence (só aparece na cena ativa). */
+  cenaId: string | null;
+  /** Mostra o nome embaixo do token no tabuleiro. */
+  nomeVisivel: boolean;
 }
 
 /** Molde de token na biblioteca da mesa (sem posição). */
@@ -44,8 +67,8 @@ export interface Mesa {
   nome: string;
   donoUserId: string;
   souDono: boolean;
-  mapaUrl: string | null;
-  grid: Grid;
+  cenas: Cena[];
+  cenaAtivaId: string | null;
   tokens: Token[];
   biblioteca: TokenTemplate[];
   pastas: BibliotecaPasta[];
@@ -76,6 +99,8 @@ export interface NovoTokenInput {
   y: number;
   tamanho: number;
   templateId?: string | null;
+  /** Cena a que o token será adicionado (em geral, a cena ativa). */
+  cenaId: string;
 }
 
 /** Dados pra pré-carregar um molde na biblioteca (opcionalmente como versão / em pasta). */
@@ -90,13 +115,32 @@ export interface ConfigurarGridInput {
   tamanhoCelula: number;
   visivel: boolean;
   cor: string;
+  escalaValor: number;
+  escalaUnidade: string;
+}
+
+/** Posição/tamanho do mapa na cena + trava. largura/altura em 0 = tamanho natural. */
+export interface TransformarMapaInput {
+  x: number;
+  y: number;
+  largura: number;
+  altura: number;
+  travado: boolean;
 }
 
 /** Evento publicado em /topic/mesas/{id} (ver MesaEvento.java). */
 export interface MesaEvento {
-  tipo: 'mover' | 'atualizada';
+  tipo: 'mover' | 'atualizada' | 'regua';
   tokenId: string | null;
+  /** mover: posição; regua: ponto inicial. */
   x: number | null;
   y: number | null;
+  /** regua: ponto final. */
+  x2: number | null;
+  y2: number | null;
+  /** regua: cena em que se está medindo. */
+  cenaId: string | null;
+  /** regua: false limpa a régua dos outros clientes. */
+  ativa: boolean | null;
   porUserId: string | null;
 }

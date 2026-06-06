@@ -7,6 +7,7 @@ import type {
   NovaMesaInput,
   NovoTemplateInput,
   NovoTokenInput,
+  TransformarMapaInput,
 } from '@/types/mesa';
 import { request } from './client';
 
@@ -38,12 +39,32 @@ async function deleteMesa(id: string): Promise<void> {
   return request<void>(`/mesas/${id}`, { method: 'DELETE' });
 }
 
-async function setMapa(id: string, mapaUrl: string | null): Promise<Mesa> {
-  return request<Mesa>(`/mesas/${id}/mapa`, { method: 'PUT', body: { mapaUrl } });
+async function addCena(id: string, nome: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas`, { method: 'POST', body: { nome } });
 }
 
-async function configurarGrid(id: string, payload: ConfigurarGridInput): Promise<Mesa> {
-  return request<Mesa>(`/mesas/${id}/grid`, { method: 'PUT', body: payload });
+async function removeCena(id: string, cenaId: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}`, { method: 'DELETE' });
+}
+
+async function renameCena(id: string, cenaId: string, nome: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}/nome`, { method: 'PUT', body: { nome } });
+}
+
+async function activateCena(id: string, cenaId: string): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}/ativar`, { method: 'PUT' });
+}
+
+async function setMapa(id: string, cenaId: string, mapaUrl: string | null): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}/mapa`, { method: 'PUT', body: { mapaUrl } });
+}
+
+async function configurarGrid(id: string, cenaId: string, payload: ConfigurarGridInput): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}/grid`, { method: 'PUT', body: payload });
+}
+
+async function transformarMapa(id: string, cenaId: string, payload: TransformarMapaInput): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/cenas/${cenaId}/transform`, { method: 'PUT', body: payload });
 }
 
 async function addToken(id: string, payload: NovoTokenInput): Promise<Mesa> {
@@ -60,6 +81,10 @@ async function removeToken(id: string, tokenId: string): Promise<void> {
 
 async function resizeToken(id: string, tokenId: string, tamanho: number): Promise<Mesa> {
   return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/tamanho`, { method: 'PUT', body: { tamanho } });
+}
+
+async function setTokenNameVisible(id: string, tokenId: string, visivel: boolean): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/nome-visivel`, { method: 'PUT', body: { visivel } });
 }
 
 async function addTemplate(id: string, payload: NovoTemplateInput): Promise<Mesa> {
@@ -131,10 +156,43 @@ export function useDeleteMesa() {
   });
 }
 
+export function useAddCena(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (nome: string) => addCena(id, nome),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useRemoveCena(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cenaId: string) => removeCena(id, cenaId),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useRenameCena(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cenaId, nome }: { cenaId: string; nome: string }) => renameCena(id, cenaId, nome),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useActivateCena(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cenaId: string) => activateCena(id, cenaId),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
 export function useSetMapa(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (mapaUrl: string | null) => setMapa(id, mapaUrl),
+    mutationFn: ({ cenaId, mapaUrl }: { cenaId: string; mapaUrl: string | null }) =>
+      setMapa(id, cenaId, mapaUrl),
     onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }
@@ -142,7 +200,17 @@ export function useSetMapa(id: string) {
 export function useConfigurarGrid(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: ConfigurarGridInput) => configurarGrid(id, payload),
+    mutationFn: ({ cenaId, ...payload }: { cenaId: string } & ConfigurarGridInput) =>
+      configurarGrid(id, cenaId, payload),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useTransformarMapa(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cenaId, ...payload }: { cenaId: string } & TransformarMapaInput) =>
+      transformarMapa(id, cenaId, payload),
     onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }
@@ -180,6 +248,15 @@ export function useResizeToken(id: string) {
   return useMutation({
     mutationFn: ({ tokenId, tamanho }: { tokenId: string; tamanho: number }) =>
       resizeToken(id, tokenId, tamanho),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useSetTokenNameVisible(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tokenId, visivel }: { tokenId: string; visivel: boolean }) =>
+      setTokenNameVisible(id, tokenId, visivel),
     onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }
