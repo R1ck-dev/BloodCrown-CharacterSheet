@@ -1,5 +1,9 @@
 package br.com.henrique.bloodcrown_cs.infrastructure.config.realtime;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessagingException;
@@ -18,15 +22,21 @@ import lombok.RequiredArgsConstructor;
  * Autentica e autoriza o canal STOMP reusando o JWT do REST:
  *  - CONNECT: valida o token do header Authorization via TokenServicePort e fixa o principal
  *    (userId) na sessão WebSocket;
- *  - SUBSCRIBE em /topic/mesas/{id}: confere que o usuário participa da mesa (checagem leve),
- *    impedindo espionar mesas alheias.
- * Token/assinatura inválidos lançam exceção, abortando o frame (CONNECT/SUBSCRIBE recusado).
+ *  - SUBSCRIBE em /topic/mesas/{id}: confere que o usuário participa da mesa, impedindo
+ *    espionar mesas alheias;
+ *  - SEND em /app/mesas/{id}/* (mover/régua ao vivo): confere acesso à mesa, impedindo injetar
+ *    eventos em mesas alheias.
+ * Pra não bater no banco a cada frame do caminho de alta frequência (drag/régua), o acesso é
+ * conferido uma vez por (sessão, mesa) e memorizado nos atributos da sessão WebSocket.
+ * Token/assinatura inválidos ou sem acesso lançam exceção, abortando o frame.
  */
 @Component
 @RequiredArgsConstructor
 public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final String PREFIXO_TOPICO_MESA = "/topic/mesas/";
+    private static final String PREFIXO_APP_MESA = "/app/mesas/";
+    private static final String ATTR_MESAS_OK = "mesasAutorizadas";
 
     private final TokenServicePort tokenServicePort;
     private final MesaRepository mesaRepository;
@@ -41,7 +51,9 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             accessor.setUser(new StompPrincipal(autenticar(accessor)));
         } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-            autorizarInscricao(accessor);
+            autorizarMesa(accessor, extrairMesaId(accessor.getDestination(), PREFIXO_TOPICO_MESA));
+        } else if (StompCommand.SEND.equals(accessor.getCommand())) {
+            autorizarMesa(accessor, extrairMesaId(accessor.getDestination(), PREFIXO_APP_MESA));
         }
         return message;
     }
@@ -60,17 +72,45 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         return userId;
     }
 
-    private void autorizarInscricao(StompHeaderAccessor accessor) {
-        String destino = accessor.getDestination();
-        if (destino == null || !destino.startsWith(PREFIXO_TOPICO_MESA)) {
-            return; // outros tópicos não são restritos aqui
+    /** Extrai o {id} de "/{prefixo}{id}/..." ou "/{prefixo}{id}"; null se não casar o prefixo. */
+    private String extrairMesaId(String destino, String prefixo) {
+        if (destino == null || !destino.startsWith(prefixo)) {
+            return null;
+        }
+        String resto = destino.substring(prefixo.length());
+        int barra = resto.indexOf('/');
+        return barra >= 0 ? resto.substring(0, barra) : resto;
+    }
+
+    private void autorizarMesa(StompHeaderAccessor accessor, String mesaId) {
+        if (mesaId == null || mesaId.isBlank()) {
+            return; // destino fora do escopo de mesa — não restringe aqui
         }
         if (accessor.getUser() == null) {
             throw new MessagingException("Nao autenticado.");
         }
-        String mesaId = destino.substring(PREFIXO_TOPICO_MESA.length());
+        if (jaAutorizado(accessor, mesaId)) {
+            return; // já conferido nesta sessão — evita SELECT por frame no caminho de alta frequência
+        }
         if (!mesaRepository.existeComAcesso(mesaId, accessor.getUser().getName())) {
             throw new MessagingException("Voce nao participa desta mesa.");
         }
+        marcarAutorizado(accessor, mesaId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean jaAutorizado(StompHeaderAccessor accessor, String mesaId) {
+        Map<String, Object> attrs = accessor.getSessionAttributes();
+        Object set = attrs != null ? attrs.get(ATTR_MESAS_OK) : null;
+        return set instanceof Set && ((Set<String>) set).contains(mesaId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void marcarAutorizado(StompHeaderAccessor accessor, String mesaId) {
+        Map<String, Object> attrs = accessor.getSessionAttributes();
+        if (attrs == null) {
+            return;
+        }
+        ((Set<String>) attrs.computeIfAbsent(ATTR_MESAS_OK, k -> new HashSet<String>())).add(mesaId);
     }
 }

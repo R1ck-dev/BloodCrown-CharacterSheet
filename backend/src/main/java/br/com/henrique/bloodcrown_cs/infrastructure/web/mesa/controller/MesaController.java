@@ -17,28 +17,35 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.henrique.bloodcrown_cs.application.mesa.dto.AdicionarTokenInput;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarCenaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarPastaUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AtivarCenaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.BuscarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ConfigurarGridUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.CriarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DefinirBaseTemplateUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DefinirNomeVisivelTokenUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DeletarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.EntrarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ListarMesasUseCase;
-import br.com.henrique.bloodcrown_cs.application.mesa.usecase.AdicionarTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.MoverTemplateParaPastaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.MoverTokenUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RedimensionarTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverCenaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverPastaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RemoverTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RenomearCenaUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TransformarMapaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TrocarMapaMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TrocarVersaoTokenUseCase;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTemplateRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTokenRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.ConfigurarGridRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CriarCenaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CriarMesaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CriarPastaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.DefinirBaseRequest;
@@ -48,7 +55,10 @@ import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResumoResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MoverTemplatePastaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MoverTokenRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.NomeVisivelRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.RedimensionarTokenRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.RenomearCenaRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TransformarMapaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TrocarMapaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TrocarVersaoRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.mapper.MesaWebMapper;
@@ -58,9 +68,9 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Endpoints REST da mesa tabletop. Todas exigem autenticação (filtro global) e validam posse
- * nos use cases. Mudanças estruturais (mapa/grid/add/remove token) emitem o evento "atualizada"
- * em /topic/mesas/{id} para os clientes re-buscarem o estado. O drag-end só persiste (o
- * movimento ao vivo já trafegou pelo STOMP).
+ * nos use cases. Mudanças estruturais (cena/mapa/grid/add/remove token) emitem o evento
+ * "atualizada" em /topic/mesas/{id} para os clientes re-buscarem o estado. O drag-end só
+ * persiste (o movimento ao vivo já trafegou pelo STOMP). Cena/mapa/grid são por cena.
  */
 @RestController
 @RequestMapping("/mesas")
@@ -72,11 +82,17 @@ public class MesaController {
     private final BuscarMesaUseCase buscarMesa;
     private final DeletarMesaUseCase deletarMesa;
     private final EntrarMesaUseCase entrarMesa;
+    private final AdicionarCenaUseCase adicionarCena;
+    private final RemoverCenaUseCase removerCena;
+    private final RenomearCenaUseCase renomearCena;
+    private final AtivarCenaUseCase ativarCena;
     private final TrocarMapaMesaUseCase trocarMapa;
     private final ConfigurarGridUseCase configurarGrid;
+    private final TransformarMapaUseCase transformarMapa;
     private final AdicionarTokenUseCase adicionarToken;
     private final MoverTokenUseCase moverToken;
     private final RedimensionarTokenUseCase redimensionarToken;
+    private final DefinirNomeVisivelTokenUseCase definirNomeVisivelToken;
     private final RemoverTokenUseCase removerToken;
     private final AdicionarTemplateUseCase adicionarTemplate;
     private final RemoverTemplateUseCase removerTemplate;
@@ -122,27 +138,78 @@ public class MesaController {
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
-    @PutMapping("/{id}/mapa")
-    public ResponseEntity<MesaResponse> mapa(@PathVariable String id, @RequestBody TrocarMapaRequest req,
-                                             @AuthenticationPrincipal String userId) {
-        Mesa mesa = trocarMapa.execute(id, userId, req.mapaUrl());
+    // ------------------------------------------------------------------- cenas
+
+    @PostMapping("/{id}/cenas")
+    public ResponseEntity<MesaResponse> addCena(@PathVariable String id, @RequestBody CriarCenaRequest req,
+                                                @AuthenticationPrincipal String userId) {
+        Mesa mesa = adicionarCena.execute(id, userId, req.nome());
         notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
-    @PutMapping("/{id}/grid")
-    public ResponseEntity<MesaResponse> grid(@PathVariable String id, @RequestBody ConfigurarGridRequest req,
-                                             @AuthenticationPrincipal String userId) {
-        Mesa mesa = configurarGrid.execute(id, userId, req.tamanhoCelula(), req.visivel(), req.cor());
+    @DeleteMapping("/{id}/cenas/{cenaId}")
+    public ResponseEntity<MesaResponse> deleteCena(@PathVariable String id, @PathVariable String cenaId,
+                                                   @AuthenticationPrincipal String userId) {
+        Mesa mesa = removerCena.execute(id, userId, cenaId);
         notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
+
+    @PutMapping("/{id}/cenas/{cenaId}/nome")
+    public ResponseEntity<MesaResponse> renameCena(@PathVariable String id, @PathVariable String cenaId,
+                                                   @RequestBody RenomearCenaRequest req,
+                                                   @AuthenticationPrincipal String userId) {
+        Mesa mesa = renomearCena.execute(id, userId, cenaId, req.nome());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/cenas/{cenaId}/ativar")
+    public ResponseEntity<MesaResponse> activateCena(@PathVariable String id, @PathVariable String cenaId,
+                                                     @AuthenticationPrincipal String userId) {
+        Mesa mesa = ativarCena.execute(id, userId, cenaId);
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/cenas/{cenaId}/mapa")
+    public ResponseEntity<MesaResponse> mapa(@PathVariable String id, @PathVariable String cenaId,
+                                             @RequestBody TrocarMapaRequest req,
+                                             @AuthenticationPrincipal String userId) {
+        Mesa mesa = trocarMapa.execute(id, userId, cenaId, req.mapaUrl());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/cenas/{cenaId}/grid")
+    public ResponseEntity<MesaResponse> grid(@PathVariable String id, @PathVariable String cenaId,
+                                             @RequestBody ConfigurarGridRequest req,
+                                             @AuthenticationPrincipal String userId) {
+        Mesa mesa = configurarGrid.execute(id, userId, cenaId, req.tamanhoCelula(), req.visivel(),
+                req.cor(), req.escalaValor(), req.escalaUnidade());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/cenas/{cenaId}/transform")
+    public ResponseEntity<MesaResponse> transform(@PathVariable String id, @PathVariable String cenaId,
+                                                  @RequestBody TransformarMapaRequest req,
+                                                  @AuthenticationPrincipal String userId) {
+        Mesa mesa = transformarMapa.execute(id, userId, cenaId, req.x(), req.y(),
+                req.largura(), req.altura(), req.travado());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    // ------------------------------------------------------------------- tokens
 
     @PostMapping("/{id}/tokens")
     public ResponseEntity<MesaResponse> addToken(@PathVariable String id, @RequestBody AdicionarTokenRequest req,
                                                  @AuthenticationPrincipal String userId) {
         Mesa mesa = adicionarToken.execute(id, userId, new AdicionarTokenInput(
-                req.nome(), req.imagemUrl(), req.cor(), req.x(), req.y(), req.tamanho(), req.templateId()));
+                req.nome(), req.imagemUrl(), req.cor(), req.x(), req.y(), req.tamanho(),
+                req.templateId(), req.cenaId()));
         notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
@@ -164,6 +231,15 @@ public class MesaController {
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
+    @PutMapping("/{id}/tokens/{tokenId}/nome-visivel")
+    public ResponseEntity<MesaResponse> setNameVisible(@PathVariable String id, @PathVariable String tokenId,
+                                                       @RequestBody NomeVisivelRequest req,
+                                                       @AuthenticationPrincipal String userId) {
+        Mesa mesa = definirNomeVisivelToken.execute(id, userId, tokenId, req.visivel());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
     @DeleteMapping("/{id}/tokens/{tokenId}")
     public ResponseEntity<Void> deleteToken(@PathVariable String id, @PathVariable String tokenId,
                                             @AuthenticationPrincipal String userId) {
@@ -171,6 +247,8 @@ public class MesaController {
         notificarAtualizada(id, userId);
         return ResponseEntity.noContent().build();
     }
+
+    // ------------------------------------------------------------------- biblioteca
 
     @PostMapping("/{id}/biblioteca")
     public ResponseEntity<MesaResponse> addTemplate(@PathVariable String id,

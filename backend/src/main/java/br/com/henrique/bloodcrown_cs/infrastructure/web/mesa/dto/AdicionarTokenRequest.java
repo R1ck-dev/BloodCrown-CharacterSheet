@@ -7,5 +7,6 @@ public record AdicionarTokenRequest(
         int x,
         int y,
         int tamanho,
-        String templateId) {
+        String templateId,
+        String cenaId) {
 }

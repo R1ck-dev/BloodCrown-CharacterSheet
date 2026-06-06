@@ -17,10 +17,10 @@ public class TrocarMapaMesaUseCase {
     private final MesaRepository mesaRepository;
 
     @Transactional
-    public Mesa execute(String mesaId, String userId, String url) {
+    public Mesa execute(String mesaId, String userId, String cenaId, String url) {
         Mesa mesa = mesaRepository.buscarPorIdComAcesso(mesaId, userId)
                 .orElseThrow(() -> new NotFoundException("Mesa nao encontrada."));
-        mesa.trocarMapa(url, userId);
+        mesa.trocarMapa(cenaId, url, userId);
         return mesaRepository.salvar(mesa);
     }
 }

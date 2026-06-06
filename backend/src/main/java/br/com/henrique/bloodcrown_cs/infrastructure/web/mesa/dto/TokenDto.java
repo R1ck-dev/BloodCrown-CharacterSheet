@@ -9,5 +9,7 @@ public record TokenDto(
         int y,
         int tamanho,
         String donoUserId,
-        String templateId) {
+        String templateId,
+        String cenaId,
+        boolean nomeVisivel) {
 }

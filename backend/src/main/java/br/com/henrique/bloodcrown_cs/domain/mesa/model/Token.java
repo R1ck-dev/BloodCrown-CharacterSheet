@@ -29,13 +29,17 @@ public class Token {
      * o grupo de versões é resolvido a partir deste id contra a biblioteca da mesa.
      */
     private String templateId;
+    /** Cena a que este token pertence; só aparece no tabuleiro quando essa é a cena ativa. */
+    private String cenaId;
+    /** Mostra o nome do token embaixo dele no tabuleiro (padrão: visível). */
+    private boolean nomeVisivel = true;
 
     public Token() {
     }
 
-    /** Cria um token novo com id gerado no domínio. */
+    /** Cria um token novo com id gerado no domínio, ligado a uma cena. */
     public static Token criar(String nome, String imagemUrl, String cor, int x, int y,
-                              int tamanho, String donoUserId, String templateId) {
+                              int tamanho, String donoUserId, String templateId, String cenaId) {
         Token t = new Token();
         t.id = UUID.randomUUID().toString();
         t.nome = nome;
@@ -46,6 +50,8 @@ public class Token {
         t.tamanho = tamanho > 0 ? tamanho : 50;
         t.donoUserId = donoUserId;
         t.templateId = (templateId != null && !templateId.isBlank()) ? templateId : null;
+        t.cenaId = (cenaId != null && !cenaId.isBlank()) ? cenaId : null;
+        t.nomeVisivel = true;
         return t;
     }
 }

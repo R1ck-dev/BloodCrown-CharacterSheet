@@ -10,7 +10,7 @@ import br.com.henrique.bloodcrown_cs.domain.shared.exception.NotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
-/** Ajusta o grid da mesa (tamanho da célula, visibilidade, cor) — só o mestre. */
+/** Ajusta o grid e a escala de medição de uma cena (tamanho da célula, cor, escala) — só o mestre. */
 @Service
 @RequiredArgsConstructor
 public class ConfigurarGridUseCase {
@@ -18,10 +18,11 @@ public class ConfigurarGridUseCase {
     private final MesaRepository mesaRepository;
 
     @Transactional
-    public Mesa execute(String mesaId, String userId, int tamanhoCelula, boolean visivel, String cor) {
+    public Mesa execute(String mesaId, String userId, String cenaId, int tamanhoCelula, boolean visivel,
+                        String cor, double escalaValor, String escalaUnidade) {
         Mesa mesa = mesaRepository.buscarPorIdComAcesso(mesaId, userId)
                 .orElseThrow(() -> new NotFoundException("Mesa nao encontrada."));
-        mesa.configurarGrid(new Grid(tamanhoCelula, visivel, cor), userId);
+        mesa.configurarGrid(cenaId, new Grid(tamanhoCelula, visivel, cor), escalaValor, escalaUnidade, userId);
         return mesaRepository.salvar(mesa);
     }
 }

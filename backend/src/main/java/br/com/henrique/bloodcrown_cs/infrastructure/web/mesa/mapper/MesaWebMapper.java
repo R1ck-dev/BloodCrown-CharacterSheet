@@ -5,10 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.BibliotecaPasta;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.Cena;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Grid;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Token;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenTemplate;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.CenaDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.GridDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResponse;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaResumoResponse;
@@ -21,6 +23,7 @@ import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TokenTemplateDt
 public class MesaWebMapper {
 
     public MesaResponse toResponse(Mesa mesa, String userId) {
+        List<CenaDto> cenas = mesa.getCenas().stream().map(this::toCenaDto).toList();
         List<TokenDto> tokens = mesa.getTokens().stream().map(this::toTokenDto).toList();
         List<TokenTemplateDto> biblioteca = mesa.getBiblioteca().stream().map(this::toTemplateDto).toList();
         List<PastaDto> pastas = mesa.getPastas().stream().map(this::toPastaDto).toList();
@@ -29,13 +32,29 @@ public class MesaWebMapper {
                 mesa.getNome(),
                 mesa.getDonoUserId(),
                 mesa.isDono(userId),
-                mesa.getMapaUrl(),
-                toGridDto(mesa.getGrid()),
+                cenas,
+                mesa.getCenaAtivaId(),
                 tokens,
                 biblioteca,
                 pastas,
                 List.copyOf(mesa.getParticipantes()),
                 mesa.getCodigoConvite());
+    }
+
+    public CenaDto toCenaDto(Cena c) {
+        return new CenaDto(
+                c.getId(),
+                c.getNome(),
+                c.getOrdem(),
+                c.getMapaUrl(),
+                toGridDto(c.getGrid()),
+                c.getEscalaValor(),
+                c.getEscalaUnidade(),
+                c.getMapaX(),
+                c.getMapaY(),
+                c.getMapaLargura(),
+                c.getMapaAltura(),
+                c.isMapaTravado());
     }
 
     public TokenTemplateDto toTemplateDto(TokenTemplate t) {
@@ -52,7 +71,8 @@ public class MesaWebMapper {
 
     public TokenDto toTokenDto(Token t) {
         return new TokenDto(t.getId(), t.getNome(), t.getImagemUrl(), t.getCor(),
-                t.getX(), t.getY(), t.getTamanho(), t.getDonoUserId(), t.getTemplateId());
+                t.getX(), t.getY(), t.getTamanho(), t.getDonoUserId(), t.getTemplateId(),
+                t.getCenaId(), t.isNomeVisivel());
     }
 
     private GridDto toGridDto(Grid g) {
