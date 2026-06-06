@@ -30,6 +30,20 @@ export const tokenStorage = {
       return null;
     }
   },
+  /**
+   * Le o claim `id` (userId) do payload JWT. Usado p.ex. pra ignorar o eco do
+   * proprio evento realtime (porUserId). Backend usa withClaim("id", userId).
+   */
+  getUserId: (): string | null => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return typeof payload.id === 'string' ? payload.id : null;
+    } catch {
+      return null;
+    }
+  },
 };
 
 export class ApiError extends Error {

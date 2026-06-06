@@ -24,6 +24,7 @@ import {
   useSetMapa,
 } from '@/api/mesas';
 import { useMesaSocket } from '@/hooks/useMesaSocket';
+import { tokenStorage } from '@/api/client';
 import { cloudinaryConfigurado, uploadImagemCloudinary } from '@/lib/cloudinary';
 import type { MesaEvento, Token, TokenTemplate } from '@/types/mesa';
 
@@ -62,7 +63,16 @@ export function MesaPage() {
 
   useEffect(() => {
     if (!mesa) return;
-    setTokens(mesa.tokens);
+    // Reconcilia por id: a posição é "ao vivo" no cliente (segue os eventos 'mover'),
+    // então preserva x/y local pra não puxar de volta um token em arraste quando chega
+    // um refetch ('atualizada'). Demais campos (tamanho/nome/imagem) vêm do servidor.
+    setTokens((prev) => {
+      const locais = new Map(prev.map((t) => [t.id, t]));
+      return mesa.tokens.map((s) => {
+        const local = locais.get(s.id);
+        return local ? { ...s, x: local.x, y: local.y } : s;
+      });
+    });
     setSelectedTokenId((sel) => (sel && mesa.tokens.some((t) => t.id === sel) ? sel : null));
   }, [mesa]);
 
@@ -76,6 +86,9 @@ export function MesaPage() {
           ),
         );
       } else if (evento.tipo === 'atualizada' && id) {
+        // Ignora o eco da própria ação (a mutation já atualizou o cache) — evita
+        // refetch redundante e fecha a janela de corrida do re-seed.
+        if (evento.porUserId && evento.porUserId === tokenStorage.getUserId()) return;
         qc.invalidateQueries({ queryKey: mesaKeys.detail(id) });
       }
     },
@@ -92,6 +105,10 @@ export function MesaPage() {
   };
 
   const onTokenDragMove = (tokenId: string, x: number, y: number) => {
+    // Mantém o state coerente com o nó a cada frame: o Group é controlado (x/y vêm do
+    // state), então sem isso qualquer re-render no meio do arraste teleportaria o token
+    // de volta. Throttle só vale pro envio via socket.
+    setTokens((prev) => prev.map((t) => (t.id === tokenId ? { ...t, x, y } : t)));
     const agora = Date.now();
     if (agora - lastSentRef.current > 45) {
       lastSentRef.current = agora;
