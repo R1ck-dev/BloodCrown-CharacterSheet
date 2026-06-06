@@ -1,0 +1,102 @@
+/* ============================================================================
+   BloodCrown — Segmented (seletor de modo, estilo medalhão)
+   Usado no Dashboard pra alternar Personagens | Mesas. Trilho de pedra esculpida
+   com aro gravado; a opção ativa ganha preenchimento roxo + aro dourado + relevo.
+   ============================================================================ */
+
+.bc-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 5px;
+  border-radius: var(--bc-radius-pill);
+  background: var(--bc-stone-gradient);
+  border: 1px solid var(--bc-edge);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.bc-segmented__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border: 1px solid transparent;
+  border-radius: var(--bc-radius-pill);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--bc-tracking-wider);
+  text-transform: uppercase;
+  color: var(--bc-ink-dim);
+  white-space: nowrap;
+  transition:
+    color var(--bc-duration-base) var(--bc-ease-out-quart),
+    background var(--bc-duration-base) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-base) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+.bc-segmented__option:hover {
+  color: var(--bc-ink);
+}
+
+.bc-segmented__option--active {
+  color: var(--bc-gold-bright);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bc-purple) 35%, transparent),
+    color-mix(in srgb, var(--bc-purple-dark) 22%, transparent)
+  );
+  border-color: var(--bc-edge-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 0 16px color-mix(in srgb, var(--bc-purple-hover) 35%, transparent);
+}
+
+.bc-segmented__icon {
+  display: inline-flex;
+  opacity: 0.9;
+}
+
+.bc-segmented__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--bc-radius-pill);
+  font-family: var(--bc-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  background: rgba(10, 5, 7, 0.55);
+  border: 1px solid var(--bc-edge);
+  color: var(--bc-ink-dim);
+}
+
+.bc-segmented__option--active .bc-segmented__count {
+  background: color-mix(in srgb, var(--bc-gold) 18%, transparent);
+  border-color: var(--bc-edge-strong);
+  color: var(--bc-gold-bright);
+}
+
+/* Mobile estreito: ocupa a largura toda, divide as opções igualmente */
+@media (max-width: 479px) {
+  .bc-segmented {
+    display: flex;
+    width: 100%;
+  }
+  .bc-segmented__option {
+    flex: 1;
+    padding-inline: 10px;
+  }
+}

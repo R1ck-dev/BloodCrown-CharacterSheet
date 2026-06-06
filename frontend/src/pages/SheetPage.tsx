@@ -23,6 +23,7 @@ import { getConfettiPalette } from '@/lib/themePalette';
 import { playSound } from '@/lib/sound';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useDiceRoll } from '@/hooks/useDiceRoll';
+import { SWAL_THEME, getSwal } from '@/lib/swal';
 import { SheetHeader } from '@/components/sheet/SheetHeader';
 import { AttributesBlock } from '@/components/sheet/AttributesBlock';
 import { StatusBlock } from '@/components/sheet/StatusBlock';
@@ -34,18 +35,6 @@ import { Button } from '@/components/ui/Button';
 import { SkillsBlock } from '@/components/sheet/SkillsBlock';
 import { RightColumn } from '@/components/sheet/RightColumn';
 import { DiceToast } from '@/components/sheet/DiceToast';
-
-const SWAL_THEME = {
-  background: '#14121A',
-  color: '#EDE6D6',
-  confirmButtonColor: '#7B2CBF',
-  cancelButtonColor: '#1A1820',
-};
-
-/** Lazy-load do SweetAlert2 — economiza ~100KB no bundle inicial */
-async function getSwal() {
-  return (await import('sweetalert2')).default;
-}
 
 /** Burst tematico central — disparado em level up. Cada tema mapeia
  *  primary/secondary/tertiary nas suas cores de identidade. */

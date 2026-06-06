@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
+import { Ruler, Tag, Trash2 } from 'lucide-react';
 import type { Cena, Token, TokenTemplate } from '@/types/mesa';
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
@@ -147,14 +148,20 @@ interface BoardProps {
   /** Réguas de outros jogadores, ao vivo. */
   reguasRemotas: ReguaRemota[];
   selectedTokenId: string | null;
-  /** Versões do token selecionado (base + variações). >=2 mostra o menu de troca rápida. */
+  /** Versões do token selecionado (base + variações). >=2 mostra a faixa de troca rápida. */
   versoesDoSelecionado: TokenTemplate[];
+  /** nomeVisivel do token selecionado (reflete o estado do toggle "Nome" no popover). */
+  tokenNomeVisivel: boolean;
   onSelectToken: (id: string | null) => void;
   onTokenDragStart: (tokenId: string) => void;
   onTokenDragMove: (tokenId: string, x: number, y: number) => void;
   onTokenDragEnd: (tokenId: string, x: number, y: number) => void;
   onTokenResize: (tokenId: string, tamanho: number) => void;
   onTrocarVersao: (tokenId: string, templateId: string) => void;
+  /** Alterna a visibilidade do nome do token selecionado (popover). */
+  onToggleNomeToken: () => void;
+  /** Apaga o token selecionado (popover). */
+  onApagarToken: () => void;
   /** Persiste a transformação do mapa (mestre move/redimensiona o mapa destravado). */
   onTransformarMapa: (t: { x: number; y: number; largura: number; altura: number; travado: boolean }) => void;
   /** Régua ao vivo: início (x1,y1) → fim (x2,y2); ativa=false limpa. */
@@ -170,12 +177,15 @@ export function Board({
   reguasRemotas,
   selectedTokenId,
   versoesDoSelecionado,
+  tokenNomeVisivel,
   onSelectToken,
   onTokenDragStart,
   onTokenDragMove,
   onTokenDragEnd,
   onTokenResize,
   onTrocarVersao,
+  onToggleNomeToken,
+  onApagarToken,
   onTransformarMapa,
   onRegua,
 }: BoardProps) {
@@ -345,13 +355,25 @@ export function Board({
     const escala = stage.scaleX();
     const token = tokens.find((t) => t.id === selectedTokenId);
     const meiaAltura = ((token?.tamanho ?? 50) / 2) * escala;
-    const left = Math.max(8, Math.min(size.width - 8, abs.x));
-    const top = Math.max(8, abs.y - meiaAltura - 12);
-    return { left, top };
-  }, [selectedTokenId, tokens, size.width, viewTick]);
+    // Clampa a CAIXA do popover (não só o ponto de âncora): usa metade da largura
+    // estimada pra não cortar nas laterais; e quando não cabe acima do token (perto
+    // do topo), joga o popover pra BAIXO dele.
+    const meiaLargura = 124;
+    const minL = meiaLargura + 8;
+    const maxL = size.width - meiaLargura - 8;
+    const left = maxL > minL ? Math.max(minL, Math.min(maxL, abs.x)) : size.width / 2;
+    const alturaEstim = versoesDoSelecionado.length >= 2 ? 112 : 56;
+    const acima = abs.y - meiaAltura - 12;
+    const below = acima - alturaEstim < 8;
+    const top = below ? abs.y + meiaAltura + 12 : acima;
+    return { left, top, below };
+  }, [selectedTokenId, tokens, size.width, viewTick, versoesDoSelecionado.length]);
 
   const tokenAtual = tokens.find((t) => t.id === selectedTokenId);
-  const mostrarMenuVersao = !arrastando && !modoRegua && menuPos && versoesDoSelecionado.length >= 2;
+  // Popover de token: aparece sempre que há token selecionado (e não em arraste/régua),
+  // com as ações (Nome/Apagar) e — quando houver >=2 versões — a faixa de troca rápida.
+  const mostrarPopover = !arrastando && !modoRegua && Boolean(menuPos) && Boolean(tokenAtual);
+  const temVersoes = versoesDoSelecionado.length >= 2;
 
   const grid = cena?.grid;
   // Memoizado: só recalcula quando grid/mapa mudam (o tabuleiro re-renderiza a cada frame da
@@ -508,52 +530,66 @@ export function Board({
         </Layer>
       </Stage>
 
-      {mostrarMenuVersao && tokenAtual && menuPos && (
+      {modoRegua && (
+        <div className="bc-mesa-regua-hint">
+          <Ruler size={13} /> Régua ativa — arraste para medir
+        </div>
+      )}
+
+      {mostrarPopover && tokenAtual && menuPos && (
         <div
+          className="bc-token-popover"
           style={{
             position: 'absolute',
             left: menuPos.left,
             top: menuPos.top,
-            transform: 'translate(-50%, -100%)',
-            display: 'flex',
-            gap: 4,
-            padding: 4,
-            background: 'rgba(10, 5, 7, 0.96)',
-            border: '1px solid var(--bc-gold)',
-            borderRadius: 8,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            transform: menuPos.below ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
             zIndex: 10,
           }}
           onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          {versoesDoSelecionado.map((v) => {
-            const ativo = v.id === tokenAtual.templateId;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                title={v.nome ?? 'versão'}
-                onClick={() => onTrocarVersao(tokenAtual.id, v.id)}
-                style={{
-                  width: 38,
-                  height: 38,
-                  padding: 0,
-                  border: ativo ? '2px solid var(--bc-gold)' : '1px solid var(--bc-edge)',
-                  borderRadius: 6,
-                  background: '#14121A',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  opacity: ativo ? 1 : 0.85,
-                }}
-              >
-                {v.imagemUrl ? (
-                  <img src={v.imagemUrl} alt={v.nome ?? 'versão'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : (
-                  <span style={{ fontSize: 10, color: 'var(--bc-ink-faint)' }}>?</span>
-                )}
-              </button>
-            );
-          })}
+          <div className="bc-token-popover__actions">
+            <button
+              type="button"
+              className={`bc-token-popover__btn${tokenNomeVisivel ? ' bc-token-popover__btn--active' : ''}`}
+              onClick={onToggleNomeToken}
+              title="Mostrar/esconder o nome deste token"
+            >
+              <Tag size={13} /> Nome
+            </button>
+            <button
+              type="button"
+              className="bc-token-popover__btn bc-token-popover__btn--danger"
+              onClick={onApagarToken}
+              title="Apagar token selecionado (Delete)"
+            >
+              <Trash2 size={13} /> Apagar
+            </button>
+          </div>
+
+          {temVersoes && (
+            <div className="bc-token-popover__versions">
+              {versoesDoSelecionado.map((v) => {
+                const ativo = v.id === tokenAtual.templateId;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className={`bc-token-ver${ativo ? ' bc-token-ver--ativa' : ''}`}
+                    title={v.nome ?? 'versão'}
+                    onClick={() => onTrocarVersao(tokenAtual.id, v.id)}
+                  >
+                    {v.imagemUrl ? (
+                      <img src={v.imagemUrl} alt={v.nome ?? 'versão'} />
+                    ) : (
+                      <span className="bc-token-ver__none">?</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
