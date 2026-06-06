@@ -1,7 +1,8 @@
 /**
  * Página da mesa tabletop. Carrega o estado via REST, mantém os tokens em estado local
- * sincronizado pelo canal STOMP (arraste ao vivo) e persiste a posição final no drag-end.
- * Mudanças estruturais (mapa/grid/add token) chegam como evento "atualizada" → re-busca.
+ * sincronizado pelo canal STOMP (arraste ao vivo) e persiste posição/tamanho. Tokens vêm da
+ * biblioteca (aba lateral): pré-carrega moldes e clica pra colocar na mesa. Seleção → resize
+ * (alças) e apagar (botão/Delete). Mudanças estruturais chegam como "atualizada" → re-busca.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,19 +10,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Board } from '@/components/mesa/Board';
 import { MesaToolbar } from '@/components/mesa/MesaToolbar';
+import { BibliotecaPanel } from '@/components/mesa/BibliotecaPanel';
 import {
   mesaKeys,
+  useAddTemplate,
   useAddToken,
   useConfigurarGrid,
   useMesa,
   useMoveTokenPersist,
+  useRemoveTemplate,
+  useRemoveToken,
+  useResizeToken,
   useSetMapa,
-  useUploadMapaUrl,
 } from '@/api/mesas';
 import { useMesaSocket } from '@/hooks/useMesaSocket';
-import type { MesaEvento, Token } from '@/types/mesa';
-
-const CORES_TOKEN = ['#8b1e2d', '#1e5a8b', '#2d8b3a', '#8b6b1e', '#6b1e8b', '#1e8b8b'];
+import { cloudinaryConfigurado, uploadImagemCloudinary } from '@/lib/cloudinary';
+import type { MesaEvento, Token, TokenTemplate } from '@/types/mesa';
 
 function Centro({ texto }: { texto: string }) {
   return (
@@ -41,18 +45,25 @@ export function MesaPage() {
   const { data: mesa, isLoading, isError, error } = useMesa(id);
 
   const addToken = useAddToken(id ?? '');
+  const removeToken = useRemoveToken(id ?? '');
+  const resizeToken = useResizeToken(id ?? '');
+  const addTemplate = useAddTemplate(id ?? '');
+  const removeTemplate = useRemoveTemplate(id ?? '');
   const setMapa = useSetMapa(id ?? '');
-  const uploadUrl = useUploadMapaUrl(id ?? '');
   const configurarGrid = useConfigurarGrid(id ?? '');
   const moverPersist = useMoveTokenPersist(id ?? '');
 
-  // Tokens vivos: semeados do servidor, atualizados por arraste local/remoto.
+  // Tokens vivos: semeados do servidor, atualizados por arraste/resize local/remoto.
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [bibliotecaAberta, setBibliotecaAberta] = useState(false);
   const draggingRef = useRef<string | null>(null);
   const lastSentRef = useRef(0);
 
   useEffect(() => {
-    if (mesa) setTokens(mesa.tokens);
+    if (!mesa) return;
+    setTokens(mesa.tokens);
+    setSelectedTokenId((sel) => (sel && mesa.tokens.some((t) => t.id === sel) ? sel : null));
   }, [mesa]);
 
   const onEvento = useCallback(
@@ -73,10 +84,11 @@ export function MesaPage() {
 
   const { conectado, enviarMovimento } = useMesaSocket(id, onEvento);
 
-  // ----- handlers de token -----
+  // ----- tokens: arrastar / redimensionar / apagar -----
 
   const onTokenDragStart = (tokenId: string) => {
     draggingRef.current = tokenId;
+    setSelectedTokenId(tokenId);
   };
 
   const onTokenDragMove = (tokenId: string, x: number, y: number) => {
@@ -94,21 +106,70 @@ export function MesaPage() {
     moverPersist.mutate({ tokenId, x, y });
   };
 
-  // ----- handlers da toolbar -----
-
-  const handleAddToken = (nome: string) => {
-    const passo = (tokens.length % 8) * 30;
-    addToken.mutate(
-      {
-        nome: nome || 'Token',
-        cor: CORES_TOKEN[tokens.length % CORES_TOKEN.length],
-        x: 200 + passo,
-        y: 200 + passo,
-        tamanho: 50,
-      },
-      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao adicionar token.') },
+  const handleResizeToken = (tokenId: string, tamanho: number) => {
+    setTokens((prev) => prev.map((t) => (t.id === tokenId ? { ...t, tamanho } : t)));
+    resizeToken.mutate(
+      { tokenId, tamanho },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao redimensionar.') },
     );
   };
+
+  const apagarToken = useCallback(
+    (tokenId: string) => {
+      setTokens((prev) => prev.filter((t) => t.id !== tokenId));
+      setSelectedTokenId((sel) => (sel === tokenId ? null : sel));
+      removeToken.mutate(tokenId, {
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao apagar token.'),
+      });
+    },
+    [removeToken],
+  );
+
+  // Apagar com a tecla Delete/Backspace (fora de inputs).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTokenId) {
+        e.preventDefault();
+        apagarToken(selectedTokenId);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedTokenId, apagarToken]);
+
+  // ----- biblioteca -----
+
+  const handleColocarTemplate = (template: TokenTemplate) => {
+    const passo = (tokens.length % 8) * 30;
+    const tamanho = mesa?.grid.tamanhoCelula ?? 50;
+    addToken.mutate(
+      {
+        nome: template.nome ?? 'Token',
+        imagemUrl: template.imagemUrl,
+        x: 200 + passo,
+        y: 200 + passo,
+        tamanho,
+      },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao colocar token.') },
+    );
+  };
+
+  const handleAddTemplate = (payload: { nome: string; imagemUrl: string }) => {
+    addTemplate.mutate(payload, {
+      onSuccess: () => toast.success('Token adicionado à biblioteca.'),
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao adicionar à biblioteca.'),
+    });
+  };
+
+  const handleRemoveTemplate = (templateId: string) => {
+    removeTemplate.mutate(templateId, {
+      onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao remover da biblioteca.'),
+    });
+  };
+
+  // ----- mapa / grid -----
 
   const handleSetMapaUrl = (url: string) => {
     setMapa.mutate(url || null, {
@@ -119,21 +180,11 @@ export function MesaPage() {
 
   const handleUploadMapa = async (file: File) => {
     try {
-      const alvo = await uploadUrl.mutateAsync(file.type || 'image/png');
-      const resp = await fetch(alvo.urlUpload, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'image/png' },
-        body: file,
-      });
-      if (!resp.ok) throw new Error(`Upload falhou (${resp.status})`);
-      await setMapa.mutateAsync(alvo.urlPublica);
+      const url = await uploadImagemCloudinary(file);
+      await setMapa.mutateAsync(url);
       toast.success('Mapa enviado.');
     } catch (e) {
-      toast.error(
-        e instanceof Error
-          ? `${e.message}. Sem R2 configurado, use "Mapa (URL)".`
-          : 'Falha no upload. Use "Mapa (URL)".',
-      );
+      toast.error(e instanceof Error ? e.message : 'Falha no upload. Use "Mapa (URL)".');
     }
   };
 
@@ -156,19 +207,38 @@ export function MesaPage() {
         mesa={mesa}
         conectado={conectado}
         onSair={() => navigate('/dashboard')}
-        onAddToken={handleAddToken}
+        bibliotecaAberta={bibliotecaAberta}
+        onToggleBiblioteca={() => setBibliotecaAberta((v) => !v)}
+        tokenSelecionado={selectedTokenId !== null}
+        onApagarToken={() => selectedTokenId && apagarToken(selectedTokenId)}
         onSetMapaUrl={handleSetMapaUrl}
         onUploadMapa={handleUploadMapa}
+        uploadHabilitado={cloudinaryConfigurado()}
         onToggleGrid={handleToggleGrid}
       />
-      <Board
-        mapaUrl={mesa.mapaUrl}
-        grid={mesa.grid}
-        tokens={tokens}
-        onTokenDragStart={onTokenDragStart}
-        onTokenDragMove={onTokenDragMove}
-        onTokenDragEnd={onTokenDragEnd}
-      />
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        <Board
+          mapaUrl={mesa.mapaUrl}
+          grid={mesa.grid}
+          tokens={tokens}
+          selectedTokenId={selectedTokenId}
+          onSelectToken={setSelectedTokenId}
+          onTokenDragStart={onTokenDragStart}
+          onTokenDragMove={onTokenDragMove}
+          onTokenDragEnd={onTokenDragEnd}
+          onTokenResize={handleResizeToken}
+        />
+        {bibliotecaAberta && (
+          <BibliotecaPanel
+            biblioteca={mesa.biblioteca}
+            uploadHabilitado={cloudinaryConfigurado()}
+            onClose={() => setBibliotecaAberta(false)}
+            onColocar={handleColocarTemplate}
+            onAdicionar={handleAddTemplate}
+            onRemover={handleRemoveTemplate}
+          />
+        )}
+      </div>
     </div>
   );
 }

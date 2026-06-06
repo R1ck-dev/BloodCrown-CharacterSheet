@@ -28,22 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<awssdk.version>2.28.0</awssdk.version>
 	</properties>
-
-	<!-- BOM do AWS SDK v2: alinha as versoes dos modulos awssdk (o parent Spring Boot
-	     nao gerencia o AWS SDK). So o modulo s3 e efetivamente trazido como dependencia. -->
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>software.amazon.awssdk</groupId>
-				<artifactId>bom</artifactId>
-				<version>${awssdk.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 
@@ -90,14 +75,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
-
-		<!-- AWS SDK v2 S3 (so o modulo s3, traz o S3Presigner): gera URLs PUT pre-assinadas
-		     pro Cloudflare R2 (S3-compativel). O presign e offline (assina local, sem rede),
-		     entao o boot local funciona mesmo sem credenciais reais. Versao via BOM abaixo. -->
-		<dependency>
-			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>s3</artifactId>
 		</dependency>
 
 		<!-- Cache JVM com Caffeine: @Cacheable em endpoints read-only. -->

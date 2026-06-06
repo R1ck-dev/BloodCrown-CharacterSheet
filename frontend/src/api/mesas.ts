@@ -6,7 +6,6 @@ import type {
   MesaResumo,
   NovaMesaInput,
   NovoTokenInput,
-  UploadUrlResponse,
 } from '@/types/mesa';
 import { request } from './client';
 
@@ -38,13 +37,6 @@ async function deleteMesa(id: string): Promise<void> {
   return request<void>(`/mesas/${id}`, { method: 'DELETE' });
 }
 
-async function uploadMapaUrl(id: string, contentType: string): Promise<UploadUrlResponse> {
-  return request<UploadUrlResponse>(`/mesas/${id}/mapa/upload-url`, {
-    method: 'POST',
-    body: { contentType },
-  });
-}
-
 async function setMapa(id: string, mapaUrl: string | null): Promise<Mesa> {
   return request<Mesa>(`/mesas/${id}/mapa`, { method: 'PUT', body: { mapaUrl } });
 }
@@ -63,6 +55,18 @@ async function moveTokenPersist(id: string, tokenId: string, x: number, y: numbe
 
 async function removeToken(id: string, tokenId: string): Promise<void> {
   return request<void>(`/mesas/${id}/tokens/${tokenId}`, { method: 'DELETE' });
+}
+
+async function resizeToken(id: string, tokenId: string, tamanho: number): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/tamanho`, { method: 'PUT', body: { tamanho } });
+}
+
+async function addTemplate(id: string, payload: { nome: string; imagemUrl: string }): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/biblioteca`, { method: 'POST', body: payload });
+}
+
+async function removeTemplate(id: string, templateId: string): Promise<void> {
+  return request<void>(`/mesas/${id}/biblioteca/${templateId}`, { method: 'DELETE' });
 }
 
 // ---------- Hooks ----------
@@ -106,13 +110,6 @@ export function useDeleteMesa() {
   });
 }
 
-/** Pede a URL PUT pré-assinada (R2). Não mexe em cache — é só um passo do upload. */
-export function useUploadMapaUrl(id: string) {
-  return useMutation({
-    mutationFn: (contentType: string) => uploadMapaUrl(id, contentType),
-  });
-}
-
 export function useSetMapa(id: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -152,6 +149,35 @@ export function useRemoveToken(id: string) {
     onSuccess: (_data, tokenId) => {
       qc.setQueryData<Mesa>(mesaKeys.detail(id), (prev) =>
         prev ? { ...prev, tokens: prev.tokens.filter((t) => t.id !== tokenId) } : prev,
+      );
+    },
+  });
+}
+
+export function useResizeToken(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tokenId, tamanho }: { tokenId: string; tamanho: number }) =>
+      resizeToken(id, tokenId, tamanho),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useAddTemplate(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { nome: string; imagemUrl: string }) => addTemplate(id, payload),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useRemoveTemplate(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: string) => removeTemplate(id, templateId),
+    onSuccess: (_data, templateId) => {
+      qc.setQueryData<Mesa>(mesaKeys.detail(id), (prev) =>
+        prev ? { ...prev, biblioteca: prev.biblioteca.filter((t) => t.id !== templateId) } : prev,
       );
     },
   });

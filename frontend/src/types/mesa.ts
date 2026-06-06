@@ -20,6 +20,13 @@ export interface Token {
   donoUserId: string | null;
 }
 
+/** Molde de token na biblioteca da mesa (sem posição). */
+export interface TokenTemplate {
+  id: string;
+  nome: string | null;
+  imagemUrl: string | null;
+}
+
 export interface Mesa {
   id: string;
   nome: string;
@@ -28,6 +35,7 @@ export interface Mesa {
   mapaUrl: string | null;
   grid: Grid;
   tokens: Token[];
+  biblioteca: TokenTemplate[];
   participantes: string[];
   codigoConvite: string;
 }
@@ -60,11 +68,6 @@ export interface ConfigurarGridInput {
   tamanhoCelula: number;
   visivel: boolean;
   cor: string;
-}
-
-export interface UploadUrlResponse {
-  urlUpload: string;
-  urlPublica: string;
 }
 
 /** Evento publicado em /topic/mesas/{id} (ver MesaEvento.java). */

@@ -59,6 +59,10 @@ public class MesaJpaEntity {
     @BatchSize(size = 30)
     private List<TokenJpaEntity> tokens = new ArrayList<>();
 
+    @OneToMany(mappedBy = "mesa", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 30)
+    private List<TokenTemplateJpaEntity> biblioteca = new ArrayList<>();
+
     @ElementCollection
     @CollectionTable(name = "mesa_participantes", joinColumns = @JoinColumn(name = "mesa_id"))
     @Column(name = "user_id", columnDefinition = "VARCHAR(36)")
