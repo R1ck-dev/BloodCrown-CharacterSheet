@@ -227,7 +227,14 @@ export function Board({
             anchorStroke="#D4AF37"
             anchorFill="#0A0507"
             borderStroke="#D4AF37"
-            boundBoxFunc={(oldBox, newBox) => (newBox.width < TAM_MIN ? oldBox : newBox)}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < TAM_MIN ||
+              newBox.width > TAM_MAX ||
+              newBox.height < TAM_MIN ||
+              newBox.height > TAM_MAX
+                ? oldBox
+                : newBox
+            }
           />
         </Layer>
       </Stage>

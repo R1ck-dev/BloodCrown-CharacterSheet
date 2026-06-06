@@ -112,7 +112,7 @@ public class MesaController {
     public ResponseEntity<MesaResponse> mapa(@PathVariable String id, @RequestBody TrocarMapaRequest req,
                                              @AuthenticationPrincipal String userId) {
         Mesa mesa = trocarMapa.execute(id, userId, req.mapaUrl());
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
@@ -120,7 +120,7 @@ public class MesaController {
     public ResponseEntity<MesaResponse> grid(@PathVariable String id, @RequestBody ConfigurarGridRequest req,
                                              @AuthenticationPrincipal String userId) {
         Mesa mesa = configurarGrid.execute(id, userId, req.tamanhoCelula(), req.visivel(), req.cor());
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
@@ -129,7 +129,7 @@ public class MesaController {
                                                  @AuthenticationPrincipal String userId) {
         Mesa mesa = adicionarToken.execute(id, userId, new AdicionarTokenInput(
                 req.nome(), req.imagemUrl(), req.cor(), req.x(), req.y(), req.tamanho()));
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
@@ -146,7 +146,7 @@ public class MesaController {
                                                     @RequestBody RedimensionarTokenRequest req,
                                                     @AuthenticationPrincipal String userId) {
         Mesa mesa = redimensionarToken.execute(id, userId, tokenId, req.tamanho());
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
@@ -154,7 +154,7 @@ public class MesaController {
     public ResponseEntity<Void> deleteToken(@PathVariable String id, @PathVariable String tokenId,
                                             @AuthenticationPrincipal String userId) {
         removerToken.execute(id, userId, tokenId);
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -163,7 +163,7 @@ public class MesaController {
                                                     @RequestBody AdicionarTemplateRequest req,
                                                     @AuthenticationPrincipal String userId) {
         Mesa mesa = adicionarTemplate.execute(id, userId, req.nome(), req.imagemUrl());
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }
 
@@ -171,11 +171,11 @@ public class MesaController {
     public ResponseEntity<Void> deleteTemplate(@PathVariable String id, @PathVariable String templateId,
                                                @AuthenticationPrincipal String userId) {
         removerTemplate.execute(id, userId, templateId);
-        notificarAtualizada(id);
+        notificarAtualizada(id, userId);
         return ResponseEntity.noContent().build();
     }
 
-    private void notificarAtualizada(String mesaId) {
-        messagingTemplate.convertAndSend("/topic/mesas/" + mesaId, MesaEvento.atualizada());
+    private void notificarAtualizada(String mesaId, String porUserId) {
+        messagingTemplate.convertAndSend("/topic/mesas/" + mesaId, MesaEvento.atualizada(porUserId));
     }
 }

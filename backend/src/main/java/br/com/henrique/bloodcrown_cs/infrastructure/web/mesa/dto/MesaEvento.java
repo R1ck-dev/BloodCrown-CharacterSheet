@@ -11,7 +11,7 @@ public record MesaEvento(String tipo, String tokenId, Integer x, Integer y, Stri
         return new MesaEvento("mover", tokenId, x, y, porUserId);
     }
 
-    public static MesaEvento atualizada() {
-        return new MesaEvento("atualizada", null, null, null, null);
+    public static MesaEvento atualizada(String porUserId) {
+        return new MesaEvento("atualizada", null, null, null, porUserId);
     }
 }
