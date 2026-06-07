@@ -198,16 +198,10 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
       </div>
 
       <div className="bc-scroll" style={{ overflowY: 'auto', flex: 1, padding: '0 14px 12px' }}>
-        {/* Grade de 2 colunas — auto-fit cai pra 1 coluna quando o espaco aperta.
-            Preenchimento row-major pareia as pericias na ordem do array:
+        {/* Grade fixa de 2 colunas (.bc-skills-grid) — nunca 3, cai pra 1 so em
+            telas bem estreitas. Preenchimento row-major pareia na ordem do array:
             (Atletismo|Luta), (Fortitude|Furtividade), (Iniciativa|Ladinagem)... */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(188px, 1fr))',
-            columnGap: 16,
-          }}
-        >
+        <div className="bc-skills-grid">
         {SKILLS.map((s) => {
           const skillBuff = buffs.get(s.skillBuffTarget) ?? 0;
           const attrBuff = buffs.get(s.attrBuffTarget) ?? 0;

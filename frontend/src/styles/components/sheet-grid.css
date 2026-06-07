@@ -45,3 +45,18 @@
     grid-template-columns: minmax(280px, 3fr) minmax(0, 5fr) minmax(0, 4fr);
   }
 }
+
+/* Grade das pericias fixas — SEMPRE 2 colunas, independente da largura
+   (cai pra 1 coluna so em telas bem estreitas). minmax(0,1fr) garante o
+   shrink correto pra truncar nomes longos sem estourar a coluna. */
+.bc-skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+@media (max-width: 420px) {
+  .bc-skills-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
