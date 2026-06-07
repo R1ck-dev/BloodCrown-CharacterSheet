@@ -10,7 +10,7 @@
 import { useState, type CSSProperties } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Swords, Sparkles, Calculator, ShieldOff } from 'lucide-react';
+import { Swords, Sparkles, ShieldOff, Droplet } from 'lucide-react';
 import type { CharacterSheet } from '@/types/character';
 
 type DamageType = 'PHYSICAL' | 'MAGICAL';
@@ -52,6 +52,7 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
 
   return (
     <section
+      className="bc-rise-in"
       style={{
         padding: bare ? '4px 0 0' : '14px 16px 14px',
         marginTop: bare ? 0 : 14,
@@ -89,76 +90,52 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
         </header>
       )}
 
-      {/* Dano cru */}
+      {/* Dano recebido — input largo e centralizado */}
+      <div className="bc-field" style={{ marginBottom: 14 }}>
+        <label htmlFor="dmg-raw" style={labelStyle}>DANO RECEBIDO</label>
+        <input
+          id="dmg-raw"
+          type="number"
+          min={0}
+          value={damage || ''}
+          onChange={(e) => setDamage(parseInt(e.target.value) || 0)}
+          placeholder="0"
+          className="bc-input bc-input--sm"
+          style={{ height: 44, marginTop: 6, textAlign: 'center', fontFamily: 'var(--bc-font-mono)', fontSize: 20, letterSpacing: '0.04em' }}
+        />
+      </div>
+
+      {/* Tipo de dano — segmentado, largura cheia */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        <div className="bc-field">
-          <label htmlFor="dmg-raw" style={labelStyle}>DANO RECEBIDO</label>
-          <input
-            id="dmg-raw"
-            type="number"
-            min={0}
-            value={damage || ''}
-            onChange={(e) => setDamage(parseInt(e.target.value) || 0)}
-            placeholder="0"
-            className="bc-input bc-input--sm"
-            style={{ height: 32, textAlign: 'center', fontFamily: 'var(--bc-font-mono)', fontSize: 14 }}
-          />
-        </div>
-        <div className="bc-field">
-          <label style={labelStyle}>RESULTADO</label>
-          <div
-            className="bc-cinzel"
-            style={{
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(10, 5, 7, 0.6)',
-              border: '1px solid rgba(212, 175, 55, 0.2)',
-              borderRadius: 'var(--bc-radius-sm)',
-              color: effective > 0 ? '#FCA5A5' : 'var(--bc-ink-faint)',
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-            title={`(${damage} − ${res}) ÷ ${divisor} = ${effective}`}
-          >
-            {effective > 0 ? `−${effective}` : '0'}
-          </div>
-        </div>
+        <ToggleBtn
+          active={type === 'PHYSICAL'}
+          onClick={() => setType('PHYSICAL')}
+          icon={<Swords size={13} />}
+          label="Físico"
+          big
+          title={`Resistência física: ${physicalRes}`}
+        />
+        <ToggleBtn
+          active={type === 'MAGICAL'}
+          onClick={() => setType('MAGICAL')}
+          icon={<Sparkles size={13} />}
+          label="Mágico"
+          big
+          title={`Resistência mágica: ${magicalRes}`}
+        />
       </div>
 
-      {/* Tipo de dano */}
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ ...labelStyle, marginBottom: 4 }}>TIPO</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+      {/* Divisor — pílulas ÷1 … ÷4 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 12 }}>
+        {DIVISORS.map((d) => (
           <ToggleBtn
-            active={type === 'PHYSICAL'}
-            onClick={() => setType('PHYSICAL')}
-            icon={<Swords size={11} />}
-            label={`Físico (${physicalRes})`}
+            key={d}
+            active={divisor === d}
+            onClick={() => setDivisor(d)}
+            label={`÷${d}`}
+            big
           />
-          <ToggleBtn
-            active={type === 'MAGICAL'}
-            onClick={() => setType('MAGICAL')}
-            icon={<Sparkles size={11} />}
-            label={`Mágico (${magicalRes})`}
-          />
-        </div>
-      </div>
-
-      {/* Divisor */}
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ ...labelStyle, marginBottom: 4 }}>DIVISOR</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
-          {DIVISORS.map((d) => (
-            <ToggleBtn
-              key={d}
-              active={divisor === d}
-              onClick={() => setDivisor(d)}
-              label={`÷${d}`}
-            />
-          ))}
-        </div>
+        ))}
       </div>
 
       {/* Ignorar resistência */}
@@ -166,10 +143,10 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          marginBottom: 10,
+          gap: 7,
+          marginBottom: 14,
           cursor: 'pointer',
-          fontSize: 11,
+          fontSize: 12,
           color: ignoreRes ? 'var(--bc-gold-bright)' : 'var(--bc-ink-dim)',
         }}
       >
@@ -177,11 +154,38 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
           type="checkbox"
           checked={ignoreRes}
           onChange={(e) => setIgnoreRes(e.target.checked)}
-          style={{ accentColor: 'var(--bc-gold)' }}
+          style={{ accentColor: 'var(--bc-purple)', width: 15, height: 15 }}
         />
-        <ShieldOff size={11} />
+        <ShieldOff size={12} />
         Ignorar resistência
       </label>
+
+      {/* Resultado — rótulo à esquerda, número grande à direita */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          gap: 8,
+          marginBottom: 12,
+          paddingTop: 4,
+        }}
+        title={`(${damage} − ${res}) ÷ ${divisor} = ${effective}`}
+      >
+        <span style={labelStyle}>RESULTADO</span>
+        <span
+          className="bc-cinzel"
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            lineHeight: 1,
+            color: effective > 0 ? '#DC2626' : 'var(--bc-ink-faint)',
+            textShadow: effective > 0 ? '0 0 18px rgba(220, 38, 38, 0.45)' : 'none',
+          }}
+        >
+          {effective > 0 ? `−${effective}` : '0'}
+        </span>
+      </div>
 
       {/* Aplicar */}
       <button
@@ -190,13 +194,13 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
         disabled={!damage}
         style={{
           width: '100%',
-          padding: '10px 12px',
+          padding: '12px 12px',
           background: damage ? 'rgba(185, 28, 28, 0.18)' : 'rgba(26, 24, 32, 0.5)',
           border: `1px solid ${damage ? 'rgba(220, 38, 38, 0.5)' : 'var(--bc-edge)'}`,
           color: damage ? '#FCA5A5' : 'var(--bc-ink-faint)',
           borderRadius: 'var(--bc-radius-sm)',
           fontFamily: 'var(--bc-font-display)',
-          fontSize: 11,
+          fontSize: 12,
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
           cursor: damage ? 'pointer' : 'not-allowed',
@@ -204,6 +208,7 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
+          boxShadow: damage ? '0 0 20px rgba(185, 28, 28, 0.2)' : 'none',
           transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
         }}
         onMouseEnter={(e) => {
@@ -213,7 +218,7 @@ export function DamageCalcBlock({ chrome = 'card' }: Props = {}) {
           if (damage) e.currentTarget.style.background = 'rgba(185, 28, 28, 0.18)';
         }}
       >
-        <Calculator size={12} />
+        <Droplet size={13} />
         Aplicar Dano
       </button>
     </section>
@@ -227,30 +232,34 @@ const labelStyle: CSSProperties = {
   letterSpacing: '0.15em',
 };
 
-function ToggleBtn({ active, onClick, icon, label }: {
+function ToggleBtn({ active, onClick, icon, label, big = false, title }: {
   active: boolean;
   onClick: () => void;
   icon?: React.ReactNode;
   label: string;
+  big?: boolean;
+  title?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={title}
       style={{
-        padding: '6px 8px',
-        background: active ? 'rgba(212, 175, 55, 0.15)' : 'rgba(10, 5, 7, 0.5)',
-        border: `1px solid ${active ? 'rgba(212, 175, 55, 0.5)' : 'var(--bc-edge)'}`,
-        color: active ? 'var(--bc-gold-bright)' : 'var(--bc-ink-dim)',
+        padding: big ? '10px 8px' : '6px 8px',
+        background: active ? 'color-mix(in srgb, var(--bc-purple) 22%, transparent)' : 'rgba(10, 5, 7, 0.5)',
+        border: `1px solid ${active ? 'color-mix(in srgb, var(--bc-purple) 60%, transparent)' : 'var(--bc-edge)'}`,
+        color: active ? 'color-mix(in srgb, var(--bc-purple) 35%, #ffffff)' : 'var(--bc-ink-dim)',
         borderRadius: 'var(--bc-radius-sm)',
-        fontSize: 10,
+        fontSize: big ? 12 : 10,
         fontFamily: 'var(--bc-font-display)',
         letterSpacing: '0.1em',
         cursor: 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 5,
+        gap: 6,
+        boxShadow: active ? '0 0 16px color-mix(in srgb, var(--bc-purple) 22%, transparent)' : 'none',
         transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
       }}
     >

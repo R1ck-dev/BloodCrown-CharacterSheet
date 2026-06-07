@@ -28,7 +28,7 @@ const CATEGORY_COLOR: Record<string, { stripe: string; text: string }> = {
 
 export function ActiveEffectsBlock({ activeAbilities, onAdvanceTurn, isAdvancing = false, customSkills = [] }: Props) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+    <div className="bc-rise-in" style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
       <div
         className="bc-scroll"
         style={{

@@ -198,6 +198,16 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
       </div>
 
       <div className="bc-scroll" style={{ overflowY: 'auto', flex: 1, padding: '0 14px 12px' }}>
+        {/* Grade de 2 colunas — auto-fit cai pra 1 coluna quando o espaco aperta.
+            Preenchimento row-major pareia as pericias na ordem do array:
+            (Atletismo|Luta), (Fortitude|Furtividade), (Iniciativa|Ladinagem)... */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(188px, 1fr))',
+            columnGap: 16,
+          }}
+        >
         {SKILLS.map((s) => {
           const skillBuff = buffs.get(s.skillBuffTarget) ?? 0;
           const attrBuff = buffs.get(s.attrBuffTarget) ?? 0;
@@ -216,10 +226,12 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
               className="bc-skill-row"
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 60px',
+                gridTemplateColumns: '1fr auto',
                 alignItems: 'center',
-                padding: '7px 10px',
+                gap: 8,
+                padding: '6px 8px',
                 fontSize: 13,
+                minWidth: 0,
                 borderBottom: '1px solid rgba(212,175,55,0.06)',
                 transition: 'background var(--bc-duration-fast) var(--bc-ease-out-quart)',
               }}
@@ -234,6 +246,10 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
                   cursor: 'pointer',
                   textAlign: 'left',
                   padding: 0,
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   color: isBuffed ? 'var(--bc-gold-bright)' : 'var(--bc-ink)',
                   font: 'inherit',
                   fontWeight: 500,
@@ -280,6 +296,7 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
             </div>
           );
         })}
+        </div>
 
         {/* ===== Perícias personalizadas ===== */}
         <div style={{ marginTop: 14 }}>
