@@ -137,6 +137,19 @@
   animation: bc-glow-gold 1.8s var(--bc-ease-in-out) infinite;
 }
 
+/* Surgimento suave — card/painel emergindo (fade + leve subida).
+   Usado nos cards do dock (Acoes, Calc Dano, Efeitos Ativos): cada vez que o
+   painel monta, o conteudo "sobe" pra dentro. fill-mode both segura o estado
+   inicial antes do 1o frame (sem flash) e o final depois. */
+@keyframes bc-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bc-rise-in {
+  animation: bc-rise-in var(--bc-duration-base) var(--bc-ease-out-quart) both;
+}
+
 /* Skeleton loader (placeholder durante fetch) */
 @keyframes bc-skeleton {
   0%   { background-position: -200px 0; }

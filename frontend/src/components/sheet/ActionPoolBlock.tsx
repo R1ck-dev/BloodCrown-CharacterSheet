@@ -62,6 +62,7 @@ export function ActionPoolBlock({ characterId, chrome = 'card' }: Props) {
 
   return (
     <section
+      className="bc-rise-in"
       style={{
         padding: bare ? '4px 0 0' : '14px 16px 12px',
         marginTop: bare ? 0 : 14,
