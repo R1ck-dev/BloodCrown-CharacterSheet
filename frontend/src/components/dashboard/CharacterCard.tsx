@@ -57,6 +57,7 @@ export function CharacterCard({ character, folders, onOpen, onDelete, onMove }: 
         Math.min(100, ((character.currentHealth as number) / (character.maxHealth as number)) * 100),
       )
     : 0;
+  const hpCrit = hasHp && hpPct < 25;
 
   return (
     <article
@@ -235,15 +236,12 @@ export function CharacterCard({ character, folders, onOpen, onDelete, onMove }: 
         </div>
       </div>
 
-      {/* HP mini bar */}
+      {/* HP mini bar — label "VIDA" + cur/max em mono acima, barra abaixo.
+          CSS vars locais colorem a .bc-bar como vermelho-sangue. */}
       {hasHp && (
         <div
-          // CSS vars locais colorem a .bc-bar como vermelho-sangue
+          className="bc-character-card__hp"
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            marginTop: -2,
             ['--bc-bar-bright' as never]: '#EF4444',
             ['--bc-bar-base' as never]: '#B91C1C',
             ['--bc-bar-dark' as never]: '#4A0303',
@@ -251,18 +249,13 @@ export function CharacterCard({ character, folders, onOpen, onDelete, onMove }: 
           }}
           title={`Vida: ${character.currentHealth}/${character.maxHealth}`}
         >
-          <span
-            className="bc-mono"
-            style={{
-              fontSize: 9,
-              color: '#FCA5A5',
-              minWidth: 38,
-              letterSpacing: '0.05em',
-            }}
-          >
-            {character.currentHealth}/{character.maxHealth}
-          </span>
-          <div className="bc-bar bc-bar--xs" style={{ flex: 1 }}>
+          <div className="bc-mono bc-character-card__hp-head">
+            <span>VIDA</span>
+            <span>
+              {character.currentHealth}/{character.maxHealth}
+            </span>
+          </div>
+          <div className={`bc-bar${hpCrit ? ' bc-bar--critical' : ''}`}>
             <div className="bc-bar__fill" style={{ width: `${hpPct}%` }} />
           </div>
         </div>

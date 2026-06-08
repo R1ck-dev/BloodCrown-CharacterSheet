@@ -8,8 +8,22 @@
  */
 import { useMemo, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
-import { FileText, FolderPlus, Map as MapIcon, MoreVertical, Plus, Trash2, Users, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronRight,
+  FileText,
+  Folder,
+  FolderPlus,
+  Library,
+  Map as MapIcon,
+  MoreVertical,
+  Plus,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react';
 import type { BibliotecaPasta, NovoTemplateInput, TipoTemplate, TokenTemplate } from '@/types/mesa';
+import { Medallion } from '@/components/ornaments/Medallion';
 import { Modal } from '@/components/sheet/modals/Modal';
 import { Button } from '@/components/ui/Button';
 import { PromptModal } from '@/components/ui/PromptModal';
@@ -43,6 +57,13 @@ const FILTROS: { tipo: TipoTemplate; label: string; icon: ReactNode }[] = [
 
 const ROTULO: Record<TipoTemplate, string> = { TOKEN: 'Token', MAPA: 'Mapa', DOCUMENTO: 'Documento' };
 
+/** Dica de uma linha sobre o que cada tipo faz ao clicar (prototype LIB_TIPS). */
+const DICA: Record<TipoTemplate, string> = {
+  TOKEN: 'Token → entra no tabuleiro como peça.',
+  MAPA: 'Mapa → o mestre aplica como mapa da cena.',
+  DOCUMENTO: 'Documento → entra no tabuleiro maior, para leitura.',
+};
+
 const VAZIO: Record<TipoTemplate, string> = {
   TOKEN: 'Sem tokens ainda. Adicione (nome + imagem) e clique pra colocar na mesa.',
   MAPA: 'Sem mapas ainda. Adicione imagens e clique pra aplicar como mapa da cena.',
@@ -69,6 +90,23 @@ export function BibliotecaPanel({
   const [pastaModalAberta, setPastaModalAberta] = useState(false);
   // Id do item cujo modal de opções está aberto (null = fechado).
   const [opcoesId, setOpcoesId] = useState<string | null>(null);
+  // Grupos (pastas) recolhidos — chaveado por "tipo:idDoGrupo" pra ser por aba.
+  const [recolhidos, setRecolhidos] = useState<Record<string, boolean>>({});
+
+  const chaveGrupo = (id: string) => `${tipoAtivo}:${id}`;
+  const estaRecolhido = (id: string) => !!recolhidos[chaveGrupo(id)];
+  const alternarGrupo = (id: string) =>
+    setRecolhidos((r) => ({ ...r, [chaveGrupo(id)]: !r[chaveGrupo(id)] }));
+
+  // Contagem por tipo pros badges das pills do filtro.
+  const contagens = useMemo<Record<TipoTemplate, number>>(
+    () => ({
+      TOKEN: biblioteca.filter((t) => (t.tipo ?? 'TOKEN') === 'TOKEN').length,
+      MAPA: biblioteca.filter((t) => t.tipo === 'MAPA').length,
+      DOCUMENTO: biblioteca.filter((t) => t.tipo === 'DOCUMENTO').length,
+    }),
+    [biblioteca],
+  );
 
   // Só os itens do tipo ativo. cards/versões/bases/grupos operam sobre esse recorte.
   const itens = useMemo(
@@ -151,43 +189,59 @@ export function BibliotecaPanel({
 
   return (
     <aside className="bc-biblioteca-panel">
-      <header className="bc-lib-header">
-        <h2 className="bc-cinzel bc-tracked bc-lib-header__title">BIBLIOTECA</h2>
-        <button type="button" className="bc-icon-btn" onClick={onClose} aria-label="Fechar biblioteca">
-          <X size={16} />
-        </button>
-      </header>
-
-      <div className="bc-lib-filter" role="tablist" aria-label="Tipo de item da biblioteca">
-        {FILTROS.map((f) => (
-          <button
-            key={f.tipo}
-            type="button"
-            role="tab"
-            aria-selected={tipoAtivo === f.tipo}
-            className={`bc-lib-filter__btn${tipoAtivo === f.tipo ? ' bc-lib-filter__btn--active' : ''}`}
-            onClick={() => {
-              setTipoAtivo(f.tipo);
-              setOpcoesId(null);
-            }}
-          >
-            {f.icon} {f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="bc-lib-actions">
+      <header className="bc-panel-header">
+        <Medallion shape="square" size={30} icon={<Library size={16} />} />
+        <h2 className="bc-panel-header__title">Biblioteca</h2>
         <button
           type="button"
-          className="bc-btn bc-btn--primary bc-btn--sm"
-          style={{ flex: 1 }}
-          onClick={() => setModalAberto(true)}
+          className="bc-icon-btn bc-panel-header__close"
+          onClick={onClose}
+          aria-label="Fechar biblioteca"
         >
-          <Plus size={16} /> {rotulo}
+          <X size={14} />
         </button>
-        <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={() => setPastaModalAberta(true)} title="Nova pasta">
-          <FolderPlus size={16} /> Pasta
-        </button>
+      </header>
+      <hr className="bc-hairline" />
+
+      <div className="bc-lib-top">
+        <div className="bc-lib-filter" role="tablist" aria-label="Tipo de item da biblioteca">
+          {FILTROS.map((f) => (
+            <button
+              key={f.tipo}
+              type="button"
+              role="tab"
+              aria-selected={tipoAtivo === f.tipo}
+              title={f.label}
+              className={`bc-lib-filter__btn${tipoAtivo === f.tipo ? ' bc-lib-filter__btn--active' : ''}`}
+              onClick={() => {
+                setTipoAtivo(f.tipo);
+                setOpcoesId(null);
+              }}
+            >
+              {f.icon}
+              <span className="bc-lib-filter__label">{f.label}</span>
+              <span className="bc-count-badge bc-lib-filter__count">{contagens[f.tipo]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="bc-lib-actions">
+          <button
+            type="button"
+            className="bc-btn bc-btn--primary bc-btn--sm"
+            style={{ flex: 1 }}
+            onClick={() => setModalAberto(true)}
+          >
+            <Plus size={16} /> {rotulo}
+          </button>
+          <button type="button" className="bc-btn bc-btn--ghost bc-btn--sm" onClick={() => setPastaModalAberta(true)} title="Nova pasta">
+            <FolderPlus size={16} /> Pasta
+          </button>
+        </div>
+
+        <p className="bc-lib-tip">
+          <AlertTriangle size={12} aria-hidden="true" /> {DICA[tipoAtivo]}
+        </p>
       </div>
 
       <div className="bc-lib-scroll">
@@ -199,12 +253,22 @@ export function BibliotecaPanel({
             if (g.id === RAIZ && g.cards.length === 0 && pastas.length > 0) return null;
             // Pasta sem itens deste tipo, mas com itens de outro tipo: some nesta aba.
             if (g.id !== RAIZ && g.cards.length === 0 && pastasComItens.has(g.id)) return null;
+            const recolhido = estaRecolhido(g.id);
             return (
-              <section key={g.id} className="bc-lib-group">
+              <section key={g.id} className={`bc-lib-group${recolhido ? ' bc-lib-group--collapsed' : ''}`}>
                 <div className="bc-lib-group__head">
-                  <span className="bc-lib-group__title">{g.nome}</span>
-                  <span className="bc-lib-group__count">({g.cards.length})</span>
-                  <div style={{ flex: 1 }} />
+                  <button
+                    type="button"
+                    className="bc-lib-group__toggle"
+                    aria-expanded={!recolhido}
+                    title={recolhido ? 'Expandir pasta' : 'Recolher pasta'}
+                    onClick={() => alternarGrupo(g.id)}
+                  >
+                    <ChevronRight size={13} className="bc-lib-group__chev" aria-hidden="true" />
+                    <Folder size={14} className="bc-lib-group__folder" aria-hidden="true" />
+                    <span className="bc-lib-group__title">{g.nome}</span>
+                    <span className="bc-count-badge">{g.cards.length}</span>
+                  </button>
                   {g.removivel && (
                     <button
                       type="button"
@@ -212,26 +276,28 @@ export function BibliotecaPanel({
                       title="Excluir pasta (itens voltam pra raiz)"
                       aria-label={`Excluir pasta ${g.nome}`}
                       onClick={() => onRemoverPasta(g.id)}
-                      style={{ width: 24, height: 24 }}
+                      style={{ width: 22, height: 22 }}
                     >
                       <Trash2 size={13} />
                     </button>
                   )}
                 </div>
 
-                <div className="bc-lib-grid">
-                  {g.cards.length === 0 && <p className="bc-lib-empty">(vazia)</p>}
-                  {g.cards.map((t) => (
-                    <LibCard
-                      key={t.id}
-                      template={t}
-                      versoes={versoesPorBase.get(t.id) ?? []}
-                      onSelecionar={handleSelecionar}
-                      onRemover={onRemover}
-                      onAbrirOpcoes={() => setOpcoesId(t.id)}
-                    />
-                  ))}
-                </div>
+                {!recolhido && (
+                  <div className="bc-lib-grid">
+                    {g.cards.length === 0 && <p className="bc-lib-empty">(vazia)</p>}
+                    {g.cards.map((t) => (
+                      <LibCard
+                        key={t.id}
+                        template={t}
+                        versoes={versoesPorBase.get(t.id) ?? []}
+                        onSelecionar={handleSelecionar}
+                        onRemover={onRemover}
+                        onAbrirOpcoes={() => setOpcoesId(t.id)}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             );
           })
@@ -367,7 +433,9 @@ function LibCard({ template, versoes, onSelecionar, onRemover, onAbrirOpcoes }: 
         {template.imagemUrl ? (
           <img className="bc-lib-card__img" src={template.imagemUrl} alt={template.nome ?? 'item'} />
         ) : (
-          <span className="bc-lib-card__noimg">sem imagem</span>
+          <span className="bc-img-ph bc-lib-card__noimg" aria-hidden="true">
+            sem imagem
+          </span>
         )}
         <span className="bc-lib-card__name">
           {template.nome ?? 'Item'}

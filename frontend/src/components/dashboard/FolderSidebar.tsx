@@ -222,7 +222,7 @@ function FolderRow({ icon, label, count, active, onClick, onRename, onDelete, di
               title="Renomear"
               disabled={disabled}
             >
-              <Pencil size={11} />
+              <Pencil size={12} />
             </button>
           )}
           {onDelete && (
@@ -234,7 +234,7 @@ function FolderRow({ icon, label, count, active, onClick, onRename, onDelete, di
               title="Deletar"
               disabled={disabled}
             >
-              <Trash2 size={11} />
+              <Trash2 size={12} />
             </button>
           )}
         </div>

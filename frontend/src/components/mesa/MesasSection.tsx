@@ -10,6 +10,7 @@ import { LogIn, Map, Plus } from 'lucide-react';
 import { useCreateMesa, useDeleteMesa, useEntrarMesa, useMesas } from '@/api/mesas';
 import { PromptModal } from '@/components/ui/PromptModal';
 import { Divider } from '@/components/ornaments/Divider';
+import { Medallion } from '@/components/ornaments/Medallion';
 import { confirmDanger } from '@/lib/swal';
 import { MesaCard } from './MesaCard';
 
@@ -61,23 +62,7 @@ export function MesasSection() {
   return (
     <section aria-label="Mesas">
       <header className="bc-dashboard-header">
-        <div
-          aria-hidden="true"
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 'var(--bc-radius-md)',
-            background: 'linear-gradient(180deg, #1A1820, #0A0507)',
-            border: '1px solid var(--bc-edge-strong)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--bc-gold)',
-            boxShadow: 'inset 0 1px 0 rgba(212,175,55,0.18), 0 4px 12px rgba(0,0,0,0.6)',
-          }}
-        >
-          <Map size={26} />
-        </div>
+        <Medallion shape="square" size={54} icon={<Map size={26} />} />
 
         <div>
           <h1
@@ -161,7 +146,7 @@ export function MesasSection() {
 
         {vazia && (
           <div className="bc-mesa-empty">
-            <Map size={40} className="bc-mesa-empty__icon" aria-hidden="true" />
+            <Medallion shape="round" size={84} icon={<Map size={38} />} />
             <span className="bc-mesa-empty__title bc-cinzel bc-tracked">NENHUMA MESA AINDA</span>
             <span className="bc-mesa-empty__text">
               Crie uma mesa pra reunir seu grupo no tabuleiro em tempo real, ou entre na mesa de

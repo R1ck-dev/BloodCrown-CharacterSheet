@@ -8,8 +8,9 @@
  */
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
-import { ArrowLeft, Copy, Library, Ruler, Tag, Wand2 } from 'lucide-react';
+import { ArrowLeft, Copy, Crown, Library, Map, Ruler, Tag } from 'lucide-react';
 import type { Mesa } from '@/types/mesa';
+import { Medallion } from '@/components/ornaments/Medallion';
 
 interface Props {
   mesa: Mesa;
@@ -53,10 +54,13 @@ export function MesaTopBar({
         <ArrowLeft size={16} /> Sair
       </button>
 
-      <h1 className="bc-mesa-topbar__title">{mesa.nome}</h1>
+      <div className="bc-mesa-topbar__crest">
+        <Medallion shape="square" size={32} icon={<Map size={16} />} />
+        <h1 className="bc-mesa-topbar__title">{mesa.nome}</h1>
+      </div>
 
       <button type="button" className="bc-mesa-code" onClick={copiarCodigo} title="Copiar código de convite">
-        <span className="bc-mesa-code__label">código</span>
+        <span className="bc-mesa-code__label">CÓDIGO</span>
         {mesa.codigoConvite}
         <Copy size={13} />
       </button>
@@ -100,13 +104,16 @@ export function MesaTopBar({
         {mesa.souDono && (
           <>
             <span className="bc-vsep" aria-hidden="true" />
-            <ToolBtn
-              active={mestreAberto}
+            <button
+              type="button"
+              className={`bc-btn bc-btn--sm ${mestreAberto ? 'bc-btn--gold' : 'bc-btn--ghost'}`}
               onClick={onToggleMestre}
-              icon={<Wand2 size={16} />}
-              label="Mestre"
               title="Ferramentas do mestre (mapa, grid, escala)"
-            />
+              aria-pressed={mestreAberto}
+            >
+              <Crown size={15} />
+              <span className="bc-tool-btn__label">Mestre</span>
+            </button>
           </>
         )}
       </div>

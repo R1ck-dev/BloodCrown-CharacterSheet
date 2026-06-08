@@ -18,6 +18,7 @@ import { SegmentedTabs } from '@/components/dashboard/SegmentedTabs';
 import type { FolderSelection } from '@/components/dashboard/FolderSidebar';
 import { MesasSection } from '@/components/mesa/MesasSection';
 import { Divider } from '@/components/ornaments/Divider';
+import { Medallion } from '@/components/ornaments/Medallion';
 import { useCharacters, useCreateCharacter, useDeleteCharacter } from '@/api/characters';
 import { useMesas } from '@/api/mesas';
 import {
@@ -176,23 +177,7 @@ export function DashboardPage() {
           <section aria-label="Personagens">
             {/* Section header */}
             <header className="bc-dashboard-header">
-              <div
-                aria-hidden="true"
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 'var(--bc-radius-md)',
-                  background: 'linear-gradient(180deg, #1A1820, #0A0507)',
-                  border: '1px solid var(--bc-edge-strong)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--bc-gold)',
-                  boxShadow: 'inset 0 1px 0 rgba(212,175,55,0.18), 0 4px 12px rgba(0,0,0,0.6)',
-                }}
-              >
-                <Castle size={26} />
-              </div>
+              <Medallion shape="square" size={54} icon={<Castle size={26} />} />
 
               <div>
                 <h1

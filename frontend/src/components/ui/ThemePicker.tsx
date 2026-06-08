@@ -52,19 +52,19 @@ export function ThemePicker() {
         title={`Tema: ${active.label}`}
         style={{
           height: 36,
-          padding: '0 12px',
+          padding: '0 14px',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
-          background: open ? 'var(--bc-surface-2)' : 'transparent',
+          gap: 9,
+          background: open ? 'var(--bc-surface-3)' : 'var(--bc-surface-2)',
           border: '1px solid var(--bc-edge)',
-          borderRadius: 'var(--bc-radius-sm)',
+          borderRadius: 'var(--bc-radius-md)',
           color: 'var(--bc-ink-dim)',
           cursor: 'pointer',
           transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--bc-gold-bright)';
+          e.currentTarget.style.color = 'var(--bc-ink)';
           e.currentTarget.style.borderColor = 'var(--bc-edge-bright)';
         }}
         onMouseLeave={(e) => {
@@ -72,21 +72,20 @@ export function ThemePicker() {
           e.currentTarget.style.borderColor = 'var(--bc-edge)';
         }}
       >
-        <Palette size={14} />
+        <Palette size={15} />
         <span
           aria-hidden="true"
           style={{
-            width: 12,
-            height: 12,
+            width: 13,
+            height: 13,
             borderRadius: '50%',
-            background: active.swatch,
-            boxShadow: `0 0 6px ${active.swatch}`,
-            border: '1px solid rgba(0,0,0,0.4)',
+            background: `linear-gradient(135deg, ${active.swatch}, color-mix(in srgb, ${active.swatch} 50%, black))`,
+            boxShadow: '0 0 0 1px var(--bc-edge-strong)',
           }}
         />
         <span
-          className="bc-cinzel bc-tracked-soft"
-          style={{ fontSize: 11, fontWeight: 600 }}
+          className="bc-cinzel"
+          style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}
         >
           {active.label}
         </span>
@@ -97,21 +96,33 @@ export function ThemePicker() {
           role="menu"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 'calc(100% + 8px)',
             right: 0,
-            minWidth: 320,
-            padding: 6,
+            width: 320,
+            padding: 8,
             background: 'linear-gradient(180deg, var(--bc-surface-2), var(--bc-surface-1))',
-            border: '1px solid var(--bc-edge)',
-            borderRadius: 'var(--bc-radius-md)',
+            border: '1px solid var(--bc-edge-strong)',
+            borderRadius: 'var(--bc-radius-lg)',
             boxShadow: 'var(--bc-shadow-lg)',
             backdropFilter: 'blur(12px)',
             zIndex: 'var(--bc-z-popover)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 2,
+            gap: 3,
           }}
         >
+          <div
+            className="bc-cinzel"
+            style={{
+              fontSize: 10,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--bc-ink-faint)',
+              padding: '6px 8px 8px',
+            }}
+          >
+            Temas
+          </div>
           {THEMES.map((t) => {
             const isActive = t.key === theme;
             return (
@@ -122,22 +133,23 @@ export function ThemePicker() {
                 aria-checked={isActive}
                 onClick={() => handleSelect(t.key)}
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '32px 1fr 14px',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  background: isActive ? 'color-mix(in srgb, var(--bc-gold) 12%, transparent)' : 'transparent',
-                  border: isActive ? '1px solid var(--bc-edge-bright)' : '1px solid transparent',
-                  borderRadius: 'var(--bc-radius-sm)',
-                  color: isActive ? 'var(--bc-gold-bright)' : 'var(--bc-ink)',
+                  gap: 11,
+                  padding: '9px 10px',
+                  background: isActive
+                    ? 'linear-gradient(90deg, color-mix(in srgb, var(--bc-purple) 16%, transparent), transparent)'
+                    : 'transparent',
+                  border: isActive ? '1px solid var(--bc-edge-strong)' : '1px solid transparent',
+                  borderRadius: 'var(--bc-radius-md)',
+                  color: 'var(--bc-ink)',
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all var(--bc-duration-fast) var(--bc-ease-out-quart)',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'color-mix(in srgb, var(--bc-purple) 12%, transparent)';
+                    e.currentTarget.style.background = 'color-mix(in srgb, var(--bc-surface-3) 60%, transparent)';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -150,20 +162,21 @@ export function ThemePicker() {
                 <span
                   aria-hidden="true"
                   style={{
-                    width: 24,
-                    height: 24,
+                    flexShrink: 0,
+                    width: 32,
+                    height: 32,
                     borderRadius: '50%',
-                    background: `radial-gradient(circle at 35% 30%, ${t.sealColor} 0%, color-mix(in srgb, ${t.sealColor} 55%, black) 60%, #0a0507 100%)`,
-                    boxShadow:
-                      'inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.5)',
+                    background: `radial-gradient(circle at 32% 28%, ${t.sealColor} 0%, color-mix(in srgb, ${t.sealColor} 55%, black) 65%, color-mix(in srgb, ${t.sealColor} 30%, black) 100%)`,
+                    border: '1px solid var(--bc-edge-strong)',
+                    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.25)',
                   }}
                 />
                 {/* Nome com tipografia do tema + subtitle + paleta de 4 swatches */}
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span
                     className="bc-cinzel"
                     style={{
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: t.displayWeight,
                       letterSpacing: t.displayTracking,
                       textTransform: t.displayTransform,
@@ -173,32 +186,30 @@ export function ThemePicker() {
                   </span>
                   <span
                     style={{
-                      fontSize: 10,
-                      color: 'var(--bc-ink-faint)',
-                      fontStyle: 'italic',
-                      marginTop: -2,
+                      fontSize: 11,
+                      color: 'var(--bc-ink-dim)',
                     }}
                   >
                     {t.subtitle}
                   </span>
-                  <span style={{ display: 'inline-flex', gap: 4, marginTop: 2 }}>
+                  <span style={{ display: 'inline-flex', gap: 3, marginTop: 3 }}>
                     {t.swatches.map((c, i) => (
                       <span
                         key={i}
                         aria-hidden="true"
                         style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
+                          width: 9,
+                          height: 9,
+                          borderRadius: 2,
                           background: c,
-                          border: '1px solid rgba(0,0,0,0.45)',
-                          boxShadow: '0 0 4px rgba(0,0,0,0.5)',
                         }}
                       />
                     ))}
                   </span>
                 </span>
-                {isActive && <Check size={12} aria-hidden="true" />}
+                {isActive && (
+                  <Check size={15} aria-hidden="true" style={{ flexShrink: 0, color: 'var(--bc-gold-bright)' }} />
+                )}
               </button>
             );
           })}

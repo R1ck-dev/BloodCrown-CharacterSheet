@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
-import { Ruler, Tag, Trash2 } from 'lucide-react';
+import { Maximize2, Ruler, ScrollText, Tag, Trash2, X } from 'lucide-react';
+import { HeraldicFrame } from '@/components/ornaments/HeraldicFrame';
 import type { Cena, Token, TokenTemplate } from '@/types/mesa';
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
@@ -197,6 +198,9 @@ export function Board({
   // Incrementa em pan/zoom pra reposicionar o popover de versão (que segue o token).
   const [viewTick, setViewTick] = useState(0);
   const [arrastando, setArrastando] = useState(false);
+  // Interação em dois passos: o token selecionado mostra só uma alça (plaquinha de
+  // pergaminho); clicar nela abre o popover de ações. Fecha ao trocar/limpar a seleção.
+  const [popoverAberto, setPopoverAberto] = useState(false);
   // Régua local enquanto o usuário mede (coordenadas do mundo/stage). reguaRef é a fonte da
   // verdade de "está medindo" (null = não); o state só dispara o re-render do desenho.
   const [reguaLocal, setReguaLocal] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
@@ -233,6 +237,11 @@ export function Board({
     tr.nodes(node ? [node] : []);
     tr.getLayer()?.batchDraw();
   }, [selectedTokenId, tokens, modoRegua]);
+
+  // Recolhe o popover (volta pra alça) sempre que a seleção muda ou é limpa.
+  useEffect(() => {
+    setPopoverAberto(false);
+  }, [selectedTokenId]);
 
   // Anexa o Transformer do mapa quando ele está destravado (mestre pode mover/redimensionar).
   useEffect(() => {
@@ -273,6 +282,7 @@ export function Board({
 
   const aoIniciarArrasto = (tokenId: string) => {
     setArrastando(true);
+    setPopoverAberto(false);
     onTokenDragStart(tokenId);
   };
   const aoFinalizarArrasto = (tokenId: string, x: number, y: number) => {
@@ -530,15 +540,71 @@ export function Board({
         </Layer>
       </Stage>
 
+      {/* Dicas de câmera (canto superior esquerdo, mono, sem captura de ponteiro). */}
+      <div className="bc-board-hint" aria-hidden="true">
+        <span>
+          arrastar vazio · <strong>pan</strong>
+        </span>
+        <span>
+          scroll · <strong>zoom</strong>
+        </span>
+      </div>
+
+      {/* Indicador de zoom + centralizar (canto inferior direito). */}
+      <div className="bc-board-zoom">
+        <button
+          type="button"
+          className="bc-board-zoom__btn"
+          title="Centralizar e resetar o zoom"
+          aria-label="Centralizar e resetar o zoom"
+          onClick={() => {
+            const stage = stageRef.current;
+            if (!stage) return;
+            stage.scale({ x: 1, y: 1 });
+            stage.position({ x: 0, y: 0 });
+            setViewTick((t) => t + 1);
+          }}
+        >
+          <Maximize2 size={15} />
+        </button>
+        <span className="bc-board-zoom__pct">
+          {Math.round((stageRef.current?.scaleX() ?? 1) * 100)}%
+        </span>
+      </div>
+
       {modoRegua && (
-        <div className="bc-mesa-regua-hint">
-          <Ruler size={13} /> Régua ativa — arraste para medir
+        <div className="bc-board-regua-hint">
+          <Ruler size={14} /> Régua ativa — arraste para medir
         </div>
       )}
 
-      {mostrarPopover && tokenAtual && menuPos && (
+      {/* Interação em dois passos: alça (plaquinha) → popover heráldico. */}
+      {mostrarPopover && tokenAtual && menuPos && !popoverAberto && (
+        <button
+          type="button"
+          className="bc-token-handle"
+          aria-label="Abrir ações do token"
+          title="Ações do token"
+          style={{
+            position: 'absolute',
+            left: menuPos.left,
+            top: menuPos.top,
+            transform: menuPos.below ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+            zIndex: 10,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setPopoverAberto(true);
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <ScrollText size={17} />
+        </button>
+      )}
+
+      {mostrarPopover && tokenAtual && menuPos && popoverAberto && (
         <div
-          className="bc-token-popover"
+          className="bc-token-pop"
           style={{
             position: 'absolute',
             left: menuPos.left,
@@ -549,47 +615,69 @@ export function Board({
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <div className="bc-token-popover__actions">
-            <button
-              type="button"
-              className={`bc-token-popover__btn${tokenNomeVisivel ? ' bc-token-popover__btn--active' : ''}`}
-              onClick={onToggleNomeToken}
-              title="Mostrar/esconder o nome deste token"
-            >
-              <Tag size={13} /> Nome
-            </button>
-            <button
-              type="button"
-              className="bc-token-popover__btn bc-token-popover__btn--danger"
-              onClick={onApagarToken}
-              title="Apagar token selecionado (Delete)"
-            >
-              <Trash2 size={13} /> Apagar
-            </button>
-          </div>
+          <HeraldicFrame className="bc-token-pop__frame">
+            <div className="bc-token-pop__body">
+              <div className="bc-token-pop__head">
+                <span
+                  className="bc-token-pop__dot"
+                  style={{ background: tokenAtual.cor ?? '#8b1e2d' }}
+                  aria-hidden="true"
+                />
+                <span className="bc-token-pop__name">{tokenAtual.nome ?? 'Token'}</span>
+                <button
+                  type="button"
+                  className="bc-token-pop__close"
+                  aria-label="Fechar ações do token"
+                  title="Fechar"
+                  onClick={() => setPopoverAberto(false)}
+                >
+                  <X size={13} />
+                </button>
+              </div>
 
-          {temVersoes && (
-            <div className="bc-token-popover__versions">
-              {versoesDoSelecionado.map((v) => {
-                const ativo = v.id === tokenAtual.templateId;
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    className={`bc-token-ver${ativo ? ' bc-token-ver--ativa' : ''}`}
-                    title={v.nome ?? 'versão'}
-                    onClick={() => onTrocarVersao(tokenAtual.id, v.id)}
-                  >
-                    {v.imagemUrl ? (
-                      <img src={v.imagemUrl} alt={v.nome ?? 'versão'} />
-                    ) : (
-                      <span className="bc-token-ver__none">?</span>
-                    )}
-                  </button>
-                );
-              })}
+              <div className="bc-token-pop__actions">
+                <button
+                  type="button"
+                  className={`bc-token-pop__btn${tokenNomeVisivel ? ' bc-token-pop__btn--active' : ''}`}
+                  onClick={onToggleNomeToken}
+                  title="Mostrar/esconder o nome deste token"
+                >
+                  <Tag size={13} /> Nome
+                </button>
+                <button
+                  type="button"
+                  className="bc-token-pop__btn bc-token-pop__btn--danger"
+                  onClick={onApagarToken}
+                  title="Apagar token selecionado (Delete)"
+                >
+                  <Trash2 size={13} /> Apagar
+                </button>
+              </div>
+
+              {temVersoes && (
+                <div className="bc-token-pop__versions">
+                  {versoesDoSelecionado.map((v) => {
+                    const ativo = v.id === tokenAtual.templateId;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        className={`bc-token-ver${ativo ? ' bc-token-ver--ativa' : ''}`}
+                        title={v.nome ?? 'versão'}
+                        onClick={() => onTrocarVersao(tokenAtual.id, v.id)}
+                      >
+                        {v.imagemUrl ? (
+                          <img src={v.imagemUrl} alt={v.nome ?? 'versão'} />
+                        ) : (
+                          <span className="bc-token-ver__none">?</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </HeraldicFrame>
         </div>
       )}
     </div>

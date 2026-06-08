@@ -1,0 +1,335 @@
+/* ============================================================================
+   BloodCrown — Tabuleiro (chrome do canvas Konva)
+   Sobreposições do Board: alça/popover do token, indicador de zoom + centralizar,
+   dicas de câmera e hint da régua. O <Stage> Konva desenha mapa/grid/tokens/régua;
+   estas classes são o HUD em volta dele.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   Dicas de câmera (canto superior esquerdo) — mono, decorativas, sem ponteiro.
+   -------------------------------------------------------------------------- */
+.bc-board-hint {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+  font-family: var(--bc-font-mono);
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--bc-ink-faint);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.bc-board-hint strong {
+  color: var(--bc-ink-dim);
+  font-weight: 600;
+}
+
+/* Em telas estreitas as dicas competem com o conteúdo — escondê-las. */
+@media (max-width: 640px) {
+  .bc-board-hint {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Indicador de zoom + centralizar (canto inferior direito).
+   -------------------------------------------------------------------------- */
+.bc-board-zoom {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bc-board-zoom__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(26, 24, 32, 0.7);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-board-zoom__btn:hover {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: rgba(43, 39, 53, 0.85);
+}
+
+.bc-board-zoom__btn:active {
+  transform: translateY(1px);
+}
+
+.bc-board-zoom__pct {
+  min-width: 46px;
+  padding: 7px 10px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(10, 5, 7, 0.8);
+  color: var(--bc-ink-dim);
+  font-family: var(--bc-font-mono);
+  font-size: 11px;
+  text-align: center;
+  user-select: none;
+}
+
+/* ----------------------------------------------------------------------------
+   Hint de "modo régua" — pílula centralizada na base do tabuleiro.
+   (Movido de mesa.css; renomeado pra .bc-board-regua-hint.)
+   -------------------------------------------------------------------------- */
+.bc-board-regua-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--bc-radius-pill);
+  border: 1px solid var(--bc-edge-strong);
+  background: color-mix(in srgb, var(--bc-gold) 12%, rgba(10, 5, 7, 0.9));
+  color: var(--bc-gold-bright);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ----------------------------------------------------------------------------
+   Alça do token (passo 1) — plaquinha de pedra com ícone de pergaminho.
+   Reusa o visual do medalhão (.bc-medal) com brilho dourado no hover.
+   -------------------------------------------------------------------------- */
+.bc-token-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--bc-radius-circle);
+  background: radial-gradient(120% 120% at 35% 25%, var(--bc-surface-3), var(--bc-surface-1) 70%, var(--bc-oled));
+  border: 1px solid var(--bc-edge-bright);
+  box-shadow:
+    inset 0 1px 0 rgba(212, 175, 55, 0.22),
+    inset 0 0 18px rgba(0, 0, 0, 0.7),
+    0 4px 14px -4px rgba(0, 0, 0, 0.8);
+  color: var(--bc-gold-bright);
+  cursor: pointer;
+  transition:
+    transform var(--bc-duration-fast) var(--bc-ease-out-quart),
+    box-shadow var(--bc-duration-base) var(--bc-ease-out-quart);
+}
+
+/* Aro gravado interno, igual ao medalhão. */
+.bc-token-handle::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--bc-gold) 16%, transparent);
+  pointer-events: none;
+}
+
+.bc-token-handle:hover {
+  transform: scale(1.08);
+  box-shadow:
+    var(--bc-glow-gold),
+    inset 0 1px 0 rgba(212, 175, 55, 0.25);
+}
+
+/* ----------------------------------------------------------------------------
+   Popover do token (passo 2) — card heráldico com cabeçalho, ações e versões.
+   (Substitui .bc-token-popover de mesa.css.)
+   -------------------------------------------------------------------------- */
+.bc-token-pop {
+  /* O HeraldicFrame fornece a moldura/brilho; este wrapper só posiciona. */
+  filter: drop-shadow(0 18px 50px rgba(0, 0, 0, 0.7));
+}
+
+.bc-token-pop__frame {
+  border-radius: var(--bc-radius-lg);
+}
+
+.bc-token-pop__body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-width: 200px;
+  padding: 15px 16px 14px;
+}
+
+.bc-token-pop__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.bc-token-pop__dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--bc-radius-circle);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.bc-token-pop__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--bc-font-display);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  color: var(--bc-ink);
+}
+
+.bc-token-pop__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: var(--bc-radius-circle);
+  border: 1px solid var(--bc-edge);
+  background: rgba(26, 24, 32, 0.5);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-token-pop__close:hover {
+  color: var(--bc-ink);
+  border-color: var(--bc-edge-strong);
+  background: rgba(43, 39, 53, 0.7);
+}
+
+.bc-token-pop__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bc-token-pop__btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(18, 16, 20, 0.6);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-token-pop__btn:hover {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+}
+
+.bc-token-pop__btn--active {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bc-gold) 14%, transparent),
+    color-mix(in srgb, var(--bc-purple) 12%, transparent)
+  );
+  box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.08);
+}
+
+.bc-token-pop__btn--danger {
+  flex: 0 0 auto;
+  color: var(--bc-error-soft);
+  border-color: var(--bc-error-border);
+}
+
+.bc-token-pop__btn--danger:hover {
+  color: var(--bc-error-bright);
+  background: var(--bc-error-bg-hover);
+  border-color: var(--bc-error-border-hover);
+}
+
+.bc-token-pop__versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-top: 11px;
+  border-top: 1px solid var(--bc-edge);
+}
+
+/* ----------------------------------------------------------------------------
+   Miniaturas de versão (faixa de troca rápida) — definidas aqui pois saíram
+   de mesa.css junto do popover.
+   -------------------------------------------------------------------------- */
+.bc-token-ver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: #14121a;
+  color: var(--bc-ink-faint);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-token-ver:hover {
+  border-color: var(--bc-edge-strong);
+}
+
+.bc-token-ver--ativa {
+  border: 2px solid var(--bc-gold);
+  box-shadow: 0 0 0 1px var(--bc-gold), 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.bc-token-ver img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bc-token-ver__none {
+  font-size: 12px;
+  color: var(--bc-ink-faint);
+}

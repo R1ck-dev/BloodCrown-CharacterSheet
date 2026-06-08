@@ -399,7 +399,8 @@ export function MesaPage() {
   };
 
   // Em telas estreitas, Biblioteca e Mestre são overlays — abrir um fecha o outro.
-  const ESTREITO = 768;
+  // Casado com o breakpoint de overlay do mesa.css (640px); acima disso são docks.
+  const ESTREITO = 640;
   const handleToggleBiblioteca = () => {
     setBibliotecaAberta((v) => !v);
     if (!bibliotecaAberta && window.innerWidth <= ESTREITO) setMestreAberto(false);
@@ -512,7 +513,28 @@ export function MesaPage() {
         />
       )}
 
+      {/* Docks laterais: Biblioteca à esquerda, tabuleiro no meio, Mestre à direita.
+          Os dois painéis são irmãos flex do canvas (espremem o tabuleiro); em telas
+          estreitas viram drawers sobrepostos (ver mesa.css) — daí o position:relative. */}
       <div style={{ position: 'relative', display: 'flex', flex: 1, minHeight: 0 }}>
+        {bibliotecaAberta && (
+          <BibliotecaPanel
+            biblioteca={mesa.biblioteca}
+            pastas={mesa.pastas}
+            uploadHabilitado={cloudinaryConfigurado()}
+            souDono={mesa.souDono}
+            onClose={() => setBibliotecaAberta(false)}
+            onColocar={handleColocarTemplate}
+            onUsarMapa={handleUsarMapaDaBiblioteca}
+            onAdicionar={handleAddTemplate}
+            onRemover={handleRemoveTemplate}
+            onAdicionarPasta={handleAddPasta}
+            onRemoverPasta={handleRemovePasta}
+            onMoverParaPasta={handleMoverParaPasta}
+            onDefinirBase={handleDefinirBase}
+          />
+        )}
+
         <div style={{ position: 'relative', display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
           <Board
             cena={cenaAtiva}
@@ -537,36 +559,18 @@ export function MesaPage() {
             onTransformarMapa={handleTransformarMapa}
             onRegua={handleRegua}
           />
-
-          {mesa.souDono && mestreAberto && cenaAtiva && (
-            <MestrePanel
-              cena={cenaAtiva}
-              uploadHabilitado={cloudinaryConfigurado()}
-              onClose={() => setMestreAberto(false)}
-              onSetMapaUrl={handleSetMapaUrl}
-              onUploadMapa={handleUploadMapa}
-              onToggleTravaMapa={handleToggleTravaMapa}
-              onConfigurarGrid={handleConfigurarGrid}
-              onSalvarGridEscala={handleSalvarGridEscala}
-            />
-          )}
         </div>
 
-        {bibliotecaAberta && (
-          <BibliotecaPanel
-            biblioteca={mesa.biblioteca}
-            pastas={mesa.pastas}
+        {mesa.souDono && mestreAberto && cenaAtiva && (
+          <MestrePanel
+            cena={cenaAtiva}
             uploadHabilitado={cloudinaryConfigurado()}
-            souDono={mesa.souDono}
-            onClose={() => setBibliotecaAberta(false)}
-            onColocar={handleColocarTemplate}
-            onUsarMapa={handleUsarMapaDaBiblioteca}
-            onAdicionar={handleAddTemplate}
-            onRemover={handleRemoveTemplate}
-            onAdicionarPasta={handleAddPasta}
-            onRemoverPasta={handleRemovePasta}
-            onMoverParaPasta={handleMoverParaPasta}
-            onDefinirBase={handleDefinirBase}
+            onClose={() => setMestreAberto(false)}
+            onSetMapaUrl={handleSetMapaUrl}
+            onUploadMapa={handleUploadMapa}
+            onToggleTravaMapa={handleToggleTravaMapa}
+            onConfigurarGrid={handleConfigurarGrid}
+            onSalvarGridEscala={handleSalvarGridEscala}
           />
         )}
       </div>
