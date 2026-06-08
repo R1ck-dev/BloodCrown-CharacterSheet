@@ -56,6 +56,14 @@ public class TokenJpaEntity {
     @Column(name = "nome_visivel", nullable = false)
     private boolean nomeVisivel;
 
+    /** Ficha (Character) vinculada; nulo = sem ficha. String solta, não FK JPA. */
+    @Column(name = "character_id", columnDefinition = "VARCHAR(36)")
+    private String characterId;
+
+    /** Mostra a barra/selos de status da ficha embaixo do token. */
+    @Column(name = "status_visivel", nullable = false)
+    private boolean statusVisivel;
+
     @ManyToOne
     @JoinColumn(name = "mesa_id")
     private MesaJpaEntity mesa;

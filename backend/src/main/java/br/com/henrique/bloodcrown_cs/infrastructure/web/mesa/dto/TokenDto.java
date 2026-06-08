@@ -11,5 +11,8 @@ public record TokenDto(
         String donoUserId,
         String templateId,
         String cenaId,
-        boolean nomeVisivel) {
+        boolean nomeVisivel,
+        String characterId,
+        boolean statusVisivel,
+        FichaResumoDto ficha) {
 }

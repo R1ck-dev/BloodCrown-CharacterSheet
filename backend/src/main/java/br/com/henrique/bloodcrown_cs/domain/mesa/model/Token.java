@@ -8,7 +8,8 @@ import lombok.Setter;
 /**
  * Token (peça) posicionado no mapa da mesa. Sub-entidade do agregado {@link Mesa}.
  * Tem imagem (R2) ou, na ausência dela, uma cor de fallback. Posição em pixels do mapa.
- * O vínculo com a ficha (characterId) fica para uma fase posterior — aqui é entidade solta.
+ * Pode estar vinculado a uma ficha ({@code characterId}); nesse caso o tabuleiro lê o snapshot de
+ * status da ficha (vida/defesa/resistências) para desenhar a barra/selos embaixo do token.
  */
 @Getter
 @Setter
@@ -33,6 +34,10 @@ public class Token {
     private String cenaId;
     /** Mostra o nome do token embaixo dele no tabuleiro (padrão: visível). */
     private boolean nomeVisivel = true;
+    /** Ficha (Character) vinculada a este token; nulo = token sem ficha. String solta, não FK. */
+    private String characterId;
+    /** Mostra a barra/selos de status da ficha embaixo do token (padrão: visível). */
+    private boolean statusVisivel = true;
 
     public Token() {
     }
@@ -52,6 +57,7 @@ public class Token {
         t.templateId = (templateId != null && !templateId.isBlank()) ? templateId : null;
         t.cenaId = (cenaId != null && !cenaId.isBlank()) ? cenaId : null;
         t.nomeVisivel = true;
+        t.statusVisivel = true;
         return t;
     }
 }

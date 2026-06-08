@@ -28,6 +28,16 @@ export interface Cena {
   mapaTravado: boolean;
 }
 
+/** Snapshot do status da ficha vinculada (barra de vida + selos), resolvido no backend. */
+export interface FichaSnapshot {
+  nome: string | null;
+  currentHealth: number;
+  maxHealth: number;
+  defense: number;
+  physicalRes: number;
+  magicalRes: number;
+}
+
 export interface Token {
   id: string;
   nome: string | null;
@@ -43,6 +53,12 @@ export interface Token {
   cenaId: string | null;
   /** Mostra o nome embaixo do token no tabuleiro. */
   nomeVisivel: boolean;
+  /** Ficha (Character) vinculada a este token; null = sem ficha. */
+  characterId: string | null;
+  /** Mostra a barra/selos de status embaixo do token. */
+  statusVisivel: boolean;
+  /** Status da ficha vinculada (null se sem ficha ou status escondido). */
+  ficha: FichaSnapshot | null;
 }
 
 /** Tipo de item da biblioteca: token (criatura/PJ), mapa (cena) ou documento (handout). */
@@ -136,7 +152,7 @@ export interface TransformarMapaInput {
 
 /** Evento publicado em /topic/mesas/{id} (ver MesaEvento.java). */
 export interface MesaEvento {
-  tipo: 'mover' | 'atualizada' | 'regua';
+  tipo: 'mover' | 'atualizada' | 'regua' | 'ficha' | 'rolagem';
   tokenId: string | null;
   /** mover: posição; regua: ponto inicial. */
   x: number | null;
@@ -149,4 +165,16 @@ export interface MesaEvento {
   /** regua: false limpa a régua dos outros clientes. */
   ativa: boolean | null;
   porUserId: string | null;
+  /** ficha: novo snapshot de status do token (atualiza a barra ao vivo). */
+  ficha?: FichaSnapshot | null;
+  /** rolagem: fonte da rolagem (atributo/perícia/ataque). */
+  rolagemSource?: string | null;
+  /** rolagem: total da rolagem. */
+  rolagemTotal?: number | null;
+  /** rolagem: tipo da rolagem. */
+  rolagemKind?: 'attribute' | 'damage' | null;
+  /** rolagem: crítico/golpe pesado (dispara confetti). */
+  rolagemCritico?: boolean | null;
+  /** rolagem: nome do personagem que rolou (exibido no card). */
+  rolagemNome?: string | null;
 }

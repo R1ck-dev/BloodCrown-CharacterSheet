@@ -1,0 +1,170 @@
+/* ============================================================================
+   Token — integração ficha↔tabletop: picker de vínculo de ficha (no popover) e
+   card de rolagem flutuante acima do token. As barras/selos de status são
+   desenhadas no canvas (Konva), não aqui. Complementa board.css.
+   ========================================================================== */
+
+/* Com a ação "Ficha" são 4 botões no popover — deixa quebrar linha sem espremer. */
+.bc-token-pop__actions {
+  flex-wrap: wrap;
+}
+
+/* ----------------------------------------------------------------------------
+   Picker de ficha (sub-painel dentro do popover do token)
+   -------------------------------------------------------------------------- */
+.bc-token-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-top: 11px;
+  border-top: 1px solid var(--bc-edge);
+}
+
+.bc-token-ficha__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--bc-radius-md);
+  border: 1px solid var(--bc-edge);
+  background: rgba(18, 16, 20, 0.6);
+  color: var(--bc-ink-dim);
+  cursor: pointer;
+  font-family: var(--bc-font-display);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-align: left;
+  transition:
+    color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    border-color var(--bc-duration-fast) var(--bc-ease-out-quart),
+    background var(--bc-duration-fast) var(--bc-ease-out-quart);
+}
+
+.bc-token-ficha__item:hover {
+  color: var(--bc-ink);
+  border-color: var(--bc-edge-strong);
+  background: rgba(43, 39, 53, 0.7);
+}
+
+.bc-token-ficha__item--ativa {
+  color: var(--bc-gold-bright);
+  border-color: var(--bc-edge-strong);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bc-gold) 14%, transparent),
+    color-mix(in srgb, var(--bc-purple) 12%, transparent)
+  );
+}
+
+.bc-token-ficha__item--off {
+  justify-content: center;
+  gap: 6px;
+  color: var(--bc-error-soft);
+  border-color: var(--bc-error-border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bc-token-ficha__item--off:hover {
+  color: var(--bc-error-bright);
+  background: var(--bc-error-bg-hover);
+  border-color: var(--bc-error-border-hover);
+}
+
+.bc-token-ficha__nome {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bc-token-ficha__hp {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--bc-blood-bright, #ef4444);
+}
+
+.bc-token-ficha__empty {
+  margin: 2px 0;
+  padding: 6px 2px;
+  color: var(--bc-ink-faint);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------------------------
+   Card de rolagem flutuante (acima do token; transitório). DOM, não Konva.
+   -------------------------------------------------------------------------- */
+.bc-token-roll {
+  filter: drop-shadow(0 14px 36px rgba(0, 0, 0, 0.7));
+}
+
+.bc-token-roll__frame {
+  border-radius: var(--bc-radius-md);
+}
+
+.bc-token-roll__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 92px;
+  padding: 8px 14px 9px;
+  text-align: center;
+}
+
+.bc-token-roll__name {
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--bc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bc-ink-dim);
+}
+
+.bc-token-roll__line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bc-token-roll__src {
+  max-width: 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--bc-ink-dim);
+}
+
+.bc-token-roll__total {
+  font-family: var(--bc-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--bc-gold-bright);
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-token-roll--crit .bc-token-roll__frame {
+  border-color: var(--bc-gold);
+  box-shadow:
+    0 0 0 1px var(--bc-gold) inset,
+    0 0 22px rgba(212, 175, 55, 0.45);
+}
+
+.bc-token-roll--crit .bc-token-roll__total {
+  color: #ffe9a8;
+  text-shadow: 0 0 16px rgba(212, 175, 55, 0.7);
+}

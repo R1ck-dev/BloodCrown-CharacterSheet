@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
-import { Maximize2, Ruler, ScrollText, Tag, Trash2, X } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import { Heart, Link2, Maximize2, Ruler, ScrollText, Tag, Trash2, User, X } from 'lucide-react';
 import { HeraldicFrame } from '@/components/ornaments/HeraldicFrame';
+import { useCharacters } from '@/api/characters';
 import type { Cena, Token, TokenTemplate } from '@/types/mesa';
+import { TokenStatus } from './TokenStatus';
+import { TokenRollCard } from './TokenRollCard';
+
+/** Rolagem ativa exibida acima de um token (card transitório). */
+export interface RolagemNoToken {
+  tokenId: string;
+  source: string;
+  total: number;
+  critico: boolean;
+  nome: string | null;
+}
 
 /** Carrega uma imagem como HTMLImageElement pro Konva (undefined enquanto baixa/sem url). */
 function useImageElement(url: string | null): HTMLImageElement | undefined {
@@ -52,6 +65,7 @@ interface TokenNodeProps {
   token: Token;
   interativo: boolean;
   mostrarNome: boolean;
+  mostrarStatus: boolean;
   onSelect: (tokenId: string) => void;
   onDragStart: (tokenId: string) => void;
   onDragMove: (tokenId: string, x: number, y: number) => void;
@@ -62,9 +76,10 @@ interface TokenNodeProps {
 /**
  * Um token no mapa. Com imagemUrl: a própria imagem (proporção preservada, SEM borda nem
  * recorte). Sem imagem (ou enquanto carrega): círculo colorido com a inicial. Posição = centro.
- * O nome aparece embaixo quando mostrarNome (toggle global + flag por token).
+ * O nome aparece embaixo quando mostrarNome (toggle global + flag por token); abaixo dele, a
+ * barra/selos de status quando mostrarStatus e a ficha está vinculada.
  */
-function TokenNode({ token, interativo, mostrarNome, onSelect, onDragStart, onDragMove, onDragEnd, onResize }: TokenNodeProps) {
+function TokenNode({ token, interativo, mostrarNome, mostrarStatus, onSelect, onDragStart, onDragMove, onDragEnd, onResize }: TokenNodeProps) {
   const img = useImageElement(token.imagemUrl);
   const r = token.tamanho / 2;
   const label = (token.nome ?? '?').trim().slice(0, 3).toUpperCase();
@@ -134,6 +149,13 @@ function TokenNode({ token, interativo, mostrarNome, onSelect, onDragStart, onDr
           listening={false}
         />
       )}
+      {mostrarStatus && token.ficha && (
+        <TokenStatus
+          ficha={token.ficha}
+          tamanho={token.tamanho}
+          y={baixoDoToken + 4 + (mostrarNome && nome ? 20 : 0)}
+        />
+      )}
     </Group>
   );
 }
@@ -144,15 +166,21 @@ interface BoardProps {
   souDono: boolean;
   /** Toggle global (preferência local de quem olha) pra mostrar/ocultar todos os nomes. */
   mostrarNomes: boolean;
+  /** Toggle global pra mostrar/ocultar todas as barras/selos de status. */
+  mostrarStatus: boolean;
   /** Modo régua ativo: clicar-arrastar mede distância (em vez de pan). */
   modoRegua: boolean;
   /** Réguas de outros jogadores, ao vivo. */
   reguasRemotas: ReguaRemota[];
+  /** Rolagens ativas (card acima do token), por token da cena. */
+  rolagens: RolagemNoToken[];
   selectedTokenId: string | null;
   /** Versões do token selecionado (base + variações). >=2 mostra a faixa de troca rápida. */
   versoesDoSelecionado: TokenTemplate[];
   /** nomeVisivel do token selecionado (reflete o estado do toggle "Nome" no popover). */
   tokenNomeVisivel: boolean;
+  /** statusVisivel do token selecionado (reflete o toggle "Status" no popover). */
+  tokenStatusVisivel: boolean;
   onSelectToken: (id: string | null) => void;
   onTokenDragStart: (tokenId: string) => void;
   onTokenDragMove: (tokenId: string, x: number, y: number) => void;
@@ -161,6 +189,10 @@ interface BoardProps {
   onTrocarVersao: (tokenId: string, templateId: string) => void;
   /** Alterna a visibilidade do nome do token selecionado (popover). */
   onToggleNomeToken: () => void;
+  /** Alterna a visibilidade do status do token selecionado (popover). */
+  onToggleStatusToken: () => void;
+  /** Vincula (characterId) ou desvincula (null) uma ficha ao token selecionado (popover). */
+  onVincularFicha: (tokenId: string, characterId: string | null) => void;
   /** Apaga o token selecionado (popover). */
   onApagarToken: () => void;
   /** Persiste a transformação do mapa (mestre move/redimensiona o mapa destravado). */
@@ -174,11 +206,14 @@ export function Board({
   tokens,
   souDono,
   mostrarNomes,
+  mostrarStatus,
   modoRegua,
   reguasRemotas,
+  rolagens,
   selectedTokenId,
   versoesDoSelecionado,
   tokenNomeVisivel,
+  tokenStatusVisivel,
   onSelectToken,
   onTokenDragStart,
   onTokenDragMove,
@@ -186,10 +221,15 @@ export function Board({
   onTokenResize,
   onTrocarVersao,
   onToggleNomeToken,
+  onToggleStatusToken,
+  onVincularFicha,
   onApagarToken,
   onTransformarMapa,
   onRegua,
 }: BoardProps) {
+  const { data: personagens = [] } = useCharacters();
+  // Sub-painel do popover pra escolher a ficha a vincular ao token selecionado.
+  const [escolhendoFicha, setEscolhendoFicha] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -241,6 +281,7 @@ export function Board({
   // Recolhe o popover (volta pra alça) sempre que a seleção muda ou é limpa.
   useEffect(() => {
     setPopoverAberto(false);
+    setEscolhendoFicha(false);
   }, [selectedTokenId]);
 
   // Anexa o Transformer do mapa quando ele está destravado (mestre pode mover/redimensionar).
@@ -379,9 +420,30 @@ export function Board({
     return { left, top, below };
   }, [selectedTokenId, tokens, size.width, viewTick, versoesDoSelecionado.length]);
 
+  // Posições (em px do container) dos cards de rolagem, ancorados ACIMA de cada token. Recalcula
+  // em pan/zoom (viewTick), como o popover. Só os tokens da cena atual têm card.
+  const cardPositions = useMemo(() => {
+    void viewTick;
+    const stage = stageRef.current;
+    if (!stage || rolagens.length === 0) return [];
+    const escala = stage.scaleX();
+    return rolagens
+      .map((r) => {
+        const node = stage.findOne(`#${r.tokenId}`);
+        if (!node) return null;
+        const abs = node.absolutePosition();
+        const token = tokens.find((t) => t.id === r.tokenId);
+        const meiaAltura = ((token?.tamanho ?? 50) / 2) * escala;
+        const left = Math.max(8, Math.min(size.width - 8, abs.x));
+        const top = abs.y - meiaAltura - 16;
+        return { ...r, left, top };
+      })
+      .filter((r): r is RolagemNoToken & { left: number; top: number } => r !== null);
+  }, [rolagens, tokens, size.width, viewTick]);
+
   const tokenAtual = tokens.find((t) => t.id === selectedTokenId);
   // Popover de token: aparece sempre que há token selecionado (e não em arraste/régua),
-  // com as ações (Nome/Apagar) e — quando houver >=2 versões — a faixa de troca rápida.
+  // com as ações (Nome/Status/Ficha/Apagar) e — quando houver >=2 versões — a faixa de troca.
   const mostrarPopover = !arrastando && !modoRegua && Boolean(menuPos) && Boolean(tokenAtual);
   const temVersoes = versoesDoSelecionado.length >= 2;
 
@@ -502,6 +564,7 @@ export function Board({
               token={t}
               interativo={!modoRegua}
               mostrarNome={mostrarNomes && t.nomeVisivel}
+              mostrarStatus={mostrarStatus && t.statusVisivel}
               onSelect={onSelectToken}
               onDragStart={aoIniciarArrasto}
               onDragMove={onTokenDragMove}
@@ -646,6 +709,22 @@ export function Board({
                 </button>
                 <button
                   type="button"
+                  className={`bc-token-pop__btn${tokenStatusVisivel ? ' bc-token-pop__btn--active' : ''}`}
+                  onClick={onToggleStatusToken}
+                  title="Mostrar/esconder a barra de status deste token"
+                >
+                  <Heart size={13} /> Status
+                </button>
+                <button
+                  type="button"
+                  className={`bc-token-pop__btn${tokenAtual.characterId ? ' bc-token-pop__btn--active' : ''}`}
+                  onClick={() => setEscolhendoFicha((v) => !v)}
+                  title="Vincular uma ficha a este token"
+                >
+                  <User size={13} /> Ficha
+                </button>
+                <button
+                  type="button"
                   className="bc-token-pop__btn bc-token-pop__btn--danger"
                   onClick={onApagarToken}
                   title="Apagar token selecionado (Delete)"
@@ -653,6 +732,43 @@ export function Board({
                   <Trash2 size={13} /> Apagar
                 </button>
               </div>
+
+              {escolhendoFicha && (
+                <div className="bc-token-ficha">
+                  {tokenAtual.characterId && (
+                    <button
+                      type="button"
+                      className="bc-token-ficha__item bc-token-ficha__item--off"
+                      onClick={() => {
+                        onVincularFicha(tokenAtual.id, null);
+                        setEscolhendoFicha(false);
+                      }}
+                    >
+                      <Link2 size={13} /> Desvincular ficha
+                    </button>
+                  )}
+                  {personagens.length === 0 ? (
+                    <p className="bc-token-ficha__empty">Você não tem fichas pra vincular.</p>
+                  ) : (
+                    personagens.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`bc-token-ficha__item${c.id === tokenAtual.characterId ? ' bc-token-ficha__item--ativa' : ''}`}
+                        onClick={() => {
+                          onVincularFicha(tokenAtual.id, c.id);
+                          setEscolhendoFicha(false);
+                        }}
+                      >
+                        <span className="bc-token-ficha__nome">{c.name || 'Sem nome'}</span>
+                        <span className="bc-token-ficha__hp">
+                          {c.currentHealth ?? '–'}/{c.maxHealth ?? '–'}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
 
               {temVersoes && (
                 <div className="bc-token-pop__versions">
@@ -680,6 +796,21 @@ export function Board({
           </HeraldicFrame>
         </div>
       )}
+
+      {/* Cards de rolagem flutuando acima dos tokens (transitórios, TTL na MesaPage). */}
+      <AnimatePresence>
+        {cardPositions.map((c) => (
+          <TokenRollCard
+            key={c.tokenId}
+            source={c.source}
+            total={c.total}
+            nome={c.nome}
+            critico={c.critico}
+            left={c.left}
+            top={c.top}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
