@@ -5,6 +5,7 @@
  */
 import { useRef, useState } from 'react';
 import {
+  Crown,
   Grid3x3,
   Image as ImageIcon,
   Link2,
@@ -12,10 +13,10 @@ import {
   Scaling,
   Unlock,
   Upload,
-  Wand2,
   X,
 } from 'lucide-react';
 import type { Cena, ConfigurarGridInput } from '@/types/mesa';
+import { Medallion } from '@/components/ornaments/Medallion';
 import { PromptModal } from '@/components/ui/PromptModal';
 import { GridEscalaModal } from './GridEscalaModal';
 
@@ -63,25 +64,35 @@ export function MestrePanel({
 
   return (
     <aside className="bc-mestre-panel" aria-label="Ferramentas do mestre">
-      <header className="bc-mestre-panel__header">
-        <Wand2 size={15} color="var(--bc-gold)" aria-hidden="true" />
-        <h2 className="bc-mestre-panel__title">Mestre</h2>
-        <button type="button" className="bc-icon-btn" onClick={onClose} aria-label="Fechar painel do mestre">
-          <X size={15} />
+      <header className="bc-panel-header">
+        <Medallion shape="square" size={30} icon={<Crown size={16} />} />
+        <h2 className="bc-panel-header__title">Mestre</h2>
+        <button
+          type="button"
+          className="bc-icon-btn bc-panel-header__close"
+          onClick={onClose}
+          aria-label="Fechar painel do mestre"
+        >
+          <X size={14} />
         </button>
       </header>
+      <hr className="bc-hairline" />
 
       <div className="bc-mestre-panel__body">
         {/* ----- Mapa ----- */}
         <section className="bc-mestre-section">
           <span className="bc-mestre-section__title">
-            <ImageIcon size={12} /> Mapa
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <ImageIcon size={12} /> Mapa
+            </span>
           </span>
 
           {cena.mapaUrl ? (
             <img className="bc-mestre-map-preview" src={cena.mapaUrl} alt="prévia do mapa da cena" />
           ) : (
-            <p className="bc-mestre-empty">Sem mapa nesta cena.</p>
+            <div className="bc-img-ph bc-mestre-map-ph" aria-hidden="true">
+              sem mapa nesta cena
+            </div>
           )}
 
           <div className="bc-mestre-actions">
@@ -115,10 +126,14 @@ export function MestrePanel({
           )}
         </section>
 
+        <hr className="bc-hairline" style={{ opacity: 0.6 }} />
+
         {/* ----- Grid & Escala ----- */}
         <section className="bc-mestre-section">
           <span className="bc-mestre-section__title">
-            <Grid3x3 size={12} /> Grid & Escala
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Grid3x3 size={12} /> Grid &amp; Escala
+            </span>
           </span>
 
           <label className="bc-switch-wrap">
@@ -132,8 +147,8 @@ export function MestrePanel({
             <span className="bc-switch-wrap__label">Grid visível</span>
           </label>
 
-          <p className="bc-mestre-empty" style={{ fontStyle: 'normal', color: 'var(--bc-ink-dim)' }}>
-            1 célula = {cena.escalaValor} {cena.escalaUnidade ?? 'm'} · {cena.grid.tamanhoCelula}px
+          <p className="bc-mestre-info">
+            1 célula = <b>{cena.escalaValor} {cena.escalaUnidade ?? 'm'}</b> · <b>{cena.grid.tamanhoCelula}px</b>
           </p>
 
           <button

@@ -9,64 +9,79 @@
   top: 0;
   z-index: var(--bc-z-sticky);
   height: 64px;
-  padding: 0 clamp(12px, 3vw, 32px);
+  padding: 0 clamp(16px, 3vw, 24px);
   display: flex;
   align-items: center;
-  gap: clamp(12px, 2vw, 24px);
+  gap: clamp(12px, 2vw, 18px);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bc-oled) 95%, transparent) 0%,
-    color-mix(in srgb, var(--bc-oled) 85%, transparent) 100%
+    rgba(18, 16, 20, 0.94) 0%,
+    color-mix(in srgb, var(--bc-oled) 86%, transparent) 100%
   );
-  border-bottom: 1px solid var(--bc-edge);
   backdrop-filter: blur(12px);
 }
 
-.bc-nav__rail {
-  flex: 1;
+/* Separador vertical fino entre o logo e a saudacao */
+.bc-nav__sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 26px;
+  background: var(--bc-edge);
+}
+
+.bc-nav__welcome {
   display: flex;
-  align-items: center;
-  gap: clamp(8px, 1.5vw, 14px);
-  padding-left: clamp(12px, 2vw, 24px);
-  border-left: 1px solid color-mix(in srgb, var(--bc-gold) 12%, transparent);
+  align-items: baseline;
+  gap: 4px;
+  font-size: 14px;
   min-width: 0;
 }
 
 .bc-nav__greeting {
-  font-size: 12px;
   color: var(--bc-ink-dim);
   font-style: italic;
 }
 
 .bc-nav__username {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--bc-gold-bright);
-  font-weight: 600;
+  letter-spacing: var(--bc-tracking-wide);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 
-/* Hairline dourada inferior */
+/* Empurra ThemePicker + Sair pra direita */
+.bc-nav__spacer {
+  flex: 1;
+}
+
+/* Hairline dourada degrade inferior */
 .bc-nav::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--bc-gold) 40%, transparent),
+    var(--bc-edge-bright) 18%,
+    var(--bc-edge-strong) 50%,
+    var(--bc-edge-bright) 82%,
     transparent
   );
   pointer-events: none;
 }
 
-/* Em mobile: esconder "Bem-vindo," e o texto "Sair" (manter aria-label) */
+/* Em mobile: esconder separador + "Bem-vindo," e o texto "Sair" (mantem aria-label) */
+@media (max-width: 639px) {
+  .bc-nav__sep,
+  .bc-nav__welcome { display: none; }
+}
+
 @media (max-width: 479px) {
-  .bc-nav__greeting { display: none; }
   .bc-nav__logout-text { display: none; }
 }

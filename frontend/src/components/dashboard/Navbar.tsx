@@ -21,14 +21,16 @@ export function Navbar({ onLogout, username }: Props) {
     <nav className="bc-nav">
       <Logo size="sm" />
 
-      <div className="bc-nav__rail">
-        {username && (
-          <>
-            <span className="bc-nav__greeting">Bem-vindo,</span>
-            <span className="bc-nav__username bc-cinzel bc-tracked-soft">{username}</span>
-          </>
-        )}
-      </div>
+      <span className="bc-nav__sep" aria-hidden="true" />
+
+      {username && (
+        <span className="bc-nav__welcome">
+          <span className="bc-nav__greeting">Bem-vindo,</span>
+          <span className="bc-nav__username bc-cinzel">{username}</span>
+        </span>
+      )}
+
+      <span className="bc-nav__spacer" />
 
       <ThemePicker />
 

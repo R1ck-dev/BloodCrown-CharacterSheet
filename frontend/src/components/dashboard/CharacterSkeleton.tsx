@@ -1,6 +1,7 @@
 /**
  * Card fantasma renderizado durante o fetch de useCharacters.
- * Forma proxima do CharacterCard pra evitar reflow ao trocar.
+ * Forma próxima do CharacterCard (avatar, nome, classe, barra, botão) pra
+ * evitar reflow ao trocar. Usa o shimmer base .bc-skeleton em blocos .bc-skel-block.
  */
 
 export function CharacterSkeleton() {
@@ -9,34 +10,27 @@ export function CharacterSkeleton() {
       className="bc-frame"
       aria-hidden="true"
       style={{
-        borderRadius: 'var(--bc-radius-md)',
-        padding: 20,
+        borderRadius: 'var(--bc-radius-lg)',
+        padding: '18px 16px',
         minHeight: 280,
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         gap: 14,
-        opacity: 0.7,
       }}
     >
-      {/* Avatar placeholder */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-        <div className="bc-skeleton" style={{ width: 76, height: 76, borderRadius: '50%' }} />
-      </div>
+      {/* Avatar */}
+      <span className="bc-skeleton bc-skel-block" style={{ width: 68, height: 68, borderRadius: '50%' }} />
 
-      {/* Linhas texto */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-        <div className="bc-skeleton" style={{ height: 16, width: '70%' }} />
-        <div className="bc-skeleton" style={{ height: 11, width: '50%' }} />
-      </div>
+      {/* Nome + classe */}
+      <span className="bc-skeleton bc-skel-block" style={{ width: '70%', height: 14 }} />
+      <span className="bc-skeleton bc-skel-block" style={{ width: '45%', height: 10 }} />
 
-      {/* HP bar placeholder */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div className="bc-skeleton" style={{ height: 9, width: 38 }} />
-        <div className="bc-skeleton" style={{ height: 4, flex: 1 }} />
-      </div>
+      {/* Barra de vida */}
+      <span className="bc-skeleton bc-skel-block" style={{ width: '100%', height: 8, marginTop: 6 }} />
 
-      {/* Botao placeholder */}
-      <div className="bc-skeleton" style={{ height: 36, marginTop: 4 }} />
+      {/* Botão "Abrir Ficha" */}
+      <span className="bc-skeleton bc-skel-block" style={{ width: '100%', height: 36, marginTop: 'auto' }} />
     </div>
   );
 }
