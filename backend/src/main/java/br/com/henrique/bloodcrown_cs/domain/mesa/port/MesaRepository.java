@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenLocation;
 
 /**
  * Porta de saída do agregado Mesa.
@@ -11,6 +12,13 @@ import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
  */
 public interface MesaRepository {
     Mesa salvar(Mesa mesa);
+
+    /**
+     * Localizações (mesa + token + statusVisivel) de todos os tokens vinculados a uma ficha, em
+     * qualquer mesa/cena. Usado para broadcast ao vivo de status e card de rolagem. 1 query, sem
+     * carregar o agregado.
+     */
+    List<TokenLocation> buscarTokensPorCharacterId(String characterId);
 
     /** Carrega a mesa só se o usuário for dono ou participante; senão Optional vazio. */
     Optional<Mesa> buscarPorIdComAcesso(String id, String userId);

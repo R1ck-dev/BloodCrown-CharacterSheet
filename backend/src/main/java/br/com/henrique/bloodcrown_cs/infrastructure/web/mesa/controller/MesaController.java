@@ -27,6 +27,7 @@ import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ConfigurarGridUseC
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.CriarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DefinirBaseTemplateUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DefinirNomeVisivelTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DefinirStatusVisivelTokenUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.DeletarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.EntrarMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.ListarMesasUseCase;
@@ -41,6 +42,7 @@ import br.com.henrique.bloodcrown_cs.application.mesa.usecase.RenomearCenaUseCas
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TransformarMapaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TrocarMapaMesaUseCase;
 import br.com.henrique.bloodcrown_cs.application.mesa.usecase.TrocarVersaoTokenUseCase;
+import br.com.henrique.bloodcrown_cs.application.mesa.usecase.VincularFichaTokenUseCase;
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTemplateRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.AdicionarTokenRequest;
@@ -58,9 +60,11 @@ import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MoverTokenReque
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.NomeVisivelRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.RedimensionarTokenRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.RenomearCenaRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.StatusVisivelRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TransformarMapaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TrocarMapaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.TrocarVersaoRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.VincularFichaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.mapper.MesaWebMapper;
 
 import jakarta.validation.Valid;
@@ -93,6 +97,8 @@ public class MesaController {
     private final MoverTokenUseCase moverToken;
     private final RedimensionarTokenUseCase redimensionarToken;
     private final DefinirNomeVisivelTokenUseCase definirNomeVisivelToken;
+    private final DefinirStatusVisivelTokenUseCase definirStatusVisivelToken;
+    private final VincularFichaTokenUseCase vincularFichaToken;
     private final RemoverTokenUseCase removerToken;
     private final AdicionarTemplateUseCase adicionarTemplate;
     private final RemoverTemplateUseCase removerTemplate;
@@ -236,6 +242,24 @@ public class MesaController {
                                                        @RequestBody NomeVisivelRequest req,
                                                        @AuthenticationPrincipal String userId) {
         Mesa mesa = definirNomeVisivelToken.execute(id, userId, tokenId, req.visivel());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/tokens/{tokenId}/status-visivel")
+    public ResponseEntity<MesaResponse> setStatusVisible(@PathVariable String id, @PathVariable String tokenId,
+                                                         @RequestBody StatusVisivelRequest req,
+                                                         @AuthenticationPrincipal String userId) {
+        Mesa mesa = definirStatusVisivelToken.execute(id, userId, tokenId, req.visivel());
+        notificarAtualizada(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(mesa, userId));
+    }
+
+    @PutMapping("/{id}/tokens/{tokenId}/ficha")
+    public ResponseEntity<MesaResponse> linkFicha(@PathVariable String id, @PathVariable String tokenId,
+                                                  @RequestBody VincularFichaRequest req,
+                                                  @AuthenticationPrincipal String userId) {
+        Mesa mesa = vincularFichaToken.execute(id, userId, tokenId, req.characterId());
         notificarAtualizada(id, userId);
         return ResponseEntity.ok(mapper.toResponse(mesa, userId));
     }

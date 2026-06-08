@@ -19,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import br.com.henrique.bloodcrown_cs.application.character.dto.AtualizarPersonagemInput;
 import br.com.henrique.bloodcrown_cs.application.character.dto.PatchPersonagemInput;
 import br.com.henrique.bloodcrown_cs.application.character.usecase.AtualizarPersonagemUseCase;
+import br.com.henrique.bloodcrown_cs.application.character.usecase.BroadcastRolagemUseCase;
 import br.com.henrique.bloodcrown_cs.application.character.usecase.BuscarPersonagemUseCase;
 import br.com.henrique.bloodcrown_cs.application.character.usecase.CriarPersonagemUseCase;
 import br.com.henrique.bloodcrown_cs.application.character.usecase.DeletarPersonagemUseCase;
@@ -27,10 +28,12 @@ import br.com.henrique.bloodcrown_cs.application.character.usecase.ListarPersona
 import br.com.henrique.bloodcrown_cs.application.character.usecase.MoverPersonagemUseCase;
 import br.com.henrique.bloodcrown_cs.application.character.usecase.PatchPersonagemUseCase;
 import br.com.henrique.bloodcrown_cs.domain.character.model.Character;
+import br.com.henrique.bloodcrown_cs.domain.character.model.RolagemPayload;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.character.dto.CharacterPatchDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.character.dto.CharacterSheetDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.character.dto.CharacterSummaryDto;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.character.dto.MoveToFolderRequest;
+import br.com.henrique.bloodcrown_cs.infrastructure.web.character.dto.RolagemMesaRequest;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.character.mapper.CharacterWebMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -48,6 +51,7 @@ public class CharacterController {
     private final DeletarPersonagemUseCase deletarPersonagem;
     private final DescansarPersonagemUseCase descansarPersonagem;
     private final MoverPersonagemUseCase moverPersonagem;
+    private final BroadcastRolagemUseCase broadcastRolagem;
     private final CharacterWebMapper webMapper;
 
     @GetMapping
@@ -100,6 +104,14 @@ public class CharacterController {
     @PostMapping("/{id}/rest")
     public ResponseEntity<CharacterSheetDto> rest(@PathVariable String id, @AuthenticationPrincipal String userId) {
         return ResponseEntity.ok(webMapper.toSheet(descansarPersonagem.execute(id, userId)));
+    }
+
+    @PostMapping("/{id}/rolagem-mesa")
+    public ResponseEntity<Void> broadcastRolagem(@PathVariable String id, @RequestBody RolagemMesaRequest body,
+                                                 @AuthenticationPrincipal String userId) {
+        broadcastRolagem.execute(id, userId,
+                new RolagemPayload(body.source(), body.total(), body.kind(), body.critico()));
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/folder")

@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Board, type ReguaRemota } from '@/components/mesa/Board';
+import { Board, type ReguaRemota, type RolagemNoToken } from '@/components/mesa/Board';
 import { MesaTopBar } from '@/components/mesa/MesaTopBar';
 import { MestrePanel } from '@/components/mesa/MestrePanel';
 import { CenasBar } from '@/components/mesa/CenasBar';
@@ -34,8 +34,10 @@ import {
   useSetMapa,
   useSetTemplateBase,
   useSetTokenNameVisible,
+  useSetTokenStatusVisible,
   useSwitchTokenVersion,
   useTransformarMapa,
+  useVincularFichaToken,
 } from '@/api/mesas';
 import { useMesaSocket } from '@/hooks/useMesaSocket';
 import { tokenStorage } from '@/api/client';
@@ -54,6 +56,10 @@ function Centro({ texto }: { texto: string }) {
 }
 
 type ReguaRemotaCena = ReguaRemota & { cenaId: string | null; ts: number };
+type RolagemCard = { source: string; total: number; critico: boolean; nome: string | null; ts: number };
+
+/** Tempo (ms) que o card de rolagem fica visível acima do token. */
+const ROLL_TTL = 6000;
 
 export function MesaPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +72,8 @@ export function MesaPage() {
   const removeToken = useRemoveToken(id ?? '');
   const resizeToken = useResizeToken(id ?? '');
   const setNomeVisivel = useSetTokenNameVisible(id ?? '');
+  const setStatusVisivel = useSetTokenStatusVisible(id ?? '');
+  const vincularFicha = useVincularFichaToken(id ?? '');
   const addTemplate = useAddTemplate(id ?? '');
   const removeTemplate = useRemoveTemplate(id ?? '');
   const addPasta = useAddPasta(id ?? '');
@@ -87,6 +95,8 @@ export function MesaPage() {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [bibliotecaAberta, setBibliotecaAberta] = useState(false);
   const [mostrarNomes, setMostrarNomes] = useState(true);
+  const [mostrarStatus, setMostrarStatus] = useState(true);
+  const [rolagens, setRolagens] = useState<Record<string, RolagemCard>>({});
   const [modoRegua, setModoRegua] = useState(false);
   const [mestreAberto, setMestreAberto] = useState(false);
   const [novaCenaAberta, setNovaCenaAberta] = useState(false);
@@ -154,6 +164,27 @@ export function MesaPage() {
           }
           return next;
         });
+      } else if (evento.tipo === 'ficha' && evento.tokenId) {
+        // Atualização ao vivo do status da ficha vinculada: troca o snapshot in-place (sem
+        // refetch). O backend só emite isso pra tokens com status visível.
+        const tokenId = evento.tokenId;
+        setTokens((prev) =>
+          prev.map((t) => (t.id === tokenId ? { ...t, ficha: evento.ficha ?? t.ficha } : t)),
+        );
+      } else if (evento.tipo === 'rolagem' && evento.tokenId) {
+        // Card transitório de rolagem acima do token; a poda por TTL fica no interval abaixo.
+        const tokenId = evento.tokenId;
+        const agora = performance.now();
+        setRolagens((prev) => ({
+          ...prev,
+          [tokenId]: {
+            source: evento.rolagemSource ?? '',
+            total: evento.rolagemTotal ?? 0,
+            critico: Boolean(evento.rolagemCritico),
+            nome: evento.rolagemNome ?? null,
+            ts: agora,
+          },
+        }));
       } else if (evento.tipo === 'atualizada' && id) {
         // Sempre re-busca em mudança estrutural (resize/versão/nome/mapa/grid/cena…).
         // NÃO filtramos pelo porUserId de propósito: com 2 abas no mesmo navegador o
@@ -174,6 +205,32 @@ export function MesaPage() {
     () => Object.values(reguasRemotas).filter((r) => r.cenaId === cenaAtiva?.id),
     [reguasRemotas, cenaAtiva?.id],
   );
+
+  // Rolagens ativas (card acima do token), só dos tokens da cena atual.
+  const rolagensDaCena = useMemo<RolagemNoToken[]>(() => {
+    const idsDaCena = new Set(tokensDaCena.map((t) => t.id));
+    return Object.entries(rolagens)
+      .filter(([tokenId]) => idsDaCena.has(tokenId))
+      .map(([tokenId, r]) => ({ tokenId, source: r.source, total: r.total, critico: r.critico, nome: r.nome }));
+  }, [rolagens, tokensDaCena]);
+
+  // Poda os cards de rolagem expirados (TTL). Só re-renderiza quando algo realmente sai.
+  useEffect(() => {
+    const t = setInterval(() => {
+      const agora = performance.now();
+      setRolagens((prev) => {
+        if (Object.keys(prev).length === 0) return prev;
+        const next: Record<string, RolagemCard> = {};
+        let mudou = false;
+        for (const [k, r] of Object.entries(prev)) {
+          if (agora - r.ts < ROLL_TTL) next[k] = r;
+          else mudou = true;
+        }
+        return mudou ? next : prev;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // Sem conexão, descarta as réguas remotas (repovoam pelos eventos ao reconectar).
   useEffect(() => {
@@ -233,12 +290,32 @@ export function MesaPage() {
     );
   };
 
+  const handleToggleStatusToken = () => {
+    const tk = tokens.find((t) => t.id === selectedTokenId);
+    if (!tk) return;
+    const visivel = !tk.statusVisivel;
+    setTokens((prev) => prev.map((t) => (t.id === tk.id ? { ...t, statusVisivel: visivel } : t)));
+    setStatusVisivel.mutate(
+      { tokenId: tk.id, visivel },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao alternar o status.') },
+    );
+  };
+
+  const handleVincularFicha = (tokenId: string, characterId: string | null) => {
+    vincularFicha.mutate(
+      { tokenId, characterId },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Erro ao vincular a ficha.') },
+    );
+  };
+
   // Apagar com a tecla Delete/Backspace (fora de inputs).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Com qualquer modal aberto (foco pode estar num botão dele, não num input),
       // não vaza o atalho de apagar pro token selecionado por trás do diálogo.
       if (document.querySelector('[role="dialog"]')) return;
+      // Foco dentro do popover do token (ex.: picker de ficha) — não vaza o atalho de apagar.
+      if ((document.activeElement as HTMLElement | null)?.closest('.bc-token-pop')) return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTokenId) {
@@ -496,6 +573,8 @@ export function MesaPage() {
         onToggleRegua={() => setModoRegua((v) => !v)}
         mostrarNomes={mostrarNomes}
         onToggleNomes={() => setMostrarNomes((v) => !v)}
+        mostrarStatus={mostrarStatus}
+        onToggleStatus={() => setMostrarStatus((v) => !v)}
         bibliotecaAberta={bibliotecaAberta}
         onToggleBiblioteca={handleToggleBiblioteca}
         mestreAberto={mestreAberto}
@@ -541,11 +620,14 @@ export function MesaPage() {
             tokens={tokensDaCena}
             souDono={mesa.souDono}
             mostrarNomes={mostrarNomes}
+            mostrarStatus={mostrarStatus}
             modoRegua={modoRegua}
             reguasRemotas={reguasDaCena}
+            rolagens={rolagensDaCena}
             selectedTokenId={selectedTokenId}
             versoesDoSelecionado={versoesDoSelecionado}
             tokenNomeVisivel={tokenSel?.nomeVisivel ?? false}
+            tokenStatusVisivel={tokenSel?.statusVisivel ?? false}
             onSelectToken={setSelectedTokenId}
             onTokenDragStart={onTokenDragStart}
             onTokenDragMove={onTokenDragMove}
@@ -553,6 +635,8 @@ export function MesaPage() {
             onTokenResize={handleResizeToken}
             onTrocarVersao={handleTrocarVersao}
             onToggleNomeToken={handleToggleNomeToken}
+            onToggleStatusToken={handleToggleStatusToken}
+            onVincularFicha={handleVincularFicha}
             onApagarToken={() => {
               if (selectedTokenId) apagarToken(selectedTokenId);
             }}

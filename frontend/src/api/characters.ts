@@ -42,6 +42,25 @@ async function restCharacter(id: string): Promise<CharacterSheet> {
   return request<CharacterSheet>(`/characters/${id}/rest`, { method: 'POST' });
 }
 
+/** Payload de uma rolagem da ficha rebroadcastada para o tabuleiro (card acima do token). */
+export interface RolagemMesaInput {
+  source: string;
+  total: number;
+  kind: 'attribute' | 'damage';
+  critico: boolean;
+}
+
+/**
+ * Manda uma rolagem feita na ficha para o backend rebroadcastar às mesas onde o personagem
+ * tem token. Fire-and-forget: não bloqueia a UI da ficha e ignora erro (a ficha pode não estar
+ * em mesa nenhuma → 404).
+ */
+export function enviarRolagemMesa(characterId: string, payload: RolagemMesaInput): void {
+  void request<void>(`/characters/${characterId}/rolagem-mesa`, { method: 'POST', body: payload }).catch(
+    () => {},
+  );
+}
+
 // ---------- Hooks ----------
 
 export function useCharacters() {

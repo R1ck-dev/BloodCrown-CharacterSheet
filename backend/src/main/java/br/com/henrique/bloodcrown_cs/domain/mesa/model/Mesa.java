@@ -350,6 +350,26 @@ public class Mesa {
     }
 
     /**
+     * Vincula (ou desvincula, com characterId nulo/vazio) uma ficha a um token. A partir daí o
+     * tabuleiro lê o status da ficha pra desenhar a barra/selos embaixo do token. Colaborativo
+     * (a posse da ficha em si é validada na use case, que conhece o agregado Character).
+     */
+    public Token vincularFicha(String tokenId, String characterId, String userId) {
+        garantirAcesso(userId);
+        Token token = buscarToken(tokenId);
+        token.setCharacterId((characterId != null && !characterId.isBlank()) ? characterId : null);
+        return token;
+    }
+
+    /** Mostra/esconde a barra/selos de status embaixo do token. Colaborativo. */
+    public Token definirStatusVisivel(String tokenId, boolean visivel, String userId) {
+        garantirAcesso(userId);
+        Token token = buscarToken(tokenId);
+        token.setStatusVisivel(visivel);
+        return token;
+    }
+
+    /**
      * Troca a versão de um token colocado pela arte/nome de outro template da biblioteca.
      * O template alvo precisa pertencer ao mesmo grupo de versões do template atual do token.
      * Mantém posição, tamanho e dono. Colaborativo.

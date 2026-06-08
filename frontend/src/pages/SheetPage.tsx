@@ -9,13 +9,13 @@
  *
  * SweetAlert2 carregado lazy pra reduzir bundle inicial (~100KB sai pra chunk).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import type { CharacterPatch, CharacterSheet } from '@/types/character';
-import { useCharacter, usePatchCharacter, useRestCharacter } from '@/api/characters';
+import { enviarRolagemMesa, useCharacter, usePatchCharacter, useRestCharacter } from '@/api/characters';
 import { buildPatch } from '@/lib/buildPatch';
 import { useAdvanceTurn } from '@/api/abilities';
 import { useActiveEffects } from '@/hooks/useActiveEffects';
@@ -79,6 +79,25 @@ export function SheetPage() {
   const advanceTurnMutation = useAdvanceTurn(id ?? '');
   const { buffs, activeAbilities } = useActiveEffects(data);
   const { rollAttr, rollDmg } = useDiceRoll();
+
+  // Além de animar o DiceToast, manda a rolagem pro tabuleiro (card acima do token vinculado).
+  // Fire-and-forget: se o personagem não estiver em mesa nenhuma, o backend só ignora.
+  const wrapRollAttr = useCallback(
+    (source: string, attrValue: number, skillBonus = 0) => {
+      const r = rollAttr(source, attrValue, skillBonus);
+      if (id) enviarRolagemMesa(id, { source, total: r.total, kind: 'attribute', critico: r.isCriticalSuccess });
+      return r;
+    },
+    [rollAttr, id],
+  );
+  const wrapRollDmg = useCallback(
+    (formula: string, source: string) => {
+      const r = rollDmg(formula, source);
+      if (r && id) enviarRolagemMesa(id, { source, total: r.total, kind: 'damage', critico: r.isHeavyHit });
+      return r;
+    },
+    [rollDmg, id],
+  );
 
   const form = useForm<CharacterSheet>({
     // Inicializa vazio — reset() preenche quando data chegar
@@ -259,7 +278,7 @@ export function SheetPage() {
         <div className="bc-sheet-grid">
           {/* ESQUERDA — ActionPool e DamageCalc moveram pro LeftDock flutuante */}
           <div className="bc-sheet-grid__left">
-            <AttributesBlock buffs={buffs} onRoll={rollAttr} />
+            <AttributesBlock buffs={buffs} onRoll={wrapRollAttr} />
             <StatusBlock />
             <DefenseBlock buffs={buffs} />
           </div>
@@ -270,7 +289,7 @@ export function SheetPage() {
               buffs={buffs}
               customSkills={data.customSkills ?? []}
               characterId={id}
-              onRoll={rollAttr}
+              onRoll={wrapRollAttr}
             />
           </div>
 
@@ -282,7 +301,7 @@ export function SheetPage() {
               abilities={data.abilities ?? []}
               inventory={data.inventory ?? []}
               customSkills={data.customSkills ?? []}
-              onRollDamage={rollDmg}
+              onRollDamage={wrapRollDmg}
             />
           </div>
         </div>

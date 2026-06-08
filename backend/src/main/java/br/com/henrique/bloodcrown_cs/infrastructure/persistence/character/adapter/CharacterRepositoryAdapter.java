@@ -1,11 +1,13 @@
 package br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.adapter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
 import br.com.henrique.bloodcrown_cs.domain.character.model.Character;
+import br.com.henrique.bloodcrown_cs.domain.character.model.FichaStatusSnapshot;
 import br.com.henrique.bloodcrown_cs.domain.character.port.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.mapper.CharacterMapper;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.repository.SpringDataCharacterRepository;
@@ -28,6 +30,19 @@ public class CharacterRepositoryAdapter implements CharacterRepository {
     @Override
     public Optional<Character> buscarPorIdEUsuario(String id, String userId) {
         return springDataCharacterRepository.findByIdAndUser_Id(id, userId).map(characterMapper::toDomain);
+    }
+
+    @Override
+    public boolean existePorIdEUsuario(String id, String userId) {
+        return springDataCharacterRepository.existsByIdAndUser_Id(id, userId);
+    }
+
+    @Override
+    public List<FichaStatusSnapshot> buscarSnapshotsPorIds(Collection<String> characterIds) {
+        if (characterIds == null || characterIds.isEmpty()) {
+            return List.of();
+        }
+        return springDataCharacterRepository.buscarSnapshotsPorIds(characterIds);
     }
 
     @Override

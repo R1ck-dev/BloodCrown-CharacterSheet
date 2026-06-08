@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenLocation;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.entity.MesaJpaEntity;
 
 @Repository
@@ -26,4 +27,10 @@ public interface SpringDataMesaRepository extends JpaRepository<MesaJpaEntity, S
     @Query("SELECT COUNT(m) > 0 FROM MesaJpaEntity m WHERE m.id = :id "
             + "AND (m.dono.id = :userId OR :userId MEMBER OF m.participantes)")
     boolean existeComAcesso(@Param("id") String id, @Param("userId") String userId);
+
+    /** Tokens (mesa + token + statusVisivel) vinculados a uma ficha, em qualquer mesa/cena. */
+    @Query("SELECT new br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenLocation("
+            + "t.mesa.id, t.id, t.statusVisivel) "
+            + "FROM TokenJpaEntity t WHERE t.characterId = :characterId")
+    List<TokenLocation> buscarTokensPorCharacterId(@Param("characterId") String characterId);
 }

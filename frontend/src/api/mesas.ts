@@ -87,6 +87,14 @@ async function setTokenNameVisible(id: string, tokenId: string, visivel: boolean
   return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/nome-visivel`, { method: 'PUT', body: { visivel } });
 }
 
+async function setTokenStatusVisible(id: string, tokenId: string, visivel: boolean): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/status-visivel`, { method: 'PUT', body: { visivel } });
+}
+
+async function linkTokenFicha(id: string, tokenId: string, characterId: string | null): Promise<Mesa> {
+  return request<Mesa>(`/mesas/${id}/tokens/${tokenId}/ficha`, { method: 'PUT', body: { characterId } });
+}
+
 async function addTemplate(id: string, payload: NovoTemplateInput): Promise<Mesa> {
   return request<Mesa>(`/mesas/${id}/biblioteca`, { method: 'POST', body: payload });
 }
@@ -257,6 +265,24 @@ export function useSetTokenNameVisible(id: string) {
   return useMutation({
     mutationFn: ({ tokenId, visivel }: { tokenId: string; visivel: boolean }) =>
       setTokenNameVisible(id, tokenId, visivel),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useSetTokenStatusVisible(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tokenId, visivel }: { tokenId: string; visivel: boolean }) =>
+      setTokenStatusVisible(id, tokenId, visivel),
+    onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
+  });
+}
+
+export function useVincularFichaToken(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tokenId, characterId }: { tokenId: string; characterId: string | null }) =>
+      linkTokenFicha(id, tokenId, characterId),
     onSuccess: (mesa) => qc.setQueryData(mesaKeys.detail(id), mesa),
   });
 }

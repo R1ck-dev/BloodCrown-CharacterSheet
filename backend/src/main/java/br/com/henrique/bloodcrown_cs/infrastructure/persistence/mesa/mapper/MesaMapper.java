@@ -123,6 +123,8 @@ public class MesaMapper {
         e.setTemplateId(t.getTemplateId());
         e.setCenaId(t.getCenaId());
         e.setNomeVisivel(t.isNomeVisivel());
+        e.setCharacterId(t.getCharacterId());
+        e.setStatusVisivel(t.isStatusVisivel());
         e.setMesa(parent);
         return e;
     }
@@ -216,6 +218,8 @@ public class MesaMapper {
         t.setTemplateId(e.getTemplateId());
         t.setCenaId(e.getCenaId());
         t.setNomeVisivel(e.isNomeVisivel());
+        t.setCharacterId(e.getCharacterId());
+        t.setStatusVisivel(e.isStatusVisivel());
         return t;
     }
 

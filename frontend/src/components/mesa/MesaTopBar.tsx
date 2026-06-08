@@ -8,7 +8,7 @@
  */
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
-import { ArrowLeft, Copy, Crown, Library, Map, Ruler, Tag } from 'lucide-react';
+import { ArrowLeft, Copy, Crown, Heart, Library, Map, Ruler, Tag } from 'lucide-react';
 import type { Mesa } from '@/types/mesa';
 import { Medallion } from '@/components/ornaments/Medallion';
 
@@ -20,6 +20,8 @@ interface Props {
   onToggleRegua: () => void;
   mostrarNomes: boolean;
   onToggleNomes: () => void;
+  mostrarStatus: boolean;
+  onToggleStatus: () => void;
   bibliotecaAberta: boolean;
   onToggleBiblioteca: () => void;
   mestreAberto: boolean;
@@ -34,6 +36,8 @@ export function MesaTopBar({
   onToggleRegua,
   mostrarNomes,
   onToggleNomes,
+  mostrarStatus,
+  onToggleStatus,
   bibliotecaAberta,
   onToggleBiblioteca,
   mestreAberto,
@@ -92,6 +96,13 @@ export function MesaTopBar({
           icon={<Tag size={16} />}
           label="Nomes"
           title="Mostrar/ocultar todos os nomes"
+        />
+        <ToolBtn
+          active={mostrarStatus}
+          onClick={onToggleStatus}
+          icon={<Heart size={16} />}
+          label="Status"
+          title="Mostrar/ocultar as barras de status"
         />
         <ToolBtn
           active={bibliotecaAberta}

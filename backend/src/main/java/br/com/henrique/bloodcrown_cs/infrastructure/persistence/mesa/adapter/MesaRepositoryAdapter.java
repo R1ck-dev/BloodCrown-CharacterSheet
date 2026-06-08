@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import br.com.henrique.bloodcrown_cs.domain.mesa.model.Mesa;
+import br.com.henrique.bloodcrown_cs.domain.mesa.model.TokenLocation;
 import br.com.henrique.bloodcrown_cs.domain.mesa.port.MesaRepository;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.mapper.MesaMapper;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.mesa.repository.SpringDataMesaRepository;
@@ -44,6 +45,11 @@ public class MesaRepositoryAdapter implements MesaRepository {
     @Override
     public boolean existeComAcesso(String id, String userId) {
         return springDataMesaRepository.existeComAcesso(id, userId);
+    }
+
+    @Override
+    public List<TokenLocation> buscarTokensPorCharacterId(String characterId) {
+        return springDataMesaRepository.buscarTokensPorCharacterId(characterId);
     }
 
     @Override
