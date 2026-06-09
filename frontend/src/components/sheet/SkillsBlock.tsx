@@ -20,6 +20,7 @@ import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { Attributes, CharacterSheet, CustomSkill, Expertise, NewCustomSkillInput } from '@/types/character';
 import { customSkillTarget, formPathToTarget } from '@/lib/buffTargets';
 import { useCreateCustomSkill, useDeleteCustomSkill, useUpdateCustomSkill } from '@/api/customSkills';
+import { BuffedValueField } from './BuffedValueField';
 
 interface SkillDef {
   field: keyof Expertise;
@@ -278,11 +279,12 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
                 control={control}
                 name={`expertise.${s.field}` as `expertise.atletismo`}
                 render={({ field }) => (
-                  <SkillValueField
+                  <BuffedValueField
                     base={Number(field.value) || 0}
                     buff={skillBuff}
                     onCommit={field.onChange}
                     ariaLabel={`Bonus de ${s.label}`}
+                    baseStyle={VALUE_INPUT_STYLE}
                     style={{ marginLeft: 'auto' }}
                   />
                 )}
@@ -373,87 +375,6 @@ export function SkillsBlock({ buffs, customSkills, characterId, onRoll }: Props)
         </div>
       </div>
     </section>
-  );
-}
-
-/**
- * Campo de valor de uma perícia (fixa ou custom). Espelha o AttributeMedallion:
- * por padrão exibe `base + buff` (dourado + brilho quando buffada); ao clicar,
- * vira input editável do `base`. Commit no blur/Enter, Escape cancela. Isso dá às
- * perícias a mesma exibição de "valor somado" que os atributos já têm.
- */
-interface SkillValueFieldProps {
-  base: number;
-  buff: number;
-  onCommit: (value: number) => void;
-  ariaLabel: string;
-  style?: CSSProperties;
-}
-
-function SkillValueField({ base, buff, onCommit, ariaLabel, style }: SkillValueFieldProps) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState<number>(base);
-
-  // Re-sincroniza com base quando muda por fora (server roundtrip / auto-save),
-  // sem atropelar uma edição em andamento.
-  useEffect(() => {
-    if (!editing) setValue(base);
-  }, [base, editing]);
-
-  if (editing) {
-    return (
-      <input
-        type="number"
-        autoFocus
-        value={Number.isNaN(value) ? '' : value}
-        onChange={(e) => {
-          const raw = e.target.valueAsNumber;
-          setValue(Number.isNaN(raw) ? 0 : raw);
-        }}
-        onBlur={() => {
-          setEditing(false);
-          onCommit(value);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-          else if (e.key === 'Escape') {
-            setValue(base);
-            setEditing(false);
-          }
-        }}
-        aria-label={ariaLabel}
-        style={{ ...VALUE_INPUT_STYLE, ...style }}
-      />
-    );
-  }
-
-  const isBuffed = buff !== 0;
-  const displayed = value + buff;
-
-  return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      aria-label={`${ariaLabel}: ${displayed}${isBuffed ? ` (base ${value}, buff ${buff >= 0 ? '+' : ''}${buff})` : ''}. Clique para editar.`}
-      title={
-        isBuffed
-          ? `Base ${value} ${buff >= 0 ? '+' : '−'} ${Math.abs(buff)} de buff = ${displayed}`
-          : 'Clique para editar'
-      }
-      style={{
-        ...VALUE_INPUT_STYLE,
-        ...style,
-        cursor: 'text',
-        ...(isBuffed
-          ? {
-              borderColor: 'rgba(212, 175, 55, 0.55)',
-              textShadow: '0 0 10px color-mix(in srgb, var(--bc-gold-bright) 70%, transparent)',
-            }
-          : null),
-      }}
-    >
-      {displayed}
-    </button>
   );
 }
 
@@ -605,11 +526,12 @@ function CustomSkillRow({ skill, buffs, onRoll, onUpdate, onDelete }: RowProps) 
           ({meta.short})
         </span>
       </button>
-      <SkillValueField
+      <BuffedValueField
         base={skillValue}
         buff={skillBuff}
         onCommit={commitValue}
         ariaLabel={`Bonus de ${skill.name || 'Perícia'}`}
+        baseStyle={VALUE_INPUT_STYLE}
       />
       <button type="button" onClick={() => setEditing(true)} aria-label={`Editar ${skill.name || 'Perícia'}`} title="Editar nome/atributo" style={ICON_BTN_STYLE}>
         <Pencil size={12} />

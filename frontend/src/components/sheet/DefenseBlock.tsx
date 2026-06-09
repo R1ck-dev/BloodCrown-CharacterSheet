@@ -9,9 +9,10 @@
  * Persistencia: SheetPage sincroniza status.defense no save (computa
  * a partir destes mesmos valores). Aqui mostramos o live total.
  */
-import { useFormContext, useWatch } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import type { CharacterSheet } from '@/types/character';
 import { DefenseShield } from './DefenseShield';
+import { BuffedValueField } from './BuffedValueField';
 import { Divider } from '@/components/ornaments/Divider';
 
 interface Props {
@@ -47,6 +48,9 @@ export function DefenseBlock({ buffs }: Props) {
     width: '100%',
     outline: 'none',
   };
+
+  // Variante compacta usada nos chips da fórmula (BASE/ARM/OUT).
+  const chipInputStyle: React.CSSProperties = { ...inputStyle, padding: 0, height: 18, fontSize: 13 };
 
   const labelStyle: React.CSSProperties = {
     fontFamily: 'var(--bc-font-display)',
@@ -111,7 +115,7 @@ export function DefenseBlock({ buffs }: Props) {
             <input
               type="number"
               {...register('status.defenseBase', { valueAsNumber: true })}
-              style={{ ...inputStyle, padding: 0, height: 18, fontSize: 13 }}
+              style={chipInputStyle}
               aria-label="Defesa base"
             />
           </FormulaChip>
@@ -135,39 +139,37 @@ export function DefenseBlock({ buffs }: Props) {
             </span>
           </FormulaChip>
 
-          {/* ARM — editavel + indicador de buff */}
+          {/* ARM — editavel, exibe base + buff (dourado quando buffado) */}
           <FormulaChip label="ARM">
-            <input
-              type="number"
-              {...register('status.armorBonus', { valueAsNumber: true })}
-              style={{
-                ...inputStyle,
-                padding: 0,
-                height: 18,
-                fontSize: 13,
-                color:
-                  (buffs.get('defArmor') ?? 0) !== 0 ? 'var(--bc-gold-bright)' : 'var(--bc-ink)',
-              }}
-              aria-label="Bonus de armadura"
-              title={(buffs.get('defArmor') ?? 0) !== 0 ? `+${buffs.get('defArmor')} de buff` : undefined}
+            <Controller
+              control={control}
+              name="status.armorBonus"
+              render={({ field }) => (
+                <BuffedValueField
+                  base={Number(field.value) || 0}
+                  buff={buffs.get('defArmor') ?? 0}
+                  onCommit={field.onChange}
+                  ariaLabel="Bonus de armadura"
+                  baseStyle={chipInputStyle}
+                />
+              )}
             />
           </FormulaChip>
 
-          {/* OUT — editavel + indicador de buff */}
+          {/* OUT — editavel, exibe base + buff (dourado quando buffado) */}
           <FormulaChip label="OUT">
-            <input
-              type="number"
-              {...register('status.otherBonus', { valueAsNumber: true })}
-              style={{
-                ...inputStyle,
-                padding: 0,
-                height: 18,
-                fontSize: 13,
-                color:
-                  (buffs.get('defOther') ?? 0) !== 0 ? 'var(--bc-gold-bright)' : 'var(--bc-ink)',
-              }}
-              aria-label="Outros bonus"
-              title={(buffs.get('defOther') ?? 0) !== 0 ? `+${buffs.get('defOther')} de buff` : undefined}
+            <Controller
+              control={control}
+              name="status.otherBonus"
+              render={({ field }) => (
+                <BuffedValueField
+                  base={Number(field.value) || 0}
+                  buff={buffs.get('defOther') ?? 0}
+                  onCommit={field.onChange}
+                  ariaLabel="Outros bonus"
+                  baseStyle={chipInputStyle}
+                />
+              )}
             />
           </FormulaChip>
         </div>
@@ -175,28 +177,42 @@ export function DefenseBlock({ buffs }: Props) {
 
       <Divider glyph="◆" />
 
-      {/* Resistencias */}
+      {/* Resistencias — exibem base + buff (dourado quando buffadas), igual perícias/defesa */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 14 }}>
         <div>
           <div style={{ ...labelStyle, marginBottom: 4, textTransform: 'uppercase' }}>
             Res. Fisica
           </div>
-          <input
-            type="number"
-            {...register('status.physicalRes', { valueAsNumber: true })}
-            style={inputStyle}
-            aria-label="Resistencia fisica"
+          <Controller
+            control={control}
+            name="status.physicalRes"
+            render={({ field }) => (
+              <BuffedValueField
+                base={Number(field.value) || 0}
+                buff={buffs.get('resPhysical') ?? 0}
+                onCommit={field.onChange}
+                ariaLabel="Resistencia fisica"
+                baseStyle={inputStyle}
+              />
+            )}
           />
         </div>
         <div>
           <div style={{ ...labelStyle, marginBottom: 4, textTransform: 'uppercase' }}>
             Res. Magica
           </div>
-          <input
-            type="number"
-            {...register('status.magicalRes', { valueAsNumber: true })}
-            style={inputStyle}
-            aria-label="Resistencia magica"
+          <Controller
+            control={control}
+            name="status.magicalRes"
+            render={({ field }) => (
+              <BuffedValueField
+                base={Number(field.value) || 0}
+                buff={buffs.get('resMagical') ?? 0}
+                onCommit={field.onChange}
+                ariaLabel="Resistencia magica"
+                baseStyle={inputStyle}
+              />
+            )}
           />
         </div>
       </div>

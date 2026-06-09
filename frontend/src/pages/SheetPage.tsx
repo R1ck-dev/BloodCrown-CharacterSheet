@@ -36,6 +36,10 @@ import { SkillsBlock } from '@/components/sheet/SkillsBlock';
 import { RightColumn } from '@/components/sheet/RightColumn';
 import { DiceToast } from '@/components/sheet/DiceToast';
 
+/** Atraso (ms) pra mandar a rolagem ao tabuleiro — casado com o tempo de spin do DiceToast
+ *  (SPIN_DURATION), pra o card no token só revelar o total quando a ficha também revela. */
+const ATRASO_CARD_TABULEIRO_MS = 1500;
+
 /** Burst tematico central — disparado em level up. Cada tema mapeia
  *  primary/secondary/tertiary nas suas cores de identidade. */
 function fireLevelUpConfetti() {
@@ -82,10 +86,17 @@ export function SheetPage() {
 
   // Além de animar o DiceToast, manda a rolagem pro tabuleiro (card acima do token vinculado).
   // Fire-and-forget: se o personagem não estiver em mesa nenhuma, o backend só ignora.
+  // O DiceToast anima o dado girando por ~1.5s antes de revelar o total; atrasamos o envio
+  // por esse tempo pra o card no tabuleiro não "entregar" o resultado antes da revelação na ficha.
   const wrapRollAttr = useCallback(
     (source: string, attrValue: number, skillBonus = 0) => {
       const r = rollAttr(source, attrValue, skillBonus);
-      if (id) enviarRolagemMesa(id, { source, total: r.total, kind: 'attribute', critico: r.isCriticalSuccess });
+      if (id) {
+        const cid = id;
+        window.setTimeout(() => {
+          enviarRolagemMesa(cid, { source, total: r.total, kind: 'attribute', critico: r.isCriticalSuccess });
+        }, ATRASO_CARD_TABULEIRO_MS);
+      }
       return r;
     },
     [rollAttr, id],
@@ -93,7 +104,14 @@ export function SheetPage() {
   const wrapRollDmg = useCallback(
     (formula: string, source: string) => {
       const r = rollDmg(formula, source);
-      if (r && id) enviarRolagemMesa(id, { source, total: r.total, kind: 'damage', critico: r.isHeavyHit });
+      if (r && id) {
+        const cid = id;
+        const total = r.total;
+        const critico = r.isHeavyHit;
+        window.setTimeout(() => {
+          enviarRolagemMesa(cid, { source, total, kind: 'damage', critico });
+        }, ATRASO_CARD_TABULEIRO_MS);
+      }
       return r;
     },
     [rollDmg, id],
