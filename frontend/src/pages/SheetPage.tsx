@@ -204,7 +204,6 @@ export function SheetPage() {
   const { status: saveStatus, saveNow } = useAutoSave({
     watch,
     getValues,
-    isDirty: formState.isDirty,
     onSave: handleSave,
   });
 
