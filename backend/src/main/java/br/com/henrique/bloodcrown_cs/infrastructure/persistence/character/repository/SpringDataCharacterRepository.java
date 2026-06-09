@@ -1,15 +1,11 @@
 package br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import br.com.henrique.bloodcrown_cs.domain.character.model.FichaStatusSnapshot;
 import br.com.henrique.bloodcrown_cs.infrastructure.persistence.character.entity.CharacterJpaEntity;
 
 /**
@@ -36,13 +32,4 @@ public interface SpringDataCharacterRepository extends JpaRepository<CharacterJp
     Optional<CharacterJpaEntity> findByInventory_IdAndUser_Id(String itemId, String userId);
 
     Optional<CharacterJpaEntity> findByCustomSkills_IdAndUser_Id(String customSkillId, String userId);
-
-    /** Projeção do status (vida/defesa/resistências) por id — 1 query, sem carregar o agregado. */
-    @Query("""
-            SELECT new br.com.henrique.bloodcrown_cs.domain.character.model.FichaStatusSnapshot(
-                c.id, c.name, c.status.currentHealth, c.status.maxHealth,
-                c.status.defense, c.status.physicalRes, c.status.magicalRes)
-            FROM CharacterJpaEntity c
-            WHERE c.id IN :ids""")
-    List<FichaStatusSnapshot> buscarSnapshotsPorIds(@Param("ids") Collection<String> ids);
 }

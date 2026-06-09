@@ -3,11 +3,13 @@ package br.com.henrique.bloodcrown_cs.application.character.usecase;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.henrique.bloodcrown_cs.application.character.dto.EffectInput;
 import br.com.henrique.bloodcrown_cs.application.character.dto.HabilidadeInput;
+import br.com.henrique.bloodcrown_cs.application.character.event.FichaStatusAlteradaEvent;
 import br.com.henrique.bloodcrown_cs.domain.character.model.Ability;
 import br.com.henrique.bloodcrown_cs.domain.character.model.AbilityEffect;
 import br.com.henrique.bloodcrown_cs.domain.character.model.Character;
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class AtualizarHabilidadeUseCase {
 
     private final CharacterRepository characterRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Ability execute(String abilityId, String userId, HabilidadeInput input) {
@@ -30,6 +33,8 @@ public class AtualizarHabilidadeUseCase {
         Ability draft = montarRascunho(input);
         Ability updated = character.updateAbility(abilityId, draft);
         characterRepository.salvar(character);
+        // Se a habilidade estava ativa, editar effects muda defesa/resistência — avisa o tabuleiro.
+        eventPublisher.publishEvent(new FichaStatusAlteradaEvent(character.getId()));
         return updated;
     }
 

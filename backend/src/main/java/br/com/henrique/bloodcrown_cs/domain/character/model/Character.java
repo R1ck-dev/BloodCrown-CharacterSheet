@@ -573,6 +573,58 @@ public class Character {
     }
 
     /**
+     * Recorte de status pro tabuleiro com os totais EFETIVOS: defesa e resistências já somam os
+     * buffs de habilidades ATIVAS e itens EQUIPADOS (espelha computeDefense/useActiveEffects do
+     * front), pra o token refletir o valor real — não a base persistida.
+     */
+    public FichaStatusSnapshot toStatusSnapshot() {
+        return new FichaStatusSnapshot(
+                id, name,
+                status != null ? status.getCurrentHealth() : null,
+                status != null ? status.getMaxHealth() : null,
+                defesaEfetiva(),
+                resistenciaFisicaEfetiva(),
+                resistenciaMagicaEfetiva());
+    }
+
+    /** Defesa total = base + DES + ARM + OUT, cada parcela somando seus buffs ativos (igual ao front). */
+    public int defesaEfetiva() {
+        int base = orZero(status != null ? status.getDefenseBase() : null);
+        int des = orZero(attributes != null ? attributes.getDestreza() : null) + buffAtivo("attrDestreza");
+        int arm = orZero(status != null ? status.getArmorBonus() : null) + buffAtivo("defArmor");
+        int out = orZero(status != null ? status.getOtherBonus() : null) + buffAtivo("defOther");
+        return base + des + arm + out;
+    }
+
+    public int resistenciaFisicaEfetiva() {
+        return orZero(status != null ? status.getPhysicalRes() : null) + buffAtivo("resPhysical");
+    }
+
+    public int resistenciaMagicaEfetiva() {
+        return orZero(status != null ? status.getMagicalRes() : null) + buffAtivo("resMagical");
+    }
+
+    /** Soma os efeitos de habilidades ATIVAS + itens EQUIPADOS cujo alvo bate exatamente. */
+    private int buffAtivo(String target) {
+        int total = 0;
+        for (Ability ability : abilities) {
+            if (!Boolean.TRUE.equals(ability.getIsActive()) || ability.getEffects() == null) continue;
+            for (AbilityEffect effect : ability.getEffects()) {
+                if (target.equals(effect.getTargetAttribute())) total += orZero(effect.getEffectValue());
+            }
+        }
+        for (Item item : inventory) {
+            if (!Boolean.TRUE.equals(item.getIsEquipped())) continue;
+            if (target.equals(item.getTargetAttribute())) total += orZero(item.getEffectValue());
+        }
+        return total;
+    }
+
+    private static int orZero(Integer v) {
+        return v != null ? v : 0;
+    }
+
+    /**
      * Patch parcial (PATCH). Cada campo (inclusive escalares e campos internos dos
      * sub-objetos) só é aplicado quando não-null; currents são capados em [0, max].
      */
