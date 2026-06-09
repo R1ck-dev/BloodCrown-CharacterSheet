@@ -104,7 +104,7 @@ public class MesaWebMapper {
                 s.defense(), s.physicalRes(), s.magicalRes());
     }
 
-    /** Carrega, numa só query, os snapshots de status das fichas vinculadas aos tokens da mesa. */
+    /** Carrega os snapshots de status (totais já com buffs) das fichas vinculadas aos tokens da mesa. */
     private Map<String, FichaStatusSnapshot> carregarSnapshots(Mesa mesa) {
         Set<String> ids = mesa.getTokens().stream()
                 .map(Token::getCharacterId)

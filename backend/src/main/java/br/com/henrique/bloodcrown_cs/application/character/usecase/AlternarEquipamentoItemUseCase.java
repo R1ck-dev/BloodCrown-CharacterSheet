@@ -1,8 +1,10 @@
 package br.com.henrique.bloodcrown_cs.application.character.usecase;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.henrique.bloodcrown_cs.application.character.event.FichaStatusAlteradaEvent;
 import br.com.henrique.bloodcrown_cs.domain.character.model.Character;
 import br.com.henrique.bloodcrown_cs.domain.character.port.CharacterRepository;
 import br.com.henrique.bloodcrown_cs.domain.shared.exception.NotFoundException;
@@ -18,12 +20,16 @@ import lombok.RequiredArgsConstructor;
 public class AlternarEquipamentoItemUseCase {
 
     private final CharacterRepository characterRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Character execute(String itemId, String userId) {
         Character character = characterRepository.buscarPorItemIdEUsuario(itemId, userId)
                 .orElseThrow(() -> new NotFoundException("Item não encontrado."));
         character.toggleItemEquip(itemId);
-        return characterRepository.salvar(character);
+        Character salvo = characterRepository.salvar(character);
+        // Buff de item equipado muda defesa/resistência — avisa o tabuleiro (após commit).
+        eventPublisher.publishEvent(new FichaStatusAlteradaEvent(salvo.getId()));
+        return salvo;
     }
 }
