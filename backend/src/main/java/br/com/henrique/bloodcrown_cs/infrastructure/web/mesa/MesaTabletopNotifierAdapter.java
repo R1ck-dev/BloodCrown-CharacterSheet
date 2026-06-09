@@ -19,6 +19,7 @@ import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.dto.MesaEvento;
 import br.com.henrique.bloodcrown_cs.infrastructure.web.mesa.mapper.MesaWebMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Ponte Character → Mesa (tabletop): descobre os tokens vinculados a uma ficha e emite os eventos
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class MesaTabletopNotifierAdapter implements TabletopNotifierPort {
 
     private final MesaRepository mesaRepository;
@@ -40,9 +42,12 @@ public class MesaTabletopNotifierAdapter implements TabletopNotifierPort {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFichaStatusAlterada(FichaStatusAlteradaEvent event) {
-        List<TokenLocation> locais = mesaRepository.buscarTokensPorCharacterId(event.characterId()).stream()
+        List<TokenLocation> todos = mesaRepository.buscarTokensPorCharacterId(event.characterId());
+        List<TokenLocation> locais = todos.stream()
                 .filter(TokenLocation::statusVisivel)
                 .toList();
+        log.info("[tabletop] ficha {} alterada → {} token(s) vinculado(s), {} com status visível",
+                event.characterId(), todos.size(), locais.size());
         if (locais.isEmpty()) {
             return;
         }
@@ -51,6 +56,8 @@ public class MesaTabletopNotifierAdapter implements TabletopNotifierPort {
             return;
         }
         FichaResumoDto resumo = mesaWebMapper.toFichaResumo(snapshot);
+        log.info("[tabletop] broadcast ficha → vida {}/{}, def {} para {} token(s)",
+                resumo.currentHealth(), resumo.maxHealth(), resumo.defense(), locais.size());
         for (TokenLocation loc : locais) {
             messagingTemplate.convertAndSend("/topic/mesas/" + loc.mesaId(),
                     MesaEvento.ficha(loc.tokenId(), resumo));
