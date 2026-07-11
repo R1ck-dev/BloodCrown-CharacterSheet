@@ -37,6 +37,34 @@ Além do uso prático, a aplicação foi construída com foco em arquitetura, bo
 
 ---
 
+## Preview
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-personagens.png" alt="Dashboard com a lista de personagens e pastas" width="100%">
+  <br>
+  <em>Dashboard — personagens organizados em pastas, com vida e nível à vista.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/ficha.jpeg" alt="Ficha do personagem" width="100%">
+  <br>
+  <em>Ficha — atributos, perícias, status e ataques preparados, com rolagem em um clique.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-mesas.png" alt="Dashboard com a lista de mesas" width="100%">
+  <br>
+  <em>Mesas — crie uma mesa como mestre ou entre na de outro jogador por código.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mesa-tabletop.jpeg" alt="Mesa virtual com mapa, tokens e biblioteca" width="100%">
+  <br>
+  <em>Mesa virtual — mapa, cenas e tokens sincronizados ao vivo, com vida e escudos de defesa vindos da ficha.</em>
+</p>
+
+---
+
 ## Funcionalidades
 
 ### Mesa Virtual em Tempo Real
