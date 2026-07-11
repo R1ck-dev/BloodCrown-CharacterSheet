@@ -2,10 +2,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-2b2b2b?logo=openjdk&logoColor=white" />
-  <img src="https://img.shields.io/badge/Spring%20Boot-3-2b2b2b?logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-4-2b2b2b?logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-2b2b2b?logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-5-2b2b2b?logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/WebSocket-STOMP-2b2b2b?logo=socketdotio&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-Containerized-2b2b2b?logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8-2b2b2b?logo=mysql&logoColor=white" />
-  <img src="https://img.shields.io/badge/Frontend-Vanilla%20JS-2b2b2b?logo=javascript&logoColor=white" />
   <img src="https://img.shields.io/badge/Deploy-Online-success?logo=netlify&logoColor=white" />
   <img src="https://img.shields.io/badge/API-Online-success?logo=spring&logoColor=white" />
 </p>
@@ -25,27 +27,21 @@ Além do uso prático, a aplicação foi construída com foco em arquitetura, bo
 
 ## Visão Geral
 
-* Aplicação full stack com frontend SPA e backend REST
+* Aplicação full stack com frontend SPA em React e backend REST
+* Mesa virtual com sincronização em tempo real via WebSocket (STOMP)
+* Arquitetura hexagonal, com o domínio isolado da infraestrutura
 * Autenticação stateless baseada em JWT
-* Persistência em banco de dados relacional
+* Persistência em banco relacional com migrações versionadas
 * Containerização completa com Docker
 * Deploy em ambiente de nuvem
 
 ---
 
-## Preview
-
-<p align="center">
-  <img src="frontend/public/assets/img/Página Dashboard.png" alt="Dashboard do sistema" width="100%">
-</p>
-
-<p align="center">
-  <img src="frontend/public/assets/img/Página Ficha.png" alt="Ficha do personagem" width="100%">
-</p>
-
----
-
 ## Funcionalidades
+
+### Mesa Virtual em Tempo Real
+
+Tabuleiro compartilhado onde cada personagem vira um token. Ficha e tabuleiro ficam sincronizados ao vivo: o dano aplicado na ficha atualiza a barra de vida do token para todos os jogadores da mesa, e atributos alterados por buffs (como defesa e resistência) se refletem no token na hora. Implementado com WebSocket (STOMP) no backend e canvas 2D (Konva) no frontend.
 
 ### Rolagem de Dados
 
@@ -81,6 +77,8 @@ Armazenamento das fichas e informações dos personagens em banco MySQL hospedad
 * Spring Boot 4
 * Arquitetura Hexagonal + Clean Architecture
 * Spring Security + JWT
+* WebSocket com STOMP (sincronização da mesa em tempo real)
+* Cache com Caffeine
 * Hibernate / JPA
 * Flyway (migrations de banco)
 * MySQL 8
@@ -92,8 +90,10 @@ Armazenamento das fichas e informações dos personagens em banco MySQL hospedad
 * TypeScript
 * Vite
 * React Router 7
-* TanStack Query 5
-* React Hook Form + Zod
+* TanStack Query 5 (estado de servidor)
+* Konva / React Konva (tabuleiro em canvas 2D)
+* STOMP.js (cliente WebSocket)
+* React Hook Form + Zod (validação de formulários)
 * Framer Motion
 * SweetAlert2
 
@@ -103,6 +103,7 @@ Armazenamento das fichas e informações dos personagens em banco MySQL hospedad
 * Docker Compose
 * Render (API)
 * Netlify (Frontend)
+* Cloudinary (imagens de mapas e tokens da mesa)
 * Git e GitHub
 
 ---
@@ -147,13 +148,14 @@ O Docker irá baixar as imagens necessárias, compilar o backend e iniciar os co
 
 ### Acesso à aplicação
 
-A aplicação estará disponível em:
+Depois que os containers subirem:
 
 ```text
-http://localhost:8080
+Frontend: http://localhost
+API:      http://localhost:8080
 ```
 
-A porta pode variar de acordo com a configuração do ambiente.
+O banco MySQL é exposto na porta `3307` do host (a `3306` costuma estar ocupada por uma instalação nativa).
 
 ---
 
