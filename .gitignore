@@ -56,3 +56,5 @@ mysql_data/
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+# Configuracao local do Claude Code (nao versionar)
+.claude/
